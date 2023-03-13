@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mk47.h"
+#include "quantum.h"
 // clang-format off
 #ifdef RGB_MATRIX_ENABLE
 const is31_led PROGMEM g_is31_leds[RGB_MATRIX_LED_COUNT] = {
@@ -179,7 +179,7 @@ static bool     while_test_flag  = false;
 static uint16_t current_time     = 0;
 static uint8_t  glint_cnt        = 0;
 static uint16_t scancode         = 0;
-
+static uint16_t RGB_HSV_level;
 HSV hsv;
 
 void led_test(uint8_t color);
@@ -218,18 +218,54 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 Lkey_flag = 0;
             }
             return true;
-#ifdef VIA_ENABLE
-        case KC_RESET: {
+        case RGB_VAI:
             if (record->event.pressed) {
-#    include "via.h"
-                via_eeprom_set_valid(false);
-                eeconfig_init_via();
+                if ((RGB_HSV_level = (uint8_t)rgb_matrix_get_val() / (RGB_MATRIX_MAXIMUM_BRIGHTNESS / 4)) < 4) {
+                    RGB_HSV_level++;
+                    rgb_matrix_config.hsv.v = (uint8_t)(RGB_MATRIX_MAXIMUM_BRIGHTNESS / 4) * RGB_HSV_level;
+                }
+                rgb_matrix_sethsv(rgb_matrix_config.hsv.h, rgb_matrix_config.hsv.s, rgb_matrix_config.hsv.v);
+
             }
             return false;
-        }
-#endif
+        case RGB_VAD:
+            if (record->event.pressed) {
+                if ((RGB_HSV_level = (uint8_t)rgb_matrix_get_val() / (RGB_MATRIX_MAXIMUM_BRIGHTNESS / 4)) > 0) {                 
+                    RGB_HSV_level--;
+                    rgb_matrix_config.hsv.v = (uint8_t)(RGB_MATRIX_MAXIMUM_BRIGHTNESS / 4) * RGB_HSV_level;
+                }
+                rgb_matrix_sethsv(rgb_matrix_config.hsv.h, rgb_matrix_config.hsv.s, rgb_matrix_config.hsv.v);
+
+            }
+            return false;
+        case RGB_HUI:
+            if (record->event.pressed) {
+                RGB_HSV_level = (uint8_t)rgb_matrix_get_hue() / (UINT8_MAX / 7);
+                RGB_HSV_level++;
+                RGB_HSV_level %= 8;
+                rgb_matrix_config.hsv.h = (uint8_t)(UINT8_MAX / 6) * RGB_HSV_level;
+                rgb_matrix_sethsv(rgb_matrix_config.hsv.h, rgb_matrix_config.hsv.s, rgb_matrix_config.hsv.v);
+            }
+            return false;
+        case RGB_SPI:
+            if (record->event.pressed) {
+                if ((RGB_HSV_level = (uint8_t)rgb_matrix_get_speed() / (UINT8_MAX / 4)) < 4) {
+                    RGB_HSV_level++;
+                    rgb_matrix_set_speed((uint8_t)(UINT8_MAX / 4) * RGB_HSV_level);
+                }
+            }
+            return false;
+        case RGB_SPD:
+            if (record->event.pressed) {
+                if ((RGB_HSV_level = (uint8_t)rgb_matrix_get_speed() / (UINT8_MAX / 4)) > 0) {
+                    RGB_HSV_level--;
+                    rgb_matrix_set_speed((uint8_t)(UINT8_MAX / 4) * RGB_HSV_level);
+                }
+            }
+            return false;
+    
         default:
-            return process_record_user(keycode, record);
+            return true;
     }
 }
 
