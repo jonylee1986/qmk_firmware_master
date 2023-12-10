@@ -17,8 +17,11 @@
 #include "quantum.h"
 
 #ifdef RGB_MATRIX_ENABLE
+
+// clang-format off
+
 const snled27351_led_t PROGMEM g_snled27351_leds[SNLED27351_LED_COUNT] = {
-/* Refer to IS31 manual for these locations
+/* Refer to SNLED27351 manual for these locations
  *   driver
  *   |  R location
  *   |  |       G location
@@ -128,76 +131,7 @@ const snled27351_led_t PROGMEM g_snled27351_leds[SNLED27351_LED_COUNT] = {
     {1, J_5,  K_5,  L_5},
     {1, J_6,  K_6,  L_6},
 };
-#endif //RGB_MATRIX_ENABLE
 
-enum __layers {
-    WIN_B,
-    WIN_WASD,
-    WIN_FN,
-    MAC_B,
-    MAC_WASD,
-    MAC_FN
-};
-void led_init_ports(void){
-    //set our LED pings as output
-    setPinOutput(LED_NUM_LOCK_PIN); // LED1 Num Lock
-    writePinLow(LED_NUM_LOCK_PIN);
-    setPinOutput(LED_CAPS_LOCK_PIN); // LDE2 Caps Lock
-    writePinLow(LED_CAPS_LOCK_PIN);
-    setPinOutput(LED_WIN_LOCK_PIN); // LED3 Win Lock
-    writePinLow(LED_WIN_LOCK_PIN);
-}
+// clang-format on
 
-bool led_update_kb(led_t led_state) {
-    bool res = led_update_user(led_state);
-    if(res) {
-        // writePin sets the pin high for 1 and low for 0.
-        // In this example the pins are inverted, setting
-        // it low/0 turns it on, and high/1 turns the LED off.
-        // This behavior depends on whether the LED is between the pin
-        // and VCC or the pin and GND.
-        writePin(LED_NUM_LOCK_PIN, led_state.num_lock);
-        writePin(LED_CAPS_LOCK_PIN, led_state.caps_lock);
-        writePin(LED_WIN_LOCK_PIN, keymap_config.no_gui);
- }
-    return res;
-}
-
-bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
-    if (!process_record_user(keycode, record)) {
-        return false;
-    }
-    switch (keycode) {
-        case DF(WIN_B):
-            if (record->event.pressed) {
-                set_single_persistent_default_layer(WIN_B);
-            }
-            return false;
-        case DF(MAC_B):
-            if (record->event.pressed) {
-                set_single_persistent_default_layer(MAC_B);
-                keymap_config.no_gui     = 0;
-                eeconfig_update_keymap(keymap_config.raw);
-            }
-            return false;
-        case RGB_TOG:
-            if (record->event.pressed) {
-                switch (rgb_matrix_get_flags()) {
-                    case LED_FLAG_ALL: {
-                        rgb_matrix_set_flags(LED_FLAG_NONE);
-                        rgb_matrix_set_color_all(0, 0, 0);
-                    } break;
-                    default: {
-                        rgb_matrix_set_flags(LED_FLAG_ALL);
-                    } break;
-                }
-            }
-            if (!rgb_matrix_is_enabled()) {
-                rgb_matrix_set_flags(LED_FLAG_ALL);
-                rgb_matrix_enable();
-            }
-            return false;
-        default:
-            return true;
-    }
-}
+#endif // RGB_MATRIX_ENABLE

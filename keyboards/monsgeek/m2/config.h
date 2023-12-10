@@ -16,14 +16,6 @@
 
 #pragma once
 
-/* LED Indicators */
-#define LED_WIN_LOCK_PIN        C11
-
-/* Mechanical locking support. Use KC_LCAP, KC_LNUM or KC_LSCR instead in keymap */
-#define LOCKING_SUPPORT_ENABLE
-/* Locking resynchronize hack */
-#define LOCKING_RESYNC_ENABLE
-
 /* SPI Config for spi flash*/
 #define SPI_DRIVER SPIDQ
 #define SPI_SCK_PIN B3
@@ -32,7 +24,6 @@
 #define SPI_MOSI_PAL_MODE 5
 
 #define EXTERNAL_FLASH_SPI_SLAVE_SELECT_PIN C12
-#define WEAR_LEVELING_BACKING_SIZE (8 * 1024)
 
 /* I2C Config for LED Driver */
 #define SNLED27351_I2C_ADDRESS_1 SNLED27351_I2C_ADDRESS_GND
@@ -42,10 +33,9 @@
 
 #define DRIVER_1_LED_TOTAL 60
 #define DRIVER_2_LED_TOTAL 38
-#define RGB_MATRIX_LED_COUNT    (DRIVER_1_LED_TOTAL + DRIVER_2_LED_TOTAL)
+#define RGB_MATRIX_LED_COUNT (DRIVER_1_LED_TOTAL + DRIVER_2_LED_TOTAL)
 
 #define RGB_TRIGGER_ON_KEYDOWN
 #define RGB_DISABLE_WHEN_USB_SUSPENDED // turn off effects when suspended
 #define RGB_MATRIX_FRAMEBUFFER_EFFECTS
 #define RGB_MATRIX_KEYPRESSES
-
