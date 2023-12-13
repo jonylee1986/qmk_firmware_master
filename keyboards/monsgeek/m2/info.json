@@ -40,6 +40,7 @@
     },
     "rgb_matrix": {
         "driver": "snled27351",
+        "led_count": 98,
         "max_brightness": 200,
         "val_steps": 20,
         "animations": {
@@ -61,7 +62,6 @@
             "solid_reactive": true,
             "solid_reactive_cross": true,
             "multisplash": true
-
         },
         "layout": [
             {"matrix": [0, 0], "x": 0, "y": 0, "flags": 1},
