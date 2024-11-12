@@ -114,6 +114,7 @@ typedef union {
     struct {
         uint8_t flag : 1;
         uint8_t devs : 3;
+        uint8_t BTdevs : 3;
     };
 } confinfo_t;
 confinfo_t confinfo;
@@ -134,7 +135,8 @@ void eeconfig_confinfo_default(void) {
 
     confinfo.flag = true;
 #ifdef WIRELESS_ENABLE
-    confinfo.devs = DEVS_BT1;
+    confinfo.devs = DEVS_USB;
+    confinfo.BTdevs = DEVS_BT1;
 #endif
 
     eeconfig_confinfo_update(confinfo.raw);
@@ -151,7 +153,7 @@ static void bt_scan_mode(void) {
 #ifdef BT_MODE_SW_PIN
     if (readPin(RF_MODE_SW_PIN) && !readPin(BT_MODE_SW_PIN)) {
         if ((wireless_get_current_devs() == DEVS_USB) || (wireless_get_current_devs() == DEVS_2G4)) {
-            wireless_devs_change(wireless_get_current_devs(), confinfo.devs, false);
+            wireless_devs_change(wireless_get_current_devs(), confinfo.BTdevs, false);
         }
     }
     if (readPin(BT_MODE_SW_PIN) && !readPin(RF_MODE_SW_PIN)) {
@@ -190,7 +192,7 @@ void keyboard_post_init_kb(void) {
 
 #ifdef WIRELESS_ENABLE
     wireless_init();
-    bt_scan_mode();
+    wireless_devs_change(!confinfo.devs, confinfo.devs, false);
     post_init_timer = timer_read32();
 #endif
 
@@ -228,7 +230,7 @@ void suspend_wakeup_init_kb(void) {
     gpio_write_pin_high(LED_POWER_EN_PIN);
 #    endif
 
-    bt_scan_mode();
+    wireless_devs_change(wireless_get_current_devs(), wireless_get_current_devs(), false);
     suspend_wakeup_init_user();
 }
 void matrix_scan_kb(void) {
@@ -242,7 +244,7 @@ void wireless_post_task(void) {
         md_send_devctrl(MD_SND_CMD_DEVCTRL_FW_VERSION);   // get the module fw version.
         md_send_devctrl(MD_SND_CMD_DEVCTRL_SLEEP_BT_EN);  // timeout 30min to sleep in bt mode, enable
         md_send_devctrl(MD_SND_CMD_DEVCTRL_SLEEP_2G4_EN); // timeout 30min to sleep in 2.4g mode, enable
-        bt_scan_mode();
+        wireless_devs_change(!confinfo.devs, confinfo.devs, false);
         post_init_timer = 0x00;
     }
 }
@@ -287,6 +289,7 @@ bool process_record_wls(uint16_t keycode, keyrecord_t *record) {
 #    define WLS_KEYCODE_EXEC(wls_dev)                                                                                          \
         do {                                                                                                                   \
             if (record->event.pressed) {                                                                                       \
+                wireless_devs_change(wireless_get_current_devs(), wls_dev, false);                                             \
                 if (wls_process_long_press_token == INVALID_DEFERRED_TOKEN) {                                                  \
                     wls_process_long_press_token = defer_exec(WLS_KEYCODE_PAIR_TIME, wls_process_long_press, &keycode_shadow); \
                 }                                                                                                              \
@@ -298,20 +301,28 @@ bool process_record_wls(uint16_t keycode, keyrecord_t *record) {
 
     switch (keycode) {
         case KC_BT1: {
-            WLS_KEYCODE_EXEC(DEVS_BT1);
+            if ((wireless_get_current_devs() != DEVS_USB) && (wireless_get_current_devs() != DEVS_2G4)) {
+                WLS_KEYCODE_EXEC(DEVS_BT1);
+            }
         } break;
         case KC_BT2: {
-            WLS_KEYCODE_EXEC(DEVS_BT2);
+            if ((wireless_get_current_devs() != DEVS_USB) && (wireless_get_current_devs() != DEVS_2G4)) {
+                WLS_KEYCODE_EXEC(DEVS_BT2);
+            }
         } break;
         case KC_BT3: {
-            WLS_KEYCODE_EXEC(DEVS_BT3);
+            if ((wireless_get_current_devs() != DEVS_USB) && (wireless_get_current_devs() != DEVS_2G4)) {
+                WLS_KEYCODE_EXEC(DEVS_BT3);
+            }
         } break;
         case KC_2G4: {
-            WLS_KEYCODE_EXEC(DEVS_2G4);
+            if (wireless_get_current_devs() == DEVS_2G4) {
+                WLS_KEYCODE_EXEC(DEVS_2G4);
+            }
         } break;
         case KC_USB: {
             if (record->event.pressed) {
-                wireless_devs_change(wireless_get_current_devs(), DEVS_USB, false);
+                // wireless_devs_change(wireless_get_current_devs(), DEVS_USB, false);
             }
         } break;
         default:
@@ -366,8 +377,11 @@ void wireless_devs_change_kb(uint8_t old_devs, uint8_t new_devs, bool reset) {
 
     wls_rgb_indicator_reset = reset;
 
-    if ((wireless_get_current_devs() != DEVS_USB) && (wireless_get_current_devs() != DEVS_2G4)) {
+    if (confinfo.devs != wireless_get_current_devs()) {
         confinfo.devs = wireless_get_current_devs();
+        if ((wireless_get_current_devs() != DEVS_USB) && (wireless_get_current_devs() != DEVS_2G4)) {
+            confinfo.BTdevs = wireless_get_current_devs();
+        }
         eeconfig_confinfo_update(confinfo.raw);
     }
 
