@@ -1,0 +1,158 @@
+{
+    "name": "STELLA 21",
+    "vendorId": "0x342D",
+    "productId": "0xE403",
+    "keycodes": ["qmk_lighting"],
+    "menus": [
+      {
+        "label": "Lighting",
+        "content": [
+          {
+            "label": "Backlight",
+            "content": [
+              {
+                "label": "Brightness",
+                "type": "range",
+                "options": [0, 200],
+                "content": ["id_qmk_rgb_matrix_brightness", 3, 1]
+              },
+              {
+                "label": "Effect",
+                "type": "dropdown",
+                "content": ["id_qmk_rgb_matrix_effect", 3, 2],
+                "options": [
+                  ["All Off", 0],
+                  ["solid_color", 1],
+                  ["alphas_mods", 2],
+                  ["gradient_up_down", 3],
+                  ["gradient_left_right", 4],
+                  ["breathing", 5],
+                  ["band_sat", 6],
+                  ["band_val", 7],
+                  ["band_pinwheel_sat", 8],
+                  ["band_pinwheel_val", 9],
+                  ["band_spiral_sat", 10],
+                  ["band_spiral_val", 11],
+                  ["cycle_all", 12],
+                  ["cycle_left_right", 13],
+                  ["cycle_up_down", 14],
+                  ["cycle_out_in", 15],
+                  ["cycle_out_in_dual", 16],
+                  ["moving_chevron", 17],
+                  ["cycle_pinwheel", 18],
+                  ["cycle_spiral", 19],
+                  ["dual_beacon", 20],
+                  ["rainbow_beacon", 21],
+                  ["rainbow_pinwheels", 22],
+                  ["raindrops", 23],
+                  ["jellybean_raindrops", 24],
+                  ["hue_breathing", 25],
+                  ["hue_pendulum", 26],
+                  ["hue_wave", 27],
+                  ["pixel_fractal", 28],
+                  ["pixel_flow", 29],
+                  ["pixel_rain", 30],
+                  ["typing_heatmap", 31],
+                  ["digital_rain", 32],
+                  ["solid_reactive_simple", 33],
+                  ["solid_reactive", 34],
+                  ["solid_reactive_wide", 35],
+                  ["solid_reactive_multiwide", 36],
+                  ["solid_reactive_cross", 37],
+                  ["solid_reactive_multicross", 38],
+                  ["solid_reactive_nexus", 39],
+                  ["solid_reactive_multinexus", 40],
+                  ["splash", 41],
+                  ["multisplash", 42],
+                  ["solid_splash", 43],
+                  ["solid_multisplash", 44]
+                ]
+              },
+              {
+                "showIf": "{id_qmk_rgb_matrix_effect} != 0",
+                "label": "Effect Speed",
+                "type": "range",
+                "options": [0, 255],
+                "content": ["id_qmk_rgb_matrix_effect_speed", 3, 3]
+              },
+              {
+                "showIf": "{id_qmk_rgb_matrix_effect} != 0",
+                "label": "Color",
+                "type": "color",
+                "content": ["id_qmk_rgb_matrix_color", 3, 4]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "matrix": { "rows": 6, "cols": 4 },
+    "customKeycodes":[
+        {"name":"BT_HOST1","title":"BT_HOST1","shortName":"BT_HOST1"},
+        {"name":"BT_HOST2","title":"BT_HOST2","shortName":"BT_HOST2"},
+        {"name":"BT_HOST3","title":"BT_HOST3","shortName":"BT_HOST3"},
+        {"name":"BT_2_4G","title": "BT_2_4G","shortName":"BT_2_4G"},
+        {"name":"BT_USB","title":  "BT_USB","shortName":"BT_USB"}
+      ],
+    "layouts": {
+      "keymap":[
+        [
+          {
+            "c": "#aaaaaa"
+          },
+          "0,0",
+          "0,1",
+          "0,2",
+          "0,3"
+        ],
+        [
+          {
+            "y": 0.25
+          },
+          "1,0",
+          "1,1",
+          "1,2",
+          "1,3"
+        ],
+        [
+          {
+            "c": "#cccccc"
+          },
+          "2,0",
+          "2,1",
+          "2,2",
+          {
+            "c": "#aaaaaa",
+            "h": 2
+          },
+          "2,3"
+        ],
+        [
+          {
+            "c": "#cccccc"
+          },
+          "3,0",
+          "3,1",
+          "3,2"
+        ],
+        [
+          "4,0",
+          "4,1",
+          "4,2",
+          {
+            "c": "#777777",
+            "h": 2
+          },
+          "4,3"
+        ],
+        [
+          {
+            "c": "#cccccc",
+            "w": 2
+          },
+          "5,0",
+          "5,2"
+        ]
+      ]
+    }
+  }
