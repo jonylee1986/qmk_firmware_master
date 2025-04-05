@@ -1,10 +1,10 @@
-# 5075
+# 5075S VIA
 [![5075](https://s21.ax1x.com/2024/03/19/pFRcz0H.jpg)](https://imgse.com/i/pFRcz0H)
 
-A customizable 75% encoder keyboard.
+A customizable 75% encoder keyboard. As noted in the [Akko FAQ](https://en.akkogear.com/faq/differences-between-5075s-kit-and-5075s-via/) only the 5075S VIA version is supported by QMK. Other versions of the Akko 5075 are built on a completely different platform and are not compatible with QMK.
 
 * Keyboard Maintainer: [jonylee@hfd](https://github.com/jonylee1986)
-* Hardware Supported: Akko 5075
+* Hardware Supported: Akko 5075S VIA
 * Hardware Availability: [akko](https://www.akkogear.com/)
 
 Make example for this keyboard (after setting up your build environment):
