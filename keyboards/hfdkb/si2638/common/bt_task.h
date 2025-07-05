@@ -14,7 +14,6 @@
 #include "host.h"
 #include "keycode.h"
 #include "keyboard.h"
-#include "keymap.h"
 #include "mousekey.h"
 #include "programmable_button.h"
 #include "command.h"
@@ -24,7 +23,7 @@
 #include "action_util.h"
 #include "action.h"
 #include "wait.h"
-#include "keycode_config.h"// #define BT_DEBUG_MODE
+#include "keycode_config.h" // #define BT_DEBUG_MODE
 // #define BT_DEBUG_MODE
 #define ENTRY_STOP_TIMEOUT 100 // ms
 // #define ENTRY_STOP_TIMEOUT (30 * 60000) // ms
@@ -33,9 +32,9 @@ typedef union {
     struct {
         uint8_t devs;
         uint8_t last_devs;
-        bool rgb_white_light:1;
-        bool ENC_FUN_flag : 1;
-        uint8_t enc_led_effect:4;
+        bool    rgb_white_light : 1;
+        bool    ENC_FUN_flag : 1;
+        uint8_t enc_led_effect : 4;
     };
 } dev_info_t;
 
