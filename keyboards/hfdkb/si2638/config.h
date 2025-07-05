@@ -42,16 +42,18 @@
 
 #define EXTERNAL_FLASH_SPI_SLAVE_SELECT_PIN C12
 
-#define n_rgb_matrix_set_color_all(r, g, b) \
-    ;                                       \
-    for (uint8_t i = 16; i <= 17; i++) {    \
-        rgb_matrix_set_color(i, r, g, b);   \
-    }
+#define n_rgb_matrix_set_color_all(r, g, b)       \
+    do {                                          \
+        for (uint8_t i = 16; i <= 17; i++) {      \
+            rgb_matrix_set_color(i, r, g, b);     \
+        }                                         \
+    } while (0)
 
-#define llv_rgb_matrix_set_color_all(r, g, b) \
-    ;                                         \
-    for (uint8_t i = 0; i <= 97; i++) {       \
-        if (i != 16 && i != 17) {             \
-            rgb_matrix_set_color(i, r, g, b); \
-        }                                     \
-    }
+#define llv_rgb_matrix_set_color_all(r, g, b)     \
+    do {                                          \
+        for (uint8_t i = 0; i <= 97; i++) {       \
+            if (i != 16 && i != 17) {             \
+                rgb_matrix_set_color(i, r, g, b); \
+            }                                     \
+        }                                         \
+    } while (0)
