@@ -2,7 +2,7 @@
     "manufacturer": " ",
     "keyboard_name": "YUNZII X98",
     "maintainer": "jonylee@hfd",
-    "url": "",
+    "url": "https://github.com/jonylee1986/qmk_firmware_master/tree/hfdkb_ble_wireless",
     "processor": "WB32FQ95",
     "bootloader": "wb32-dfu",
     "usb": {
@@ -14,8 +14,6 @@
     "diode_direction": "ROW2COL",
     "features": {
         "bootmagic": true,
-        "command": false,
-        "console": false,
         "extrakey": true,
         "mousekey": true,
         "nkro": true,
