@@ -1284,8 +1284,6 @@ static void handle_charging_indication(void) {
 }
 
 static void handle_low_battery_warning(void) {
-    // update_low_voltage_state();
-
     // 低电量警告（电量≤20%）
     if (bts_info.bt_info.pvol <= 20) {
         if (!is_in_low_power_state) {
@@ -1408,7 +1406,7 @@ static void handle_battery_query_display(void) {
         RGB color;
         if (pvol < 30) {
             color = (RGB){100, 0, 0}; // 红色
-        } else if (pvol < 70) {
+        } else if (pvol < 60) {
             color = (RGB){100, 50, 0}; // 橙色
         } else {
             color = (RGB){0, 100, 0}; // 绿色
@@ -1425,14 +1423,16 @@ static void handle_battery_query_display(void) {
 // 主RGB指示器函数
 // ===========================================
 bool bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
+    if (dev_info.devs != DEVS_USB && (get_battery_charge_state() != BATTERY_STATE_UNPLUGGED)) {
+        // trurn off backlight when the voltage is low
+        update_low_voltage_state();
+    }
+
     // 工厂重置显示（最高优先级）
     if (factory_reset_status) {
         handle_factory_reset_display();
         return false;
     }
-
-    // 闪烁效果处理
-    handle_blink_effects();
 
     // 图层指示
     handle_layer_indication();
@@ -1440,7 +1440,6 @@ bool bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
     // 设备状态指示
     if (dev_info.devs != DEVS_USB) {
         handle_bt_indicate_led();
-        update_low_voltage_state();
     }
     if (dev_info.devs == DEVS_USB) {
         handle_usb_indicate_led();
@@ -1461,6 +1460,9 @@ bool bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
             handle_low_battery_shutdow();
         }
     }
+
+    // 闪烁效果处理
+    handle_blink_effects();
 
     // rgb test
     if (rgb_test_en) {

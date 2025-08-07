@@ -57,7 +57,7 @@ enum __layers {
     [WIN_FN] = LAYOUT_87_ansi( /* FN */
         NK_TOGG,           KC_BRID, KC_BRIU, KC_NO,   KC_NO,    KC_NO,   KC_NO,   KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,  KC_VOLU,
         FN_FUN,   BT_HOST1,BT_HOST2,BT_HOST3,BT_2_4G, BT_USB,   _______, _______, _______, IND_VAL, IND_HUE, RGB_HUD, RGB_HUI,  FACTORY, KC_PSCR, KC_SCRL, KC_PAUS,
-        BT_VOL,   _______, _______, _______, _______, _______,  _______, _______, _______, _______, _______, RGB_SAD, RGB_SAI,  RGB_MOD, BLE_RES, KEY_RES, _______,
+        BT_VOL,   _______, _______, _______, _______, _______,  _______, _______, _______, _______, _______, RGB_SAI, RGB_SAD,  RGB_MOD, BLE_RES, KEY_RES, _______,
         RGB_TEST, _______, _______, _______, _______, _______,  _______, _______, _______, _______, SW_SLEP, KEY_ECO,           RGB_TOG,
         _______,           _______, _______, _______, _______,  _______, _______, _______, _______, SW_OS,   FN_MENU,           _______,          RGB_VAI,
         _______,  WIN_LOCK,_______,                             _______,                            _______, KC_RWIN, _______,  _______, RGB_SPD, RGB_VAD, RGB_SPI),
@@ -73,7 +73,7 @@ enum __layers {
     [MAC_FN] = LAYOUT_87_ansi( /* mac fn */
         NK_TOGG,           KC_F1,   KC_F2,   KC_F3,   KC_F4,    KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,   KC_F12,
         FN_FUN,   BT_HOST1,BT_HOST2,BT_HOST3,BT_2_4G, BT_USB,   _______, _______, _______, IND_VAL, IND_HUE, RGB_HUD, RGB_HUI,  FACTORY, KC_PSCR, KC_SCRL, KC_PAUS,
-        BT_VOL,   _______, _______, _______, _______, _______,  _______, _______, _______, _______, _______, RGB_SAD, RGB_SAI,  RGB_MOD, BLE_RES, KEY_RES, _______,
+        BT_VOL,   _______, _______, _______, _______, _______,  _______, _______, _______, _______, _______, RGB_SAI, RGB_SAD,  RGB_MOD, BLE_RES, KEY_RES, _______,
         RGB_TEST, _______, _______, _______, _______, _______,  _______, _______, _______, _______, SW_SLEP, KEY_ECO,           RGB_TOG,
         _______,           _______, _______, _______, _______,  _______, _______, _______, SW_OS,   _______, FN_MENU,           _______,          RGB_VAI,
         KC_SPOT,  KC_DND,  _______,                             _______,                            _______, KC_ROPT, _______,  _______, RGB_SPD, RGB_VAD, RGB_SPI),
@@ -108,7 +108,6 @@ uint16_t FN_MENU_table[][1] = {
 static uint8_t indicator_color_tab[][3] = {
     {HSV_BLUE},    // BLUE
     {HSV_PURPLE},  // PURPLE
-    {HSV_WHITE},   // WHITE
     {HSV_MAGENTA}, // MAGENTA
     {HSV_RED},     // RED
     {HSV_ORANGE},  // ORANGE
@@ -196,16 +195,30 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         case RGB_VAD: {
             if (record->event.pressed) {
-                // rgb_matrix_decrease_val();
                 rgb_matrix_config.hsv.v = rgb_matrix_get_val() - RGB_MATRIX_VAL_STEP;
-                if (rgb_matrix_get_val() <= 50) rgb_matrix_config.hsv.v = 50;
+                eeconfig_update_rgb_matrix(&rgb_matrix_config);
+                if (rgb_matrix_get_val() <= 40) rgb_matrix_config.hsv.v = 40;
+            }
+        }
+            return false;
+        case RGB_SPD: {
+            if (record->event.pressed) {
+                rgb_matrix_config.speed = rgb_matrix_get_speed() - RGB_MATRIX_SPD_STEP;
+                eeconfig_update_rgb_matrix(&rgb_matrix_config);
+                if (rgb_matrix_get_speed() <= 51) rgb_matrix_config.speed = 51;
+            }
+        }
+            return false;
+        case RGB_SAD: {
+            if (record->event.pressed) {
+                rgb_matrix_config.hsv.s = rgb_matrix_get_sat() - RGB_MATRIX_SAT_STEP;
+                eeconfig_update_rgb_matrix(&rgb_matrix_config);
+                if (rgb_matrix_get_sat() <= 64) rgb_matrix_config.hsv.s = 64;
             }
         }
             return false;
         case IND_VAL: {
             if (record->event.pressed) {
-                // dev_info.ind_brightness = qadd8(dev_info.ind_brightness, RGB_MATRIX_VAL_STEP);
-                // dev_info.ind_brightness = (dev_info.ind_brightness > RGB_MATRIX_MAXIMUM_BRIGHTNESS) ? RGB_MATRIX_MAXIMUM_BRIGHTNESS : dev_info.ind_brightness;
                 dev_info.ind_brightness += RGB_MATRIX_VAL_STEP;
                 if (dev_info.ind_brightness > RGB_MATRIX_MAXIMUM_BRIGHTNESS) {
                     dev_info.ind_brightness = RGB_MATRIX_VAL_STEP;
@@ -228,28 +241,22 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 dev_info.smd_color_index++;
                 if (dev_info.smd_color_index >= sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0])) {
-                    // dev_info.smd_color_index = sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0]) - 1;
                     dev_info.smd_color_index = 0;
                 }
                 eeconfig_update_user(dev_info.raw);
                 rgb_matrix_config.hsv.h = indicator_color_tab[dev_info.smd_color_index][0];
-                rgb_matrix_config.hsv.s = indicator_color_tab[dev_info.smd_color_index][1];
-                // rgb_matrix_config.hsv.v = rgb_matrix_config.hsv.v;
             }
         }
             return false;
         case RGB_HUD: {
             if (record->event.pressed) {
                 if (dev_info.smd_color_index == 0) {
-                    // dev_info.smd_color_index = 0;
                     dev_info.smd_color_index = sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0]) - 1;
                 } else {
                     dev_info.smd_color_index--;
                 }
                 eeconfig_update_user(dev_info.raw);
                 rgb_matrix_config.hsv.h = indicator_color_tab[dev_info.smd_color_index][0];
-                rgb_matrix_config.hsv.s = indicator_color_tab[dev_info.smd_color_index][1];
-                // rgb_matrix_config.hsv.v = rgb_matrix_config.hsv.v;
             }
         }
             return false;
