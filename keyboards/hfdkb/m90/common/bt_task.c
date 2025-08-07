@@ -701,7 +701,7 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
                     } else {
                         dev_info.manual_usb_mode = false; // User selected wireless mode
                     }
-                    eeconfig_update_kb(dev_info.raw);
+                    eeconfig_update_user(dev_info.raw);
                     bt_switch_mode(dev_info.devs, target_devs, false);
                 }
             }
@@ -912,7 +912,7 @@ static void bt_scan_mode(void) {
                 }
                 bt_switch_mode(dev_info.devs, DEVS_USB, false);
                 dev_info.manual_usb_mode = false; // This is a forced switch, not manual
-                eeconfig_update_kb(dev_info.raw);
+                eeconfig_update_user(dev_info.raw);
             }
         } else {
             // Switch turned OFF -> Restore last wireless mode ONLY if it was wireless AND USB wasn't manually selected
@@ -932,7 +932,7 @@ static void bt_scan_mode(void) {
         // Hardware switch is ON -> force USB mode (handles any edge cases)
         bt_switch_mode(dev_info.devs, DEVS_USB, false);
         dev_info.manual_usb_mode = false; // This is a forced switch, not manual
-        eeconfig_update_kb(dev_info.raw);
+        eeconfig_update_user(dev_info.raw);
     }
 #endif
 }
@@ -984,7 +984,7 @@ static void open_rgb(void) {
     key_press_time = timer_read32();
     if (!sober) {
 #ifdef RGB_DRIVER_SDB_PIN
-        writePinLow(RGB_DRIVER_SDB_PIN);
+        writePinHigh(RGB_DRIVER_SDB_PIN);
 #endif
         if (bak_rgb_toggle) {
             extern bool low_vol_offed_sleep;
@@ -1159,6 +1159,7 @@ static void handle_factory_reset_display(void) {
                         wait_ms(1000);
                         bt_switch_mode(DEVS_HOST1, DEVS_USB, false);
                         last_total_time = timer_read32();
+                        indicator_status = 2;
                     }
                     break;
 
@@ -1174,6 +1175,7 @@ static void handle_factory_reset_display(void) {
                         wait_ms(1000);
                         bt_switch_mode(dev_info.devs, DEVS_HOST1, false);
                         last_total_time = timer_read32();
+                        indicator_status = 2;
                     }
                     break;
                 default:

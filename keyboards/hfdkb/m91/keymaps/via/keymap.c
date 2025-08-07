@@ -109,15 +109,14 @@ uint16_t FN_MENU_table[][1] = {
 };
 
 static uint8_t indicator_color_tab[][3] = {
-    {170, 255, 100}, // BLUE
-    {191, 255, 100}, // PURPLE
-    {0, 0, 100},     // WHITE
-    {213, 255, 100}, // MAGENTA
-    {0, 255, 100},   // RED
-    {21, 255, 100},  // ORANGE
-    {43, 255, 100},  // YELLOW
-    {85, 255, 100},  // GREEN
-    {128, 255, 100}, // CYAN
+    {HSV_BLUE},    // BLUE
+    {HSV_PURPLE},  // PURPLE
+    {HSV_MAGENTA}, // MAGENTA
+    {HSV_RED},     // RED
+    {HSV_ORANGE},  // ORANGE
+    {HSV_YELLOW},  // YELLOW
+    {HSV_GREEN},   // GREEN
+    {HSV_CYAN},    // CYAN
 };
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
@@ -190,79 +189,93 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
         }
             return false;
+        case WIN_LOCK: {
+            if (record->event.pressed) {
+                keymap_config.no_gui = !keymap_config.no_gui;
+                eeconfig_update_keymap(&keymap_config);
+            }
+        }
+            return false;
         case RGB_VAD: {
             if (record->event.pressed) {
-                // rgb_matrix_decrease_val();
                 rgb_matrix_config.hsv.v = rgb_matrix_get_val() - RGB_MATRIX_VAL_STEP;
-                if (rgb_matrix_get_val() <= 50) rgb_matrix_config.hsv.v = 50;
+                if (rgb_matrix_get_val() <= 40) rgb_matrix_config.hsv.v = 40;
+            }
+        }
+            return false;
+        case RGB_SPD: {
+            if (record->event.pressed) {
+                rgb_matrix_config.speed = rgb_matrix_get_speed() - RGB_MATRIX_SPD_STEP;
+                eeconfig_update_rgb_matrix(&rgb_matrix_config);
+                if (rgb_matrix_get_speed() <= 51) rgb_matrix_config.speed = 51;
+            }
+        }
+            return false;
+        case RGB_SAD: {
+            if (record->event.pressed) {
+                rgb_matrix_config.hsv.s = rgb_matrix_get_sat() - RGB_MATRIX_SAT_STEP;
+                eeconfig_update_rgb_matrix(&rgb_matrix_config);
+                if (rgb_matrix_get_sat() <= 64) rgb_matrix_config.hsv.s = 64;
             }
         }
             return false;
         case IND_VAL: {
             if (record->event.pressed) {
-                // per_info.ind_brightness = qadd8(per_info.ind_brightness, RGB_MATRIX_VAL_STEP);
-                // per_info.ind_brightness = (per_info.ind_brightness > RGB_MATRIX_MAXIMUM_BRIGHTNESS) ? RGB_MATRIX_MAXIMUM_BRIGHTNESS : per_info.ind_brightness;
-                per_info.ind_brightness += RGB_MATRIX_VAL_STEP;
-                if (per_info.ind_brightness > RGB_MATRIX_MAXIMUM_BRIGHTNESS) {
-                    per_info.ind_brightness = RGB_MATRIX_VAL_STEP;
+                dev_info.ind_brightness += RGB_MATRIX_VAL_STEP;
+                if (dev_info.ind_brightness > RGB_MATRIX_MAXIMUM_BRIGHTNESS) {
+                    dev_info.ind_brightness = RGB_MATRIX_VAL_STEP;
                 }
-                eeconfig_update_kb(per_info.raw);
+                eeconfig_update_user(dev_info.raw);
             }
         }
             return false;
         case IND_HUE: {
             if (record->event.pressed) {
-                per_info.ind_color_index++;
-                if (per_info.ind_color_index >= sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0])) {
-                    per_info.ind_color_index = 0;
+                dev_info.ind_color_index++;
+                if (dev_info.ind_color_index >= sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0])) {
+                    dev_info.ind_color_index = 0;
                 }
-                eeconfig_update_kb(per_info.raw);
+                eeconfig_update_user(dev_info.raw);
             }
         }
             return false;
         case RGB_HUI: {
             if (record->event.pressed) {
-                per_info.smd_color_index++;
-                if (per_info.smd_color_index >= sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0])) {
-                    // per_info.smd_color_index = sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0]) - 1;
-                    per_info.smd_color_index = 0;
+                dev_info.smd_color_index++;
+                if (dev_info.smd_color_index >= sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0])) {
+                    dev_info.smd_color_index = 0;
                 }
-                eeconfig_update_kb(per_info.raw);
-                rgb_matrix_config.hsv.h = indicator_color_tab[per_info.smd_color_index][0];
-                rgb_matrix_config.hsv.s = indicator_color_tab[per_info.smd_color_index][1];
-                // rgb_matrix_config.hsv.v = rgb_matrix_config.hsv.v;
+                eeconfig_update_user(dev_info.raw);
+                rgb_matrix_config.hsv.h = indicator_color_tab[dev_info.smd_color_index][0];
             }
         }
             return false;
         case RGB_HUD: {
             if (record->event.pressed) {
-                if (per_info.smd_color_index == 0) {
-                    // per_info.smd_color_index = 0;
-                    per_info.smd_color_index = sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0]) - 1;
+                if (dev_info.smd_color_index == 0) {
+                    dev_info.smd_color_index = sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0]) - 1;
                 } else {
-                    per_info.smd_color_index--;
+                    dev_info.smd_color_index--;
                 }
-                eeconfig_update_kb(per_info.raw);
-                rgb_matrix_config.hsv.h = indicator_color_tab[per_info.smd_color_index][0];
-                rgb_matrix_config.hsv.s = indicator_color_tab[per_info.smd_color_index][1];
-                // rgb_matrix_config.hsv.v = rgb_matrix_config.hsv.v;
+                eeconfig_update_user(dev_info.raw);
+                rgb_matrix_config.hsv.h = indicator_color_tab[dev_info.smd_color_index][0];
             }
         }
             return false;
         case KEY_ECO: {
             if (record->event.pressed) {
-                per_info.eco_tog_flag = !per_info.eco_tog_flag;
-                eeconfig_update_kb(per_info.raw);
+                dev_info.eco_tog_flag = !dev_info.eco_tog_flag;
+                eeconfig_update_user(dev_info.raw);
             }
         }
             return false;
         case SW_SLEP: {
             if (record->event.pressed) {
-                per_info.sleep_mode += 1;
-                if (per_info.sleep_mode > 3) {
-                    per_info.sleep_mode = 0;
+                dev_info.sleep_mode += 1;
+                if (dev_info.sleep_mode > 3) {
+                    dev_info.sleep_mode = 0;
                 }
-                switch (per_info.sleep_mode) {
+                switch (dev_info.sleep_mode) {
                     case 0: // 关闭睡眠
                         bts_send_vendor(v_dis_sleep_bt);
                         wait_ms(50);
@@ -306,7 +319,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     default:
                         break;
                 }
-                eeconfig_update_kb(per_info.raw);
+                eeconfig_update_user(dev_info.raw);
             }
         }
             return false;
@@ -342,10 +355,36 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
-static HSV hsv;
-static RGB rgb;
-
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+    // GUI lock red
+    if (keymap_config.no_gui) {
+        rgb_matrix_set_color(92, 160, 160, 160);
+    }
+
+    static HSV hsv;
+    static RGB rgb;
+
+    hsv.h = indicator_color_tab[dev_info.ind_color_index][0];
+    hsv.s = indicator_color_tab[dev_info.ind_color_index][1];
+    hsv.v = dev_info.ind_brightness;
+    rgb   = hsv_to_rgb(hsv);
+
+    if (!dev_info.eco_tog_flag && host_keyboard_led_state().num_lock && ((bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
+        rgb_matrix_set_color(NUM_LOCK_IND_INDEX, rgb.r, rgb.g, rgb.b);
+    } else {
+        rgb_matrix_set_color(NUM_LOCK_IND_INDEX, 0, 0, 0);
+    }
+    if (!dev_info.eco_tog_flag && host_keyboard_led_state().caps_lock && ((bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
+        rgb_matrix_set_color(CAPS_LOCK_IND_INDEX, rgb.r, rgb.g, rgb.b);
+    } else {
+        rgb_matrix_set_color(CAPS_LOCK_IND_INDEX, 0, 0, 0);
+    }
+    if (!dev_info.eco_tog_flag && host_keyboard_led_state().scroll_lock && ((bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
+        rgb_matrix_set_color(SCROLL_LOCK_IND_INDEX, rgb.r, rgb.g, rgb.b);
+    } else {
+        rgb_matrix_set_color(SCROLL_LOCK_IND_INDEX, 0, 0, 0);
+    }
+
     if (VAL_OUT_blink_cnt) {
         if (timer_elapsed32(VAL_OUT_blink_time) > 500) {
             VAL_OUT_blink_time = timer_read32();
@@ -358,32 +397,20 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         }
     }
 
-    hsv.h = indicator_color_tab[per_info.ind_color_index][0];
-    hsv.s = indicator_color_tab[per_info.ind_color_index][1];
-    hsv.v = per_info.ind_brightness;
-    rgb   = hsv_to_rgb(hsv);
-
-    if (!per_info.eco_tog_flag && host_keyboard_led_state().num_lock && ((bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
-        rgb_matrix_set_color(NUM_LOCK_IND_INDEX, rgb.r, rgb.g, rgb.b);
-    } else {
-        rgb_matrix_set_color(NUM_LOCK_IND_INDEX, 0, 0, 0);
-    }
-    if (!per_info.eco_tog_flag && host_keyboard_led_state().caps_lock && ((bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
-        rgb_matrix_set_color(CAPS_LOCK_IND_INDEX, rgb.r, rgb.g, rgb.b);
-    } else {
-        rgb_matrix_set_color(CAPS_LOCK_IND_INDEX, 0, 0, 0);
-    }
-    if (!per_info.eco_tog_flag && host_keyboard_led_state().scroll_lock && ((bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
-        rgb_matrix_set_color(SCROLL_LOCK_IND_INDEX, rgb.r, rgb.g, rgb.b);
-    } else {
-        rgb_matrix_set_color(SCROLL_LOCK_IND_INDEX, 0, 0, 0);
-    }
-
     return true;
 }
 
 void keyboard_post_init_user() {
-    rgb_matrix_config.hsv.h = indicator_color_tab[per_info.smd_color_index][0];
-    rgb_matrix_config.hsv.s = indicator_color_tab[per_info.smd_color_index][1];
-    // rgb_matrix_config.hsv.v = rgb_matrix_config.hsv.v;
+    rgb_matrix_config.hsv.h = indicator_color_tab[dev_info.smd_color_index][0];
+}
+
+void eeconfig_init_user(void) {
+    // 设置默认值
+    dev_info.ind_brightness  = RGB_MATRIX_VAL_STEP * 3;
+    dev_info.smd_color_index = 0;
+    dev_info.ind_color_index = 0;
+    dev_info.sleep_mode      = 1;
+    dev_info.eco_tog_flag    = false;
+    dev_info.manual_usb_mode = false;
+    eeconfig_update_user(dev_info.raw);
 }

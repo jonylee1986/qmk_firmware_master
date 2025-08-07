@@ -404,7 +404,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 
 void keyboard_post_init_user() {
     rgb_matrix_config.hsv.h = indicator_color_tab[dev_info.smd_color_index][0];
-    rgb_matrix_config.hsv.s = indicator_color_tab[dev_info.smd_color_index][1];
+    // rgb_matrix_config.hsv.s = indicator_color_tab[dev_info.smd_color_index][1];
 }
 
 void eeconfig_init_user(void) {
