@@ -602,7 +602,7 @@ static THD_FUNCTION(Thread1, arg) {
 // ===========================================
 void bt_init(void) {
     bts_init(&bts_info);
-    // bt_used_pin_init();
+    bt_used_pin_init();
 
     // 读取用户配置
     dev_info.raw = eeconfig_read_user();
@@ -612,20 +612,9 @@ void bt_init(void) {
         eeconfig_update_user(dev_info.raw);
     }
 
-    // 检查硬件开关初始状态
-    bool switch_on = !readPin(MM_MODE_SW_PIN);
-    if (switch_on) {
-        // Hardware switch is ON -> Force wired mode
-        if (dev_info.devs != DEVS_USB) {
-            dev_info.devs = DEVS_USB;
-        }
-        // Clear manual USB flag since this is hardware-forced
-        // per_info.manual_usb_mode = false;
-        // eeconfig_update_kb(per_info.raw);
-    }
-
     bt_init_time = timer_read32();
     chThdCreateStatic(waThread1, sizeof(waThread1), HIGHPRIO, Thread1, NULL);
+    bt_scan_mode();
 
     if (dev_info.devs != DEVS_USB) {
         usbDisconnectBus(&USB_DRIVER);
@@ -692,7 +681,7 @@ void bt_task(void) {
     }
 
     long_pressed_keys_hook();
-    bt_scan_mode();
+    if (!bt_init_time) bt_scan_mode();
 }
 
 // ===========================================
@@ -1098,6 +1087,11 @@ static void bt_used_pin_init(void) {
     setPinInputHigh(MM_CHARGE_PIN);
     setPinInput(MM_CABLE_PIN);
 #endif
+
+#ifdef RGB_DRIVER_SDB_PIN
+    setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
+    writePinHigh(RGB_DRIVER_SDB_PIN);
+#endif
 }
 
 static void bt_scan_mode(void) {
@@ -1159,16 +1153,20 @@ static void bt_bat_low_level_state(void) {
 // ===========================================
 void led_config_all(void) {
     if (!led_inited) {
+#ifdef RGB_DRIVER_SDB_PIN
         // setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
         writePinHigh(RGB_DRIVER_SDB_PIN);
+#endif
         led_inited = true;
     }
 }
 
 void led_deconfig_all(void) {
     if (led_inited) {
+#ifdef RGB_DRIVER_SDB_PIN
         // setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
         writePinLow(RGB_DRIVER_SDB_PIN);
+#endif
         led_inited = false;
     }
 }
@@ -1757,20 +1755,13 @@ void bt_housekeeping_task(void) {
 #endif
 }
 
-void bt_pre_init(void) {
-    // 初始化硬件引脚
-    bt_used_pin_init();
-#ifdef RGB_DRIVER_SDB_PIN
-    setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
-    writePinHigh(RGB_DRIVER_SDB_PIN);
+void matrix_init_user(void) {
+#ifdef MULTIMODE_ENABLE
+    // 初始化蓝牙
+    bt_init();
 #endif
 }
 
-void bt_post_init(void) {
-    // 初始化蓝牙
-    bt_init();
-}
-
-void bt_suspend_power_down(void) {
+void suspend_power_down_user(void) {
     led_deconfig_all();
 }

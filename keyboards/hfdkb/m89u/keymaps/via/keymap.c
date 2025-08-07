@@ -384,15 +384,6 @@ bool dip_switch_update_user(uint8_t index, bool active) {
 
 void keyboard_post_init_user(void) {
     rgb_matrix_config.hsv.h = indicator_color_tab[dev_info.smd_color_index][0];
-    bt_post_init();
-}
-
-void keyboard_pre_init_user(void) {
-    bt_pre_init();
-}
-
-void suspend_power_down_user(void) {
-    bt_suspend_power_down();
 }
 
 void eeconfig_init_user(void) { // EEPROM is getting reset!

@@ -38,7 +38,7 @@ enum bt_keycodes {
 
 typedef union {
     uint32_t raw;
-    struct {
+    struct PACKED{
         // 3+3+8+3+3+4+1+1+1+1
         uint8_t devs : 3;
         uint8_t last_devs : 3;
@@ -57,9 +57,6 @@ extern dev_info_t dev_info;
 extern bts_info_t bts_info;
 
 void bt_housekeeping_task(void);
-void bt_pre_init(void);
-void bt_post_init(void);
-void bt_suspend_power_down(void);
 
 /**
  * @brief bluetooth 初始化函数
