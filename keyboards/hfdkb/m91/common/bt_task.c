@@ -1159,7 +1159,6 @@ static void handle_factory_reset_display(void) {
                         wait_ms(1000);
                         bt_switch_mode(DEVS_HOST1, DEVS_USB, false);
                         last_total_time  = timer_read32();
-                        indicator_status = 2;
                     }
                     break;
 
@@ -1175,7 +1174,6 @@ static void handle_factory_reset_display(void) {
                         wait_ms(1000);
                         bt_switch_mode(dev_info.devs, DEVS_HOST1, false);
                         last_total_time  = timer_read32();
-                        indicator_status = 2;
                     }
                     break;
                 default:
@@ -1249,14 +1247,14 @@ static void handle_charging_indication(void) {
                 }
 
                 // 只有在未完成闪烁且闪烁次数未达到5次时才显示充电指示
-                if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 5) {
+                if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 6) {
                     if (timer_elapsed32(charge_complete_warning.blink_time) >= 1000) {
                         charge_complete_warning.blink_time  = timer_read32();
                         charge_complete_warning.blink_state = !charge_complete_warning.blink_state;
 
                         if (charge_complete_warning.blink_state) {
                             charge_complete_warning.blink_count++;
-                            if (charge_complete_warning.blink_count >= 5) {
+                            if (charge_complete_warning.blink_count >= 6) {
                                 charge_complete_warning.completed   = true;
                                 charge_complete_warning.blink_state = false;
                             }
