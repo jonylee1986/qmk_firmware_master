@@ -1,0 +1,408 @@
+/* Copyright (C) 2023 jonylee@hfd
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include QMK_KEYBOARD_H
+#ifdef MULTIMODE_ENABLE
+#    include "bt_task.h"
+#endif
+#include "lib/lib8tion/lib8tion.h"
+#include "usb_main.h"
+
+enum __layers {
+    WIN_B,
+    WIN_FN,
+    MAC_B,
+    MAC_FN,
+};
+
+#define IND_HUE INDICATOR_HUE
+#define IND_VAL INDICATOR_BRIGHTNESS
+#define KEY_SLP KEYBOARD_SLEEP
+#define KEY_ECO ECO
+#define FACTORY FACTORY_RESET
+#define KEY_RES KEYBOARD_RESET
+#define BLE_RES BLE_RESET
+#define SW_SLEP SLEEP_TOGGLE
+
+// clang-format off
+const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
+
+    [WIN_B] = LAYOUT_numpad_6x4(
+        KC_ESC,  KC_TAB,  KC_BSPC, MO(1),
+        KC_NUM,  KEY_EQL, KC_PSLS, KC_PAST,
+        KC_P7,   KC_P8,   KC_P9,   KC_PMNS,
+        KC_P4,   KC_P5,   KC_P6,   KC_PPLS,
+        KC_P1,   KC_P2,   KC_P3,   KC_PENT,
+                 KC_P0,   KC_PDOT
+    ),
+
+    [WIN_FN] = LAYOUT_numpad_6x4(
+        NK_TOGG, SW_SLEP, KEY_ECO, _______,
+        RGB_TOG, BLE_RES, KEY_RES, FACTORY,
+        RGB_HUI, RGB_VAI, RGB_MOD, RGB_SAI,
+        BT_2_4G, BT_USB,  RGB_SPI, BT_VOL,
+        BT_HOST1,BT_HOST2,BT_HOST3,_______,
+        SW_OS,   RGB_TEST
+    ),
+
+    [MAC_B] = LAYOUT_numpad_6x4(
+        KC_ESC,  KC_TAB,  KC_BSPC, MO(3),
+        KC_NUM,  KC_PEQL, KC_PSLS, KC_PAST,
+        KC_P7,   KC_P8,   KC_P9,   KC_PMNS,
+        KC_P4,   KC_P5,   KC_P6,   KC_PPLS,
+        KC_P1,   KC_P2,   KC_P3,   KC_PENT,
+                 KC_P0,   KC_PDOT
+    ),
+
+    [MAC_FN] = LAYOUT_numpad_6x4(
+        NK_TOGG, SW_SLEP, KEY_ECO, _______,
+        RGB_TOG, BLE_RES, KEY_RES, FACTORY,
+        RGB_HUI, RGB_VAI, RGB_MOD, RGB_SAI,
+        BT_2_4G, BT_USB,  RGB_SPI, BT_VOL,
+        BT_HOST1,BT_HOST2,BT_HOST3,_______,
+        SW_OS,   RGB_TEST
+    )
+};
+// clang-format on
+
+const uint8_t indicator_color_tab[][3] = {
+    {HSV_BLUE},    // BLUE
+    {HSV_PURPLE},  // PURPLE
+    {HSV_MAGENTA}, // MAGENTA
+    {HSV_RED},     // RED
+    {HSV_ORANGE},  // ORANGE
+    {HSV_YELLOW},  // YELLOW
+    {HSV_GREEN},   // GREEN
+    {HSV_CYAN},    // CYAN
+};
+
+static uint8_t  single_blink_index = 0;
+static uint8_t  single_blink_cnt   = 0;
+static uint32_t single_blink_time  = 0;
+RGB             single_blink_color = {0};
+
+bool key_eql_pressed = false;
+bool key_eql_release = false;
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+#ifdef MULTIMODE_ENABLE
+    if (!bt_process_record(keycode, record)) {
+        return false;
+    }
+#endif
+
+    switch (keycode) {
+        case RGB_VAI: {
+            if (record->event.pressed) {
+                if (rgb_matrix_get_val() == RGB_MATRIX_MAXIMUM_BRIGHTNESS) {
+                    rgb_matrix_config.hsv.v = RGB_MATRIX_VAL_STEP;
+                    eeconfig_update_rgb_matrix(&rgb_matrix_config);
+
+                } else {
+                    rgb_matrix_increase_val();
+                }
+            }
+            return false;
+        }
+
+        case RGB_SPI: {
+            if (record->event.pressed) {
+                if (rgb_matrix_get_speed() == UINT8_MAX) {
+                    rgb_matrix_config.speed = RGB_MATRIX_SPD_STEP;
+                    eeconfig_update_rgb_matrix(&rgb_matrix_config);
+                } else {
+                    rgb_matrix_increase_speed();
+                }
+            }
+            return false;
+        }
+
+        case IND_VAL: {
+            if (record->event.pressed) {
+                dev_info.ind_brightness = qadd8(dev_info.ind_brightness, RGB_MATRIX_VAL_STEP);
+                dev_info.ind_brightness = (dev_info.ind_brightness > RGB_MATRIX_MAXIMUM_BRIGHTNESS) ? RGB_MATRIX_MAXIMUM_BRIGHTNESS : dev_info.ind_brightness;
+                eeconfig_update_user(dev_info.raw);
+                if (dev_info.ind_brightness == RGB_MATRIX_MAXIMUM_BRIGHTNESS) {
+                    dev_info.ind_brightness = 0x00;
+                }
+            }
+            return false;
+        }
+
+        case IND_HUE: {
+            if (record->event.pressed) {
+                dev_info.ind_color_index++;
+                if (dev_info.ind_color_index >= sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0])) {
+                    dev_info.ind_color_index = 0;
+                }
+                eeconfig_update_user(dev_info.raw);
+            }
+            return false;
+        }
+
+        case RGB_HUI: {
+            if (record->event.pressed) {
+                dev_info.smd_color_index++;
+                if (dev_info.smd_color_index >= sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0])) {
+                    dev_info.smd_color_index = 0;
+                }
+                eeconfig_update_user(dev_info.raw);
+                rgb_matrix_config.hsv.h = indicator_color_tab[dev_info.smd_color_index][0];
+            }
+            return false;
+        }
+
+        case RGB_SAI: {
+            if (record->event.pressed) {
+                if (rgb_matrix_get_sat() >= UINT8_MAX) {
+                    rgb_matrix_config.hsv.s = 64; // 设置为最小饱和度
+                    eeconfig_update_rgb_matrix(&rgb_matrix_config);
+                } else {
+                    rgb_matrix_increase_sat();
+                }
+            }
+            return false;
+        }
+
+        case KEY_ECO: {
+            if (record->event.pressed) {
+                dev_info.eco_tog_flag = !dev_info.eco_tog_flag;
+                eeconfig_update_user(dev_info.raw);
+            }
+            return false;
+        }
+
+        case SW_SLEP: {
+            if (record->event.pressed) {
+                if (dev_info.devs != DEVS_USB) {
+                    dev_info.sleep_mode += 1;
+                    if (dev_info.sleep_mode > 3) {
+                        dev_info.sleep_mode = 0;
+                    }
+                    switch (dev_info.sleep_mode) {
+                        case 0: // 关闭睡眠
+                            bts_send_vendor(v_dis_sleep_bt);
+                            bts_send_vendor(v_dis_sleep_wl);
+                            single_blink_index = 1;
+                            single_blink_cnt   = 8;
+                            single_blink_time  = timer_read32();
+                            single_blink_color = (RGB){RGB_BLUE};
+                            break;
+                        case 1: // 开启睡眠1
+                            bts_send_vendor(v_en_sleep_bt);
+                            bts_send_vendor(v_en_sleep_wl);
+                            single_blink_index = 1;
+                            single_blink_cnt   = 2;
+                            single_blink_time  = timer_read32();
+                            single_blink_color = (RGB){RGB_BLUE};
+                            break;
+                        case 2: // 开启睡眠2
+                            bts_send_vendor(v_en_sleep_bt);
+                            bts_send_vendor(v_en_sleep_wl);
+                            single_blink_index = 1;
+                            single_blink_cnt   = 4;
+                            single_blink_color = (RGB){RGB_BLUE};
+                            single_blink_time  = timer_read32();
+                            break;
+                        case 3: // 开启睡眠3
+                            bts_send_vendor(v_en_sleep_bt);
+                            bts_send_vendor(v_en_sleep_wl);
+                            single_blink_index = 1;
+                            single_blink_cnt   = 6;
+                            single_blink_color = (RGB){RGB_BLUE};
+                            single_blink_time  = timer_read32();
+                            break;
+                        default:
+                            break;
+                    }
+                    eeconfig_update_user(dev_info.raw);
+                }
+            }
+            return false;
+        }
+
+        case KEY_EQL: {
+            if (record->event.pressed) {
+                if (get_highest_layer(default_layer_state) == 0) {
+                    key_eql_pressed = true;
+                    register_code(KC_LALT);
+                    register_code(KC_P6);
+                    register_code(KC_P1);
+                    key_eql_pressed = false;
+                    // send_char(0x3D); // Send '=' character
+                    // send_char('='); // Send '=' character
+                }
+            } else {
+                if (get_highest_layer(default_layer_state) == 0) {
+                    key_eql_release = true;
+                    unregister_code(KC_P1);
+                    unregister_code(KC_P6);
+                    unregister_code(KC_LALT);
+                    key_eql_release = false;
+                }
+            }
+            return false;
+        }
+
+        case KC_NUM: {
+            if (dev_info.unsync) {
+                if (record->event.pressed) {
+                    dev_info.num_unsync = !dev_info.num_unsync;
+                    eeconfig_update_user(dev_info.raw);
+                }
+                return false;
+            } else {
+#ifdef CONSOLE_ENABLE
+                if (record->event.pressed) {
+                    uprintf("per_info.ind_brightness: %d, per_info.smd_color_index: %d, per_info.ind_color_index: %d, per_info.sleep_mode: %d, per_info.eco_tog_flag: %d, per_info.manual_usb_mode: %d, per_info.unsync: %d, per_info.num_unsync: %d\n", dev_info.ind_brightness, dev_info.smd_color_index, dev_info.ind_color_index, dev_info.sleep_mode, dev_info.eco_tog_flag, dev_info.manual_usb_mode, dev_info.unsync, dev_info.num_unsync);
+                }
+#endif
+                break;
+            }
+        }
+
+        default: {
+            // 处理其他按键
+            return true; // 允许默认处理
+        }
+    }
+
+    return true;
+}
+
+bool charge_full = false;
+
+#ifdef RGB_MATRIX_ENABLE
+static void num_lock_indicator(void) {
+    static HSV hsv;
+    static RGB rgb;
+
+    hsv.h = indicator_color_tab[dev_info.ind_color_index][0];
+    hsv.s = indicator_color_tab[dev_info.ind_color_index][1];
+    hsv.v = dev_info.ind_brightness;
+    rgb   = hsv_to_rgb(hsv);
+
+    // NumLock 指示逻辑
+    bool should_show_numlock = false;
+
+    if (!dev_info.eco_tog_flag && !charge_full) {
+        if (dev_info.unsync) {
+            should_show_numlock = (dev_info.num_unsync && (bts_info.bt_info.paired || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE))));
+        } else {
+            should_show_numlock = (host_keyboard_led_state().num_lock && (bts_info.bt_info.paired || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE))));
+        }
+    }
+
+    if (should_show_numlock) {
+        rgb_matrix_set_color(NUM_LOCK_INDICATE_INDEX, rgb.r, rgb.g, rgb.b);
+    } else {
+        rgb_matrix_set_color(NUM_LOCK_INDICATE_INDEX, RGB_OFF);
+    }
+}
+
+bool rgb_matrix_indicators_user(void) {
+    if (!rgb_matrix_get_flags()) {
+        rgb_matrix_set_color_all(RGB_OFF);
+    }
+
+    num_lock_indicator();
+
+    return true;
+}
+
+bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+#    ifdef MULTIMODE_ENABLE
+    if (!bt_indicators_advanced(led_min, led_max)) {
+        return false;
+    }
+#    endif
+
+    // All LEDs blink
+    if (single_blink_cnt) {
+        // Turn off all LEDs before blinking
+        rgb_matrix_set_color_all(RGB_OFF);
+        if (timer_elapsed32(single_blink_time) > 300) {
+            single_blink_time = timer_read32();
+            single_blink_cnt--;
+        }
+        if (single_blink_cnt & 0x1) {
+            rgb_matrix_set_color(single_blink_index, single_blink_color.r, single_blink_color.g, single_blink_color.b);
+        }
+    }
+
+    return true;
+}
+#endif // RGB_MATRIX_ENABLE
+
+void housekeeping_task_user(void) {
+#ifdef NKRO_ENABLE
+    if (dev_info.devs) {
+        static uint8_t nkro_mode = true;
+        do {
+            nkro_mode = keymap_config.nkro;
+            if (nkro_mode) {
+                bts_set_nkro(true);
+            } else {
+                bts_set_nkro(false);
+            }
+        } while (nkro_mode != keymap_config.nkro);
+    }
+#endif // NKRO_ENABLE
+
+    bt_housekeeping_task();
+}
+
+#ifdef DIP_SWITCH_ENABLE
+bool dip_switch_update_user(uint8_t index, bool active) {
+    if (index == 0) {
+        if (active) {
+            if (get_highest_layer(default_layer_state) == WIN_B) {
+                dev_info.unsync = true;
+                eeconfig_update_user(dev_info.raw);
+            }
+        } else {
+            dev_info.unsync = false;
+            eeconfig_update_user(dev_info.raw);
+        }
+    }
+    return true;
+}
+#endif // DIP_SWITCH_ENABLE
+
+void keyboard_post_init_user(void) {
+    rgb_matrix_config.hsv.h = indicator_color_tab[dev_info.smd_color_index][0];
+    bt_post_init();
+}
+
+void keyboard_pre_init_user(void) {
+    bt_pre_init();
+}
+
+void suspend_power_down_user(void) {
+    bt_suspend_power_down();
+}
+
+void eeconfig_init_user(void) { // EEPROM is getting reset!
+    dev_info.ind_brightness  = RGB_MATRIX_VAL_STEP * 3;
+    dev_info.smd_color_index = 0;
+    dev_info.ind_color_index = 0;
+    dev_info.sleep_mode      = 1;
+    dev_info.eco_tog_flag    = false;
+    dev_info.manual_usb_mode = false;
+    dev_info.unsync          = false;
+    dev_info.num_unsync      = true;
+    eeconfig_update_user(dev_info.raw);
+}
