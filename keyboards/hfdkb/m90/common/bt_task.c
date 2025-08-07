@@ -83,23 +83,11 @@ typedef struct {
     bool     completed;
 } charge_complete_warning_t;
 
-// 低电量背光控制状态结构体 (5%以下关闭背光)
-typedef struct {
-    bool     forced_rgb_off;
-    bool     is_low_voltage;
-    uint8_t  saved_rgb_mode;
-    uint8_t  read_vol_count;
-    uint32_t last_normal_vol_time;
-    bool     waiting_recovery;
-} low_voltage_state_t;
-
 typedef struct {
     uint32_t press_time;
     uint16_t keycode;
     void (*event_cb)(uint16_t);
 } long_pressed_keys_t;
-
-per_info_t per_info = {.raw = 0};
 
 typedef enum {
     BATTERY_STATE_UNPLUGGED = 0, // No cable connected
@@ -115,7 +103,6 @@ static battery_charge_state_t get_battery_charge_state(void);
 
 static low_battery_warning_t     low_battery_warning     = {0};
 static charge_complete_warning_t charge_complete_warning = {0};
-static low_voltage_state_t       low_voltage_state       = {0};
 
 static bool is_in_low_power_state  = false;
 static bool is_in_full_power_state = false;
@@ -164,7 +151,7 @@ extern void     led_deconfig_all(void);
 // 设备指示配置
 static const uint8_t rgb_index_table[]          = {BT_USB_INDEX, BT_HOST1_INDEX, BT_HOST2_INDEX, BT_HOST3_INDEX, BT_2_4G_INDEX};
 static const uint8_t rgb_index_color_table[][3] = {
-    BT_USB_COLOR, BT_HOST1_COLOR, BT_HOST2_COLOR, BT_HOST3_COLOR, BT_2_4G_COLOR,
+    {BT_USB_COLOR}, {BT_HOST1_COLOR}, {BT_HOST2_COLOR}, {BT_HOST3_COLOR}, {BT_2_4G_COLOR},
 };
 
 static const uint8_t rgb_test_color_table[][3] = {
@@ -206,6 +193,9 @@ uint32_t last_total_time = 0;
 
 static bool is_charging = false;
 
+#include "command.h"
+#include "action.h"
+
 void register_mouse(uint8_t mouse_keycode, bool pressed);
 /** \brief Utilities for actions. (FIXME: Needs better description)
  *
@@ -225,7 +215,7 @@ __attribute__((weak)) void register_code(uint8_t code) {
         } else if (KC_LOCKING_CAPS_LOCK == code) {
 #    ifdef LOCKING_RESYNC_ENABLE
             // Resync: ignore if caps lock already is on
-            if (host_keyboard_leds() & (1 << USB_LED_CAPS_LOCK)) return;
+            if (host_keyboard_led_state().caps_lock) return;
 #    endif
             add_key(KC_CAPS_LOCK);
             send_keyboard_report();
@@ -235,7 +225,7 @@ __attribute__((weak)) void register_code(uint8_t code) {
 
         } else if (KC_LOCKING_NUM_LOCK == code) {
 #    ifdef LOCKING_RESYNC_ENABLE
-            if (host_keyboard_leds() & (1 << USB_LED_NUM_LOCK)) return;
+            if (host_keyboard_led_state().num_lock) return;
 #    endif
             add_key(KC_NUM_LOCK);
             send_keyboard_report();
@@ -245,7 +235,7 @@ __attribute__((weak)) void register_code(uint8_t code) {
 
         } else if (KC_LOCKING_SCROLL_LOCK == code) {
 #    ifdef LOCKING_RESYNC_ENABLE
-            if (host_keyboard_leds() & (1 << USB_LED_SCROLL_LOCK)) return;
+            if (host_keyboard_led_state().scroll_lock) return;
 #    endif
             add_key(KC_SCROLL_LOCK);
             send_keyboard_report();
@@ -302,7 +292,7 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
         } else if (KC_LOCKING_CAPS_LOCK == code) {
 #    ifdef LOCKING_RESYNC_ENABLE
             // Resync: ignore if caps lock already is off
-            if (!(host_keyboard_leds() & (1 << USB_LED_CAPS_LOCK))) return;
+            if (!host_keyboard_led_state().caps_lock) return;
 #    endif
             add_key(KC_CAPS_LOCK);
             send_keyboard_report();
@@ -311,7 +301,7 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
 
         } else if (KC_LOCKING_NUM_LOCK == code) {
 #    ifdef LOCKING_RESYNC_ENABLE
-            if (!(host_keyboard_leds() & (1 << USB_LED_NUM_LOCK))) return;
+            if (!host_keyboard_led_state().num_lock) return;
 #    endif
             add_key(KC_NUM_LOCK);
             send_keyboard_report();
@@ -320,7 +310,7 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
 
         } else if (KC_LOCKING_SCROLL_LOCK == code) {
 #    ifdef LOCKING_RESYNC_ENABLE
-            if (!(host_keyboard_leds() & (1 << USB_LED_SCROLL_LOCK))) return;
+            if (!host_keyboard_led_state().scroll_lock) return;
 #    endif
             add_key(KC_SCROLL_LOCK);
             send_keyboard_report();
@@ -344,6 +334,82 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
 
         } else if (IS_MOUSE_KEYCODE(code)) {
             register_mouse(code, false);
+        }
+    }
+}
+
+extern void do_code16(uint16_t code, void (*f)(uint8_t));
+
+__attribute__((weak)) void register_code16(uint16_t code) {
+    if (dev_info.devs) {
+        if (QK_MODS_GET_MODS(code) & 0x1) {
+            if (QK_MODS_GET_MODS(code) & 0x10)
+                bts_process_keys(KC_RCTL, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            else
+                bts_process_keys(KC_LCTL, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        }
+        if (QK_MODS_GET_MODS(code) & 0x2) {
+            if (QK_MODS_GET_MODS(code) & 0x10)
+                bts_process_keys(KC_RSFT, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            else
+                bts_process_keys(KC_LSFT, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        }
+        if (QK_MODS_GET_MODS(code) & 0x4) {
+            if (QK_MODS_GET_MODS(code) & 0x10)
+                bts_process_keys(KC_RALT, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            else
+                bts_process_keys(KC_LALT, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        }
+        if (QK_MODS_GET_MODS(code) & 0x8) {
+            if (QK_MODS_GET_MODS(code) & 0x10)
+                bts_process_keys(KC_RGUI, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            else
+                bts_process_keys(KC_LGUI, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        }
+        bts_process_keys(QK_MODS_GET_BASIC_KEYCODE(code), true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+    } else {
+        if (IS_MODIFIER_KEYCODE(code) || code == KC_NO) {
+            do_code16(code, register_mods);
+        } else {
+            do_code16(code, register_weak_mods);
+        }
+        register_code(code);
+    }
+}
+
+__attribute__((weak)) void unregister_code16(uint16_t code) {
+    if (dev_info.devs) {
+        if (QK_MODS_GET_MODS(code) & 0x1) {
+            if (QK_MODS_GET_MODS(code) & 0x10)
+                bts_process_keys(KC_RCTL, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            else
+                bts_process_keys(KC_LCTL, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        }
+        if (QK_MODS_GET_MODS(code) & 0x2) {
+            if (QK_MODS_GET_MODS(code) & 0x10)
+                bts_process_keys(KC_RSFT, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            else
+                bts_process_keys(KC_LSFT, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        }
+        if (QK_MODS_GET_MODS(code) & 0x4) {
+            if (QK_MODS_GET_MODS(code) & 0x10)
+                bts_process_keys(KC_RALT, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            else
+                bts_process_keys(KC_LALT, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        }
+        if (QK_MODS_GET_MODS(code) & 0x8) {
+            if (QK_MODS_GET_MODS(code) & 0x10)
+                bts_process_keys(KC_RGUI, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            else
+                bts_process_keys(KC_LGUI, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        }
+        bts_process_keys(QK_MODS_GET_BASIC_KEYCODE(code), false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+    } else {
+        unregister_code(code);
+        if (IS_MODIFIER_KEYCODE(code) || code == KC_NO) {
+            do_code16(code, unregister_mods);
+        } else {
+            do_code16(code, unregister_weak_mods);
         }
     }
 }
@@ -376,20 +442,9 @@ void bt_init(void) {
         eeconfig_update_user(dev_info.raw);
     }
 
-    // 检查硬件开关初始状态
-    bool switch_on = !readPin(BT_MODE_SW_PIN);
-    if (switch_on) {
-        // Hardware switch is ON -> Force wired mode
-        if (dev_info.devs != DEVS_USB) {
-            dev_info.devs = DEVS_USB;
-        }
-        // Clear manual USB flag since this is hardware-forced
-        // per_info.manual_usb_mode = false;
-        // eeconfig_update_kb(per_info.raw);
-    }
-
     bt_init_time = timer_read32();
     chThdCreateStatic(waThread1, sizeof(waThread1), HIGHPRIO, Thread1, NULL);
+    bt_scan_mode();
 
     if (dev_info.devs != DEVS_USB) {
         usbDisconnectBus(&USB_DRIVER);
@@ -453,7 +508,7 @@ void bt_task(void) {
     }
 
     long_pressed_keys_hook();
-    bt_scan_mode();
+    if (!bt_init_time) bt_scan_mode();
 }
 
 // ===========================================
@@ -642,11 +697,11 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
                 if (dev_info.devs != target_devs) {
                     // Track if user manually selected USB mode
                     if (target_devs == DEVS_USB) {
-                        per_info.manual_usb_mode = true;
+                        dev_info.manual_usb_mode = true;
                     } else {
-                        per_info.manual_usb_mode = false; // User selected wireless mode
+                        dev_info.manual_usb_mode = false; // User selected wireless mode
                     }
-                    eeconfig_update_kb(per_info.raw);
+                    eeconfig_update_kb(dev_info.raw);
                     bt_switch_mode(dev_info.devs, target_devs, false);
                 }
             }
@@ -831,6 +886,11 @@ static void bt_used_pin_init(void) {
     setPinInput(BT_CABLE_PIN);
     setPinInput(BT_CHARGE_PIN);
 #endif
+
+#ifdef RGB_DRIVER_SDB_PIN
+    setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
+    writePinHigh(RGB_DRIVER_SDB_PIN);
+#endif
 }
 
 static void bt_scan_mode(void) {
@@ -851,12 +911,12 @@ static void bt_scan_mode(void) {
                     dev_info.last_devs = dev_info.devs;
                 }
                 bt_switch_mode(dev_info.devs, DEVS_USB, false);
-                per_info.manual_usb_mode = false; // This is a forced switch, not manual
-                eeconfig_update_kb(per_info.raw);
+                dev_info.manual_usb_mode = false; // This is a forced switch, not manual
+                eeconfig_update_kb(dev_info.raw);
             }
         } else {
             // Switch turned OFF -> Restore last wireless mode ONLY if it was wireless AND USB wasn't manually selected
-            if (dev_info.devs == DEVS_USB && is_current_mode_wireless_by_devs(dev_info.last_devs) && !per_info.manual_usb_mode) {
+            if (dev_info.devs == DEVS_USB && is_current_mode_wireless_by_devs(dev_info.last_devs) && !dev_info.manual_usb_mode) {
                 // Only auto-switch back if:
                 // 1. Currently in USB mode
                 // 2. Last mode was wireless
@@ -871,8 +931,8 @@ static void bt_scan_mode(void) {
     if (is_switch_forcing_wired_mode() && dev_info.devs != DEVS_USB) {
         // Hardware switch is ON -> force USB mode (handles any edge cases)
         bt_switch_mode(dev_info.devs, DEVS_USB, false);
-        per_info.manual_usb_mode = false; // This is a forced switch, not manual
-        eeconfig_update_kb(per_info.raw);
+        dev_info.manual_usb_mode = false; // This is a forced switch, not manual
+        eeconfig_update_kb(dev_info.raw);
     }
 #endif
 }
@@ -881,110 +941,29 @@ static void bt_scan_mode(void) {
 // 低电量管理函数
 // ===========================================
 static void update_low_voltage_state(void) {
-    if (!low_voltage_state.is_low_voltage) {
-        // 进入低电压状态：电量≤5%且未充电
-        if (bts_info.bt_info.pvol <= 5 && bts_info.bt_info.pvol > 0 && !is_charging) {
-            low_voltage_state.is_low_voltage   = true;
-            low_voltage_state.waiting_recovery = false;
-            low_voltage_state.read_vol_count   = 0;
-
-            // 保存当前RGB状态并强制关闭
-            if (per_info.backlight_off) {
-                low_voltage_state.saved_rgb_mode = RGB_MATRIX_CUSTOM_EFFECT_OFF;
-                low_voltage_state.forced_rgb_off = false;
-            } else {
-                low_voltage_state.saved_rgb_mode = rgb_matrix_get_mode();
-                low_voltage_state.forced_rgb_off = true;
-                rgb_matrix_mode_noeeprom(RGB_MATRIX_CUSTOM_EFFECT_OFF);
-                // rgb_matrix_disable_noeeprom();
-            }
-        }
-    } else {
-        // 已在低电压状态，检查恢复条件
-        bool should_recover = false;
-
-        if (is_charging) {
-            // 充电状态：直接恢复背光
-            // 假设充电时电量会逐渐恢复，无需等待电量值更新
-            should_recover = true;
-        } else {
-            // 非充电状态：按原逻辑检查电量值
-            bool voltage_recovered = (bts_info.bt_info.pvol > 20 && bts_info.bt_info.pvol <= 100);
-            bool connection_stable = bts_info.bt_info.paired;
-
-            if (voltage_recovered && connection_stable) {
-                if (!low_voltage_state.waiting_recovery) {
-                    low_voltage_state.waiting_recovery     = true;
-                    low_voltage_state.last_normal_vol_time = timer_read32();
-                    low_voltage_state.read_vol_count       = 0;
-                } else {
-                    if (timer_elapsed32(low_voltage_state.last_normal_vol_time) >= 1000) {
-                        low_voltage_state.last_normal_vol_time = timer_read32();
-
-                        if (bts_info.bt_info.pvol > 20 && bts_info.bt_info.pvol <= 100) {
-                            low_voltage_state.read_vol_count++;
-                            if (low_voltage_state.read_vol_count >= 5) {
-                                should_recover = true;
-                            }
-                        } else {
-                            low_voltage_state.waiting_recovery = false;
-                            low_voltage_state.read_vol_count   = 0;
-                        }
-                    }
-                }
-            } else {
-                if (low_voltage_state.waiting_recovery) {
-                    low_voltage_state.waiting_recovery = false;
-                    low_voltage_state.read_vol_count   = 0;
-                }
-            }
-        }
-
-        // 执行恢复操作
-        if (should_recover) {
-            low_voltage_state.is_low_voltage   = false;
-            low_voltage_state.waiting_recovery = false;
-            low_voltage_state.read_vol_count   = 0;
-
-            // 恢复RGB状态
-            if (low_voltage_state.forced_rgb_off && !per_info.backlight_off) {
-                uint8_t restore_mode = low_voltage_state.saved_rgb_mode;
-                if (restore_mode == RGB_MATRIX_CUSTOM_EFFECT_OFF || restore_mode == 0) {
-                    restore_mode = RGB_MATRIX_DEFAULT_MODE;
-                }
-                // rgb_matrix_enable_noeeprom();
-                rgb_matrix_mode_noeeprom(restore_mode);
-            }
-            low_voltage_state.forced_rgb_off = false;
-        }
+    if (bts_info.bt_info.low_vol) {
+        rgb_matrix_set_color_all(RGB_OFF);
     }
 }
 
 // ===========================================
 // RGB控制函数
 // ===========================================
-// static void led_off_standby(void) {
-//     if (timer_elapsed32(key_press_time) >= LED_OFF_STANDBY_MS) {
-//         rgb_matrix_disable_noeeprom();
-//     } else {
-//         rgb_status_save = rgb_matrix_config.enable;
-//     }
-// }
-
 static void close_rgb(void) {
     if (!key_press_time) {
         key_press_time = timer_read32();
         return;
     }
 
-    // led_off_standby();
-
     if (sober) {
-        if (kb_sleep_flag || ((timer_elapsed32(key_press_time) >= sleep_time_table[per_info.sleep_mode]) && (sleep_time_table[per_info.sleep_mode] != 0))) {
+        if (kb_sleep_flag || ((timer_elapsed32(key_press_time) >= sleep_time_table[dev_info.sleep_mode]) && (sleep_time_table[dev_info.sleep_mode] != 0))) {
             bak_rgb_toggle = rgb_matrix_config.enable;
             sober          = false;
             close_rgb_time = timer_read32();
             rgb_matrix_disable_noeeprom();
+#ifdef RGB_DRIVER_SDB_PIN
+            writePinLow(RGB_DRIVER_SDB_PIN);
+#endif
         }
     } else {
         if (!rgb_matrix_config.enable) {
@@ -1004,9 +983,8 @@ static void close_rgb(void) {
 static void open_rgb(void) {
     key_press_time = timer_read32();
     if (!sober) {
-#ifdef WS2812_EN_PIN
-        setPinOutput(WS2812_EN_PIN);
-        writePinLow(WS2812_EN_PIN);
+#ifdef RGB_DRIVER_SDB_PIN
+        writePinLow(RGB_DRIVER_SDB_PIN);
 #endif
         if (bak_rgb_toggle) {
             extern bool low_vol_offed_sleep;
@@ -1041,7 +1019,6 @@ static void handle_bt_indicate_led(void) {
         indicator_reset_last_time = false;
         last_time                 = 0;
     }
-
     switch (indicator_status) {
         case 1: { // 闪烁模式 5Hz 重置
             if ((last_time == 0) || (timer_elapsed32(last_time) >= 200)) {
@@ -1175,18 +1152,8 @@ static void handle_factory_reset_display(void) {
             switch (factory_reset_status) {
                 case 1: // factory reset
                     eeconfig_init();
-                    per_info.ind_brightness  = RGB_MATRIX_VAL_STEP * 3;
-                    per_info.ind_color_index = 0;
-                    per_info.eco_tog_flag    = false;
-                    eeconfig_update_kb(per_info.raw);
                     keymap_config.nkro   = false;
-                    keymap_config.no_gui = 0;
-                    // eeconfig_update_keymap(&keymap_config);
-                    {
-                        rgb_matrix_config.hsv.h = 170;
-                        rgb_matrix_config.mode  = RGB_MATRIX_CUSTOM_EFFECT_OFF;
-                    }
-                    rgb_matrix_mode_noeeprom(RGB_MATRIX_CUSTOM_EFFECT_OFF);
+                    keymap_config.no_gui = false;
                     if (readPin(BT_MODE_SW_PIN) && (dev_info.devs != DEVS_USB)) {
                         bts_send_vendor(v_clear);
                         wait_ms(1000);
@@ -1197,14 +1164,8 @@ static void handle_factory_reset_display(void) {
 
                 case 2: // keyboard reset
                     eeconfig_init();
-                    keymap_config.no_gui = 0;
+                    keymap_config.no_gui = false;
                     keymap_config.nkro   = false;
-                    // eeconfig_update_keymap(&keymap_config);
-                    {
-                        rgb_matrix_config.hsv.h = 170;
-                        rgb_matrix_config.mode  = RGB_MATRIX_CUSTOM_EFFECT_OFF;
-                    }
-                    rgb_matrix_mode_noeeprom(RGB_MATRIX_CUSTOM_EFFECT_OFF);
                     break;
 
                 case 3: // ble reset

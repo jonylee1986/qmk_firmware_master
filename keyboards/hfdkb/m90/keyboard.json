@@ -1,5 +1,5 @@
 {
-    "manufacturer": " ",
+    "manufacturer": "hfd",
     "keyboard_name": "Alchemie TKL",
     "maintainer": "jonylee@hfd",
     "url": "https://github.com/jonylee1986",
@@ -8,7 +8,7 @@
     "usb": {
         "vid": "0xFFFE",
         "pid": "0x00AC",
-        "device_version": "1.0.8",
+        "device_version": "1.0.9",
         "suspend_wakeup_delay": 1000
     },
     "diode_direction": "ROW2COL",
@@ -26,13 +26,20 @@
         "cols": ["C1", "C2", "C3", "A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "C4", "C5", "B0", "B1", "B2", "B12", "B13"],
         "rows": ["B15", "C6", "C7", "C8", "C9", "B14" ]
     },
+    "eeprom": {
+        "driver": "wear_leveling",
+        "wear_leveling": {
+            "driver": "spi_flash",
+            "backing_size": 4096
+        }
+    },
     "rgb_matrix": {
-        "driver": "is31fl3733",
-        "led_count": 87,
+        "driver": "snled27351",
+        "react_on_keyup": true,
         "max_brightness": 200,
-        "val_steps": 50,
-        "sat_steps": 85,
-        "speed_steps": 64,
+        "val_steps": 40,
+        "sat_steps": 48,
+        "speed_steps": 51,
         "sleep": true,
         "animations": {
             "solid_color": true,
@@ -40,18 +47,18 @@
             "cycle_all": true,
             "cycle_left_right": true,
             "cycle_up_down": true,
-            "cycle_out_in": true,
-            "cycle_out_in_dual": true,
-            "rainbow_moving_chevron": true,
             "cycle_pinwheel": true,
-            "cycle_spiral": true,
             "dual_beacon": true,
-            "rainbow_beacon": true,
             "raindrops": true,
             "typing_heatmap": true,
             "solid_reactive_simple": true,
             "solid_reactive": true,
             "multisplash": true
+        },
+        "default": {
+            "speed": 153,
+            "hue": 170,
+            "animation": "cycle_all"
         },
         "layout": [
             { "flags": 1, "matrix": [0,0],  "x":   0, "y": 0 },

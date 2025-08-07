@@ -204,69 +204,69 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         case IND_VAL: {
             if (record->event.pressed) {
-                // per_info.ind_brightness = qadd8(per_info.ind_brightness, RGB_MATRIX_VAL_STEP);
-                // per_info.ind_brightness = (per_info.ind_brightness > RGB_MATRIX_MAXIMUM_BRIGHTNESS) ? RGB_MATRIX_MAXIMUM_BRIGHTNESS : per_info.ind_brightness;
-                per_info.ind_brightness += RGB_MATRIX_VAL_STEP;
-                if (per_info.ind_brightness > RGB_MATRIX_MAXIMUM_BRIGHTNESS) {
-                    per_info.ind_brightness = RGB_MATRIX_VAL_STEP;
+                // dev_info.ind_brightness = qadd8(dev_info.ind_brightness, RGB_MATRIX_VAL_STEP);
+                // dev_info.ind_brightness = (dev_info.ind_brightness > RGB_MATRIX_MAXIMUM_BRIGHTNESS) ? RGB_MATRIX_MAXIMUM_BRIGHTNESS : dev_info.ind_brightness;
+                dev_info.ind_brightness += RGB_MATRIX_VAL_STEP;
+                if (dev_info.ind_brightness > RGB_MATRIX_MAXIMUM_BRIGHTNESS) {
+                    dev_info.ind_brightness = RGB_MATRIX_VAL_STEP;
                 }
-                eeconfig_update_kb(per_info.raw);
+                eeconfig_update_user(dev_info.raw);
             }
         }
             return false;
         case IND_HUE: {
             if (record->event.pressed) {
-                per_info.ind_color_index++;
-                if (per_info.ind_color_index >= sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0])) {
-                    per_info.ind_color_index = 0;
+                dev_info.ind_color_index++;
+                if (dev_info.ind_color_index >= sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0])) {
+                    dev_info.ind_color_index = 0;
                 }
-                eeconfig_update_kb(per_info.raw);
+                eeconfig_update_user(dev_info.raw);
             }
         }
             return false;
         case RGB_HUI: {
             if (record->event.pressed) {
-                per_info.smd_color_index++;
-                if (per_info.smd_color_index >= sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0])) {
-                    // per_info.smd_color_index = sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0]) - 1;
-                    per_info.smd_color_index = 0;
+                dev_info.smd_color_index++;
+                if (dev_info.smd_color_index >= sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0])) {
+                    // dev_info.smd_color_index = sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0]) - 1;
+                    dev_info.smd_color_index = 0;
                 }
-                eeconfig_update_kb(per_info.raw);
-                rgb_matrix_config.hsv.h = indicator_color_tab[per_info.smd_color_index][0];
-                rgb_matrix_config.hsv.s = indicator_color_tab[per_info.smd_color_index][1];
+                eeconfig_update_user(dev_info.raw);
+                rgb_matrix_config.hsv.h = indicator_color_tab[dev_info.smd_color_index][0];
+                rgb_matrix_config.hsv.s = indicator_color_tab[dev_info.smd_color_index][1];
                 // rgb_matrix_config.hsv.v = rgb_matrix_config.hsv.v;
             }
         }
             return false;
         case RGB_HUD: {
             if (record->event.pressed) {
-                if (per_info.smd_color_index == 0) {
-                    // per_info.smd_color_index = 0;
-                    per_info.smd_color_index = sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0]) - 1;
+                if (dev_info.smd_color_index == 0) {
+                    // dev_info.smd_color_index = 0;
+                    dev_info.smd_color_index = sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0]) - 1;
                 } else {
-                    per_info.smd_color_index--;
+                    dev_info.smd_color_index--;
                 }
-                eeconfig_update_kb(per_info.raw);
-                rgb_matrix_config.hsv.h = indicator_color_tab[per_info.smd_color_index][0];
-                rgb_matrix_config.hsv.s = indicator_color_tab[per_info.smd_color_index][1];
+                eeconfig_update_user(dev_info.raw);
+                rgb_matrix_config.hsv.h = indicator_color_tab[dev_info.smd_color_index][0];
+                rgb_matrix_config.hsv.s = indicator_color_tab[dev_info.smd_color_index][1];
                 // rgb_matrix_config.hsv.v = rgb_matrix_config.hsv.v;
             }
         }
             return false;
         case KEY_ECO: {
             if (record->event.pressed) {
-                per_info.eco_tog_flag = !per_info.eco_tog_flag;
-                eeconfig_update_kb(per_info.raw);
+                dev_info.eco_tog_flag = !dev_info.eco_tog_flag;
+                eeconfig_update_user(dev_info.raw);
             }
         }
             return false;
         case SW_SLEP: {
             if (record->event.pressed) {
-                per_info.sleep_mode += 1;
-                if (per_info.sleep_mode > 3) {
-                    per_info.sleep_mode = 0;
+                dev_info.sleep_mode += 1;
+                if (dev_info.sleep_mode > 3) {
+                    dev_info.sleep_mode = 0;
                 }
-                switch (per_info.sleep_mode) {
+                switch (dev_info.sleep_mode) {
                     case 0: // 关闭睡眠
                         bts_send_vendor(v_dis_sleep_bt);
                         wait_ms(50);
@@ -310,7 +310,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     default:
                         break;
                 }
-                eeconfig_update_kb(per_info.raw);
+                eeconfig_update_user(dev_info.raw);
             }
         }
             return false;
@@ -346,10 +346,40 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
-static HSV hsv;
-static RGB rgb;
-
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+    // GUI lock red
+    if (keymap_config.no_gui) {
+        rgb_matrix_set_color(74, 160, 160, 160);
+    }
+
+    static HSV hsv;
+    static RGB rgb;
+
+    // 修正：使用 dev_info.config 中的系统指示灯配置
+    hsv.h = indicator_color_tab[dev_info.ind_color_index][0];
+    hsv.s = indicator_color_tab[dev_info.ind_color_index][1];
+    hsv.v = dev_info.ind_brightness;
+    rgb   = hsv_to_rgb(hsv);
+
+    // 系统指示灯逻辑
+    if (!dev_info.eco_tog_flag && host_keyboard_led_state().num_lock && ((bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
+        rgb_matrix_set_color(84, rgb.r, rgb.g, rgb.b);
+    } else {
+        rgb_matrix_set_color(84, 0, 0, 0);
+    }
+
+    if (!dev_info.eco_tog_flag && host_keyboard_led_state().caps_lock && ((bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
+        rgb_matrix_set_color(85, rgb.r, rgb.g, rgb.b);
+    } else {
+        rgb_matrix_set_color(85, 0, 0, 0);
+    }
+
+    if (!dev_info.eco_tog_flag && host_keyboard_led_state().scroll_lock && ((bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
+        rgb_matrix_set_color(86, rgb.r, rgb.g, rgb.b);
+    } else {
+        rgb_matrix_set_color(86, 0, 0, 0);
+    }
+
     if (VAL_OUT_blink_cnt) {
         if (timer_elapsed32(VAL_OUT_blink_time) > 500) {
             VAL_OUT_blink_time = timer_read32();
@@ -362,35 +392,21 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         }
     }
 
-    // 修正：使用 dev_info.config 中的系统指示灯配置
-    hsv.h = indicator_color_tab[per_info.ind_color_index][0];
-    hsv.s = indicator_color_tab[per_info.ind_color_index][1];
-    hsv.v = per_info.ind_brightness;
-    rgb   = hsv_to_rgb(hsv);
-
-    // 系统指示灯逻辑
-    if (!per_info.eco_tog_flag && host_keyboard_led_state().num_lock && ((bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
-        rgb_matrix_set_color(84, rgb.r, rgb.g, rgb.b);
-    } else {
-        rgb_matrix_set_color(84, 0, 0, 0);
-    }
-
-    if (!per_info.eco_tog_flag && host_keyboard_led_state().caps_lock && ((bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
-        rgb_matrix_set_color(85, rgb.r, rgb.g, rgb.b);
-    } else {
-        rgb_matrix_set_color(85, 0, 0, 0);
-    }
-
-    if (!per_info.eco_tog_flag && host_keyboard_led_state().scroll_lock && ((bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
-        rgb_matrix_set_color(86, rgb.r, rgb.g, rgb.b);
-    } else {
-        rgb_matrix_set_color(86, 0, 0, 0);
-    }
-
     return true;
 }
 
 void keyboard_post_init_user() {
-    rgb_matrix_config.hsv.h = indicator_color_tab[per_info.smd_color_index][0];
-    rgb_matrix_config.hsv.s = indicator_color_tab[per_info.smd_color_index][1];
+    rgb_matrix_config.hsv.h = indicator_color_tab[dev_info.smd_color_index][0];
+    rgb_matrix_config.hsv.s = indicator_color_tab[dev_info.smd_color_index][1];
+}
+
+void eeconfig_init_user(void) {
+    // 设置默认值
+    dev_info.ind_brightness  = RGB_MATRIX_VAL_STEP * 3;
+    dev_info.smd_color_index = 0;
+    dev_info.ind_color_index = 0;
+    dev_info.sleep_mode      = 1;
+    dev_info.eco_tog_flag    = false;
+    dev_info.manual_usb_mode = false;
+    eeconfig_update_user(dev_info.raw);
 }
