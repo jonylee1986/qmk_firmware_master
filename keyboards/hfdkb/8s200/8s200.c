@@ -138,8 +138,8 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 }
 
 bool rgb_matrix_indicators_kb(void) {
-    if (!rgb_matrix_indicators_user()) {
-        return false;
+    if (!rgb_matrix_get_flags()) {
+        rgb_matrix_set_color_all(0, 0, 0);
     }
 
     // caps lock red
@@ -152,10 +152,10 @@ bool rgb_matrix_indicators_kb(void) {
     // GUI lock white
     if (keymap_config.no_gui) {
         rgb_matrix_set_color(61, 100, 100, 100);
-    } else {
-        if (!rgb_matrix_get_flags()) {
-            rgb_matrix_set_color(61, 0, 0, 0);
-        }
+    }
+
+    if (!rgb_matrix_indicators_user()) {
+        return false;
     }
 
     return true;
