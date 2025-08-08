@@ -56,8 +56,6 @@ typedef union {
 extern dev_info_t dev_info;
 extern bts_info_t bts_info;
 
-void bt_housekeeping_task(void);
-
 /**
  * @brief bluetooth 初始化函数
  * @param None

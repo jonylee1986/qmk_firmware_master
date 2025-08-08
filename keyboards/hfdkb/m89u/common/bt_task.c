@@ -27,7 +27,7 @@
 #endif
 
 // Macro to check if a keycode is a numpad key
-#define IS_NUMPAD_KEYCODE(code) ((code) >= KC_KP_SLASH && (code) <= KC_KP_DOT)
+#define IS_NUMPAD_KEYCODE(code) ((code) >= KC_KP_1 && (code) <= KC_KP_DOT)
 
 // ===========================================
 // 函数声明
@@ -229,7 +229,9 @@ __attribute__((weak)) void register_code(uint8_t code) {
                 // First numpad key pressed: apply NumLock sync logic
                 if (dev_info.num_unsync) {
                     // Force numpad to produce numbers (NumLock ON behavior)
-                    original_num_lock_state = host_keyboard_led_state().num_lock;
+                    if (numpad_keys_pressed_count == 0) {
+                        original_num_lock_state = host_keyboard_led_state().num_lock;
+                    }
                     if (!original_num_lock_state) {
                         // Host NumLock is OFF - turn it ON temporarily
                         bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
@@ -243,7 +245,9 @@ __attribute__((weak)) void register_code(uint8_t code) {
                     }
                 } else {
                     // Force numpad to produce navigation keys (NumLock OFF behavior)
-                    original_num_lock_state = host_keyboard_led_state().num_lock;
+                    if (numpad_keys_pressed_count == 0) {
+                        original_num_lock_state = host_keyboard_led_state().num_lock;
+                    }
                     if (original_num_lock_state) {
                         // Host NumLock is ON - turn it OFF temporarily
                         send_num_lock_manually = true;
@@ -325,6 +329,7 @@ __attribute__((weak)) void register_code(uint8_t code) {
                 if (numpad_keys_pressed_count == 0) {
                     // First numpad key pressed: apply NumLock sync logic
                     if (dev_info.num_unsync) {
+                        wait_ms(10);
                         original_num_lock_state = host_keyboard_led_state().num_lock;
                         if (!original_num_lock_state) {
                             add_key(KC_NUM_LOCK);
@@ -333,6 +338,7 @@ __attribute__((weak)) void register_code(uint8_t code) {
                             send_keyboard_report();
                         }
                     } else {
+                        wait_ms(10);
                         original_num_lock_state = host_keyboard_led_state().num_lock;
                         if (original_num_lock_state) {
                             send_num_lock_manually = true;
@@ -484,6 +490,7 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
                     if (numpad_keys_pressed_count > 0) {
                         numpad_keys_pressed_count--;
                         if (numpad_keys_pressed_count == 0) {
+                            wait_ms(10);
                             // Last numpad key released - restore original NumLock state if needed
                             if (!original_num_lock_state && host_keyboard_led_state().num_lock) {
                                 // Original was OFF, current is ON, restore to OFF
@@ -503,6 +510,7 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
                     if (numpad_keys_pressed_count > 0) {
                         numpad_keys_pressed_count--;
                         if (numpad_keys_pressed_count == 0) {
+                            wait_ms(10);
                             // Last numpad key released - restore original NumLock state if needed
                             if (send_num_lock_manually && original_num_lock_state && !host_keyboard_led_state().num_lock) {
                                 // Original was ON, current is OFF, restore to ON
@@ -868,6 +876,10 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
             if (reset != false) {
                 indicator_status          = 1;
                 indicator_reset_last_time = true;
+                uint8_t vendor_cmds[]     = {v_host1, v_host2, v_host3, v_2_4g};
+                uint8_t vendor_names[]    = {DEVS_HOST1, DEVS_HOST2, DEVS_HOST3, DEVS_2_4G};
+                bts_send_name(vendor_names[dev_info.devs - 1]);
+                bts_send_vendor(vendor_cmds[dev_info.devs - 1]);
                 bts_send_vendor(v_pair);
             } else {
                 indicator_status          = 2;
@@ -931,20 +943,20 @@ static bool bt_process_record_other(uint16_t keycode, keyrecord_t *record) {
         case BT_VOL: {
             if (record->event.pressed) {
                 // bts_send_vendor(v_query_vol);
-                switch (get_battery_charge_state()) {
-                    case BATTERY_STATE_CHARGING:
-                        bts_send_vendor(v_query_vol_chrg);
-                        break;
+                // switch (get_battery_charge_state()) {
+                //     case BATTERY_STATE_CHARGING:
+                //         bts_send_vendor(v_query_vol_chrg);
+                //         break;
 
-                    case BATTERY_STATE_CHARGED_FULL:
-                        bts_send_vendor(v_query_vol_full);
-                        break;
+                //     case BATTERY_STATE_CHARGED_FULL:
+                //         bts_send_vendor(v_query_vol_full);
+                //         break;
 
-                    case BATTERY_STATE_UNPLUGGED:
-                    default:
-                        bts_send_vendor(v_query_vol);
-                        break;
-                }
+                //     case BATTERY_STATE_UNPLUGGED:
+                //     default:
+                //         bts_send_vendor(v_query_vol);
+                //         break;
+                // }
                 query_vol_flag = true;
             } else {
                 query_vol_flag = false;
@@ -1008,14 +1020,17 @@ static void long_pressed_keys_cb(uint16_t keycode) {
         case SW_OS: {
             if (get_highest_layer(default_layer_state) == 0) {
                 // If in win layer, switch to mac layer
-                set_single_persistent_default_layer(2);
+                set_single_persistent_default_layer(3);
+                dev_info.unsync = false;
+                eeconfig_update_user(dev_info.raw);
                 single_blink_cnt   = 6;
                 single_blink_index = 20;
                 single_blink_color = (RGB){RGB_BLUE};
                 single_blink_time  = timer_read32();
-            } else if (get_highest_layer(default_layer_state) == 2) {
+            } else if (get_highest_layer(default_layer_state) == 3) {
                 // If in mac layer, switch back to win layer
                 set_single_persistent_default_layer(0);
+                dip_switch_read(true);
                 single_blink_cnt   = 6;
                 single_blink_index = 20;
                 single_blink_color = (RGB){RGB_GREEN};
@@ -1398,11 +1413,8 @@ static void execute_factory_reset(void) {
     switch (factory_reset.type) {
         case _FACTORY: // Factory reset
             eeconfig_init();
-            dev_info.ind_brightness  = RGB_MATRIX_VAL_STEP * 3;
-            dev_info.ind_color_index = 0;
-            dev_info.eco_tog_flag    = false;
-            eeconfig_update_user(dev_info.raw);
             keymap_config.nkro = false;
+            dip_switch_read(true);
             if (readPin(MM_MODE_SW_PIN) && (dev_info.devs != DEVS_USB)) {
                 bts_send_vendor(v_clear);
                 wait_ms(1000);
@@ -1414,6 +1426,7 @@ static void execute_factory_reset(void) {
         case _KEYBOARD: // Keyboard reset
             eeconfig_init();
             keymap_config.nkro = false;
+            dip_switch_read(true);
             break;
 
         case _BLE: // BLE reset
@@ -1483,7 +1496,7 @@ static void blink_effects(void) {
 
 static void show_device_state(void) {
     // FN 按下时显示当前设备状态
-    if (get_highest_layer(layer_state) == 1 || get_highest_layer(layer_state) == 3) {
+    if (get_highest_layer(layer_state) == 2 || get_highest_layer(layer_state) == 4) {
         rgb_matrix_set_color(rgb_index_table[dev_info.devs], RGB_BLUE);
     }
 }
@@ -1622,7 +1635,7 @@ static void bt_bat_query_period(void) {
     static uint32_t query_vol_time = 0;
 
     // Check if we should query battery (avoid querying too frequently)
-    if (!bt_init_time && (bts_info.bt_info.paired) && !kb_sleep_flag && timer_elapsed32(query_vol_time) > 10000) {
+    if (!bt_init_time && (bts_info.bt_info.paired) && !kb_sleep_flag && timer_elapsed32(query_vol_time) > 4000) {
         query_vol_time = timer_read32();
 
         // Send appropriate query command based on charge state
@@ -1656,7 +1669,7 @@ static void bt_bat_level_display(void) {
         uint8_t pvol = bts_info.bt_info.pvol;
 
         // 计算LED数量（至少2个，最多10个）
-        uint8_t led_count = (pvol < 30) ? 2 : ((pvol / 10) >= 10 ? 10 : (pvol / 10 - 1));
+        uint8_t led_count = (pvol < 30) ? 2 : ((pvol / 10) >= 10 ? 10 : (pvol / 10));
 
         // 根据电量确定颜色
         RGB color;
@@ -1733,7 +1746,7 @@ bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
     return true;
 }
 
-void bt_housekeeping_task(void) {
+void matrix_scan_user(void) {
 #ifdef MULTIMODE_ENABLE
     bt_task();
 

@@ -8,7 +8,7 @@
     "usb": {
         "vid": "0xFFFE",
         "pid": "0x00A0",
-        "device_version": "1.2.9",
+        "device_version": "1.3.1",
         "suspend_wakeup_delay": 1000
     },
     "diode_direction": "ROW2COL",
@@ -32,6 +32,9 @@
             "driver": "spi_flash",
             "backing_size": 4096
         }
+    },
+    "dynamic_keymap": {
+        "layer_count": 5
     },
     "dip_switch": {
         "pins": ["C11"]

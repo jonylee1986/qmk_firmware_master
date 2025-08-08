@@ -23,6 +23,7 @@
 
 enum __layers {
     WIN_B,
+    WIN_B1,
     WIN_FN,
     MAC_B,
     MAC_FN,
@@ -41,12 +42,21 @@ enum __layers {
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [WIN_B] = LAYOUT_numpad_6x4(
-        KC_ESC,  KC_TAB,  KC_BSPC, MO(1),
+        KC_ESC,  KC_TAB,  KC_BSPC, MO(WIN_FN),
         KC_NUM,  KEY_EQL, KC_PSLS, KC_PAST,
         KC_P7,   KC_P8,   KC_P9,   KC_PMNS,
         KC_P4,   KC_P5,   KC_P6,   KC_PPLS,
         KC_P1,   KC_P2,   KC_P3,   KC_PENT,
                  KC_P0,   KC_PDOT
+    ),
+
+    [WIN_B1] = LAYOUT_numpad_6x4(
+        KC_ESC,  KC_TAB,  KC_BSPC, MO(WIN_FN),
+        KC_NUM,  KEY_EQL, KC_PSLS, KC_PAST,
+        KC_HOME, KC_UP,   KC_PGUP, KC_PMNS,
+        KC_LEFT, KC_NO,   KC_RIGHT,KC_PPLS,
+        KC_END,  KC_DOWN, KC_PGDN, KC_PENT,
+                 KC_INS,  KC_DEL
     ),
 
     [WIN_FN] = LAYOUT_numpad_6x4(
@@ -59,7 +69,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [MAC_B] = LAYOUT_numpad_6x4(
-        KC_ESC,  KC_TAB,  KC_BSPC, MO(3),
+        KC_ESC,  KC_TAB,  KC_BSPC, MO(MAC_FN),
         KC_NUM,  KC_PEQL, KC_PSLS, KC_PAST,
         KC_P7,   KC_P8,   KC_P9,   KC_PMNS,
         KC_P4,   KC_P5,   KC_P6,   KC_PPLS,
@@ -77,6 +87,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     )
 };
 // clang-format on
+
+// static uint16_t navigation_tab[][3] = {
+//     [0] = {KC_HOME, KC_UP, KC_PGUP},
+//     [1] = {KC_LEFT, KC_NO, KC_RIGHT},
+//     [2] = {KC_END, KC_DOWN, KC_PGDN},
+//     [3] = {KC_INS, KC_DEL},
+// };
 
 const uint8_t indicator_color_tab[][3] = {
     {HSV_BLUE},    // BLUE
@@ -262,16 +279,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 if (record->event.pressed) {
                     dev_info.num_unsync = !dev_info.num_unsync;
                     eeconfig_update_user(dev_info.raw);
+                    return false;
                 }
-                return false;
-            } else {
-#ifdef CONSOLE_ENABLE
-                if (record->event.pressed) {
-                    uprintf("per_info.ind_brightness: %d, per_info.smd_color_index: %d, per_info.ind_color_index: %d, per_info.sleep_mode: %d, per_info.eco_tog_flag: %d, per_info.manual_usb_mode: %d, per_info.unsync: %d, per_info.num_unsync: %d\n", dev_info.ind_brightness, dev_info.smd_color_index, dev_info.ind_color_index, dev_info.sleep_mode, dev_info.eco_tog_flag, dev_info.manual_usb_mode, dev_info.unsync, dev_info.num_unsync);
-                }
-#endif
-                break;
             }
+            break;
         }
 
         default: {
@@ -362,7 +373,13 @@ void housekeeping_task_user(void) {
     }
 #endif // NKRO_ENABLE
 
-    bt_housekeeping_task();
+    if (get_highest_layer(default_layer_state) == WIN_B) {
+        if (host_keyboard_led_state().num_lock && !dev_info.num_unsync) {
+            layer_on(WIN_B1);
+        } else {
+            layer_off(WIN_B1);
+        }
+    }
 }
 
 #ifdef DIP_SWITCH_ENABLE
