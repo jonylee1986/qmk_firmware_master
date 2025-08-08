@@ -211,9 +211,10 @@ uint32_t last_total_time = 0;
 #include "command.h"
 #include "action.h"
 
-static bool    send_num_lock_manually    = false;
-static bool    original_num_lock_state   = false; // Track original NumLock state
-static uint8_t numpad_keys_pressed_count = 0;     // Count of currently pressed numpad keys
+static bool     send_num_lock_manually    = false;
+static bool     original_num_lock_state   = false; // Track original NumLock state
+static uint8_t  numpad_keys_pressed_count = 0;     // Count of currently pressed numpad keys
+static uint32_t numpad_keys_pressed_time  = 0;     // Time when the first numpad key was pressed
 
 void register_mouse(uint8_t mouse_keycode, bool pressed);
 /** \brief Utilities for actions. (FIXME: Needs better description)
@@ -225,40 +226,45 @@ __attribute__((weak)) void register_code(uint8_t code) {
     if (dev_info.devs) {
         // Handle numpad keys with custom behavior when unsync is enabled (BT mode)
         if (!key_eql_pressed && dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
+            numpad_keys_pressed_time = timer_read32();
             if (numpad_keys_pressed_count == 0) {
                 // First numpad key pressed: apply NumLock sync logic
-                if (dev_info.num_unsync) {
-                    // Force numpad to produce numbers (NumLock ON behavior)
-                    if (numpad_keys_pressed_count == 0) {
-                        original_num_lock_state = host_keyboard_led_state().num_lock;
-                    }
-                    if (!original_num_lock_state) {
-                        // Host NumLock is OFF - turn it ON temporarily
-                        bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
-                        bts_task(dev_info.devs);
-                        while (bts_is_busy())
-                            wait_ms(1);
-                        bts_process_keys(KC_NUM_LOCK, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
-                        bts_task(dev_info.devs);
-                        while (bts_is_busy())
-                            wait_ms(1);
-                    }
-                } else {
-                    // Force numpad to produce navigation keys (NumLock OFF behavior)
-                    if (numpad_keys_pressed_count == 0) {
-                        original_num_lock_state = host_keyboard_led_state().num_lock;
-                    }
-                    if (original_num_lock_state) {
-                        // Host NumLock is ON - turn it OFF temporarily
-                        send_num_lock_manually = true;
-                        bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
-                        bts_task(dev_info.devs);
-                        while (bts_is_busy())
-                            wait_ms(1);
-                        bts_process_keys(KC_NUM_LOCK, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
-                        bts_task(dev_info.devs);
-                        while (bts_is_busy())
-                            wait_ms(1);
+                if (numpad_keys_pressed_count == 0) {
+                    if (dev_info.num_unsync) {
+                        // Force numpad to produce numbers (NumLock ON behavior)
+                        if (timer_elapsed32(numpad_keys_pressed_time) > 200) {
+                            original_num_lock_state = host_keyboard_led_state().num_lock;
+                        }
+
+                        if (original_num_lock_state != dev_info.num_unsync) {
+                            // Host NumLock is OFF - turn it ON temporarily
+                            bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+                            bts_task(dev_info.devs);
+                            while (bts_is_busy())
+                                wait_ms(1);
+                            bts_process_keys(KC_NUM_LOCK, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+                            bts_task(dev_info.devs);
+                            while (bts_is_busy())
+                                wait_ms(1);
+                        }
+                    } else {
+                        // Force numpad to produce navigation keys (NumLock OFF behavior)
+                        if (timer_elapsed32(numpad_keys_pressed_time) > 200) {
+                            original_num_lock_state = host_keyboard_led_state().num_lock;
+                        }
+
+                        if (original_num_lock_state != dev_info.num_unsync) {
+                            // Host NumLock is ON - turn it OFF temporarily
+                            send_num_lock_manually = true;
+                            bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+                            bts_task(dev_info.devs);
+                            while (bts_is_busy())
+                                wait_ms(1);
+                            bts_process_keys(KC_NUM_LOCK, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+                            bts_task(dev_info.devs);
+                            while (bts_is_busy())
+                                wait_ms(1);
+                        }
                     }
                 }
             }
@@ -395,6 +401,7 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
                 if (numpad_keys_pressed_count > 0) {
                     numpad_keys_pressed_count--;
                     if (numpad_keys_pressed_count == 0) {
+                        wait_ms(20);
                         // Last numpad key released - restore original NumLock state if needed
                         if (!original_num_lock_state && host_keyboard_led_state().num_lock) {
                             // Original was OFF, current is ON, restore to OFF
@@ -420,6 +427,7 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
                 if (numpad_keys_pressed_count > 0) {
                     numpad_keys_pressed_count--;
                     if (numpad_keys_pressed_count == 0) {
+                        wait_ms(20);
                         // Last numpad key released - restore original NumLock state if needed
                         if (send_num_lock_manually && original_num_lock_state && !host_keyboard_led_state().num_lock) {
                             // Original was ON, current is OFF, restore to ON
