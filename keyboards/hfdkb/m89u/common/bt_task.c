@@ -19,6 +19,8 @@
 #define NUM_LONG_PRESS_KEYS (sizeof(long_pressed_keys) / sizeof(long_pressed_keys_t))
 #define LED_OFF_STANDBY_MS (10 * 60 * 1000)
 #define KEY_NUM 8
+// Wireless-specific settle time after toggling NumLock
+#define BT_NUMLOCK_SETTLE_MS 40
 
 #ifdef BT_DEBUG_MODE
 #    define BT_DEBUG_INFO(fmt, ...) dprintf(fmt, ##__VA_ARGS__)
@@ -211,10 +213,9 @@ uint32_t last_total_time = 0;
 #include "command.h"
 #include "action.h"
 
-static bool     send_num_lock_manually    = false;
-static bool     original_num_lock_state   = false; // Track original NumLock state
-static uint8_t  numpad_keys_pressed_count = 0;     // Count of currently pressed numpad keys
-static uint32_t numpad_keys_pressed_time  = 0;     // Time when the first numpad key was pressed
+static bool    send_num_lock_manually    = false;
+static bool    original_num_lock_state   = false; // Track original NumLock state
+static uint8_t numpad_keys_pressed_count = 0;     // Count of currently pressed numpad keys
 
 void register_mouse(uint8_t mouse_keycode, bool pressed);
 /** \brief Utilities for actions. (FIXME: Needs better description)
@@ -226,16 +227,17 @@ __attribute__((weak)) void register_code(uint8_t code) {
     if (dev_info.devs) {
         // Handle numpad keys with custom behavior when unsync is enabled (BT mode)
         if (!key_eql_pressed && dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
-            numpad_keys_pressed_time = timer_read32();
             if (numpad_keys_pressed_count == 0) {
                 // First numpad key pressed: apply NumLock sync logic
                 if (numpad_keys_pressed_count == 0) {
+                    {
+                        uint8_t keyboard_led_state = 0;
+                        led_t  *kb_leds            = (led_t *)&keyboard_led_state;
+                        kb_leds->raw               = bts_info.bt_info.indictor_rgb_s;
+                        usb_device_state_set_leds(keyboard_led_state);
+                        original_num_lock_state = host_keyboard_led_state().num_lock;
+                    }
                     if (dev_info.num_unsync) {
-                        // Force numpad to produce numbers (NumLock ON behavior)
-                        if (timer_elapsed32(numpad_keys_pressed_time) > 200) {
-                            original_num_lock_state = host_keyboard_led_state().num_lock;
-                        }
-
                         if (original_num_lock_state != dev_info.num_unsync) {
                             // Host NumLock is OFF - turn it ON temporarily
                             bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
@@ -248,10 +250,7 @@ __attribute__((weak)) void register_code(uint8_t code) {
                                 wait_ms(1);
                         }
                     } else {
-                        // Force numpad to produce navigation keys (NumLock OFF behavior)
-                        if (timer_elapsed32(numpad_keys_pressed_time) > 200) {
-                            original_num_lock_state = host_keyboard_led_state().num_lock;
-                        }
+                        // original_num_lock_state = host_keyboard_led_state().num_lock;
 
                         if (original_num_lock_state != dev_info.num_unsync) {
                             // Host NumLock is ON - turn it OFF temporarily
@@ -401,7 +400,6 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
                 if (numpad_keys_pressed_count > 0) {
                     numpad_keys_pressed_count--;
                     if (numpad_keys_pressed_count == 0) {
-                        wait_ms(20);
                         // Last numpad key released - restore original NumLock state if needed
                         if (!original_num_lock_state && host_keyboard_led_state().num_lock) {
                             // Original was OFF, current is ON, restore to OFF
@@ -427,7 +425,6 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
                 if (numpad_keys_pressed_count > 0) {
                     numpad_keys_pressed_count--;
                     if (numpad_keys_pressed_count == 0) {
-                        wait_ms(20);
                         // Last numpad key released - restore original NumLock state if needed
                         if (send_num_lock_manually && original_num_lock_state && !host_keyboard_led_state().num_lock) {
                             // Original was ON, current is OFF, restore to ON
@@ -1135,8 +1132,8 @@ static void bt_used_pin_init(void) {
 #endif
 
 #if defined(MM_CABLE_PIN) && defined(MM_CHARGE_PIN)
-    setPinInputHigh(MM_CHARGE_PIN);
-    setPinInput(MM_CABLE_PIN);
+    setPinInputHigh(MM_CABLE_PIN);
+    setPinInput(MM_CHARGE_PIN);
 #endif
 
 #ifdef RGB_DRIVER_SDB_PIN
@@ -1511,8 +1508,11 @@ static void show_device_state(void) {
 
 static void charging_indicate(void) {
     extern bool charge_full;
-    if (get_battery_charge_state() == BATTERY_STATE_CHARGED_FULL) {
+
+    if (get_battery_charge_state() == BATTERY_STATE_CHARGING) {
         charge_complete_warning.entry_full_time = timer_read32();
+    }
+    if (get_battery_charge_state() == BATTERY_STATE_CHARGED_FULL) {
         if (timer_elapsed32(charge_complete_warning.entry_full_time) > 2000) {
             // 充满状态
             if (!is_in_full_power_state) {
@@ -1619,13 +1619,13 @@ static void bt_bat_low_level_shutdown(void) {
 }
 
 static battery_charge_state_t get_battery_charge_state(void) {
-#if defined(BT_CABLE_PIN) && defined(BT_CHARGE_PIN)
+#if defined(MM_CABLE_PIN) && defined(MM_CHARGE_PIN)
     static battery_charge_state_t stable_state = BATTERY_STATE_UNPLUGGED;
 
-    if (readPin(BT_CABLE_PIN)) {
+    if (readPin(MM_CABLE_PIN)) {
         stable_state = BATTERY_STATE_UNPLUGGED;
     } else {
-        if (!readPin(BT_CHARGE_PIN)) {
+        if (!readPin(MM_CHARGE_PIN)) {
             stable_state = BATTERY_STATE_CHARGING;
         } else {
             stable_state = BATTERY_STATE_CHARGED_FULL;
@@ -1700,15 +1700,16 @@ static void bt_bat_level_display(void) {
 // 主RGB指示器函数
 // ===========================================
 bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
-    if (dev_info.devs != DEVS_USB && (get_battery_charge_state() != BATTERY_STATE_UNPLUGGED)) {
-        // trurn off backlight when the voltage is low
-        bt_bat_low_level_state();
-    }
-
+    if (get_battery_charge_state() != BATTERY_STATE_UNPLUGGED) {
+        if (dev_info.devs != DEVS_USB) {
+            // trurn off backlight when the voltage is low
+            bt_bat_low_level_state();
+        }
 #if defined(MM_CABLE_PIN) && defined(MM_CHARGE_PIN)
-    // 充电状态指示
-    charging_indicate();
+        // 充电状态指示
+        charging_indicate();
 #endif
+    }
 
     // Show the current device state
     show_device_state();
