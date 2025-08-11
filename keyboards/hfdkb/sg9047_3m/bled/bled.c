@@ -6,11 +6,11 @@
 
 static void bled_task(void);
 
-#define BLED_VAL_STEP 45
+#define BLED_VAL_STEP 50
 // #define BLED_VAL_STEP RGB_MATRIX_VAL_STEP
 // #define BLED_MAXIMUM_BRIGHTNESS RGB_MATRIX_MAXIMUM_BRIGHTNESS
-// #define BLED_MAXIMUM_BRIGHTNESS UINT8_MAX
-#define BLED_MAXIMUM_BRIGHTNESS 180
+#define BLED_MAXIMUM_BRIGHTNESS 200
+// #define BLED_MAXIMUM_BRIGHTNESS 180
 
 // Color table for fixed color modes
 // clang-format off
@@ -22,7 +22,8 @@ const uint8_t hsv_table[COLOR_COUNT][3] = {
     {HSV_CYAN},
     {HSV_BLUE},
     {HSV_PURPLE},
-    {HSV_WHITE},
+    {160, 160, 160},
+    // {HSV_WHITE},
 };
 // clang-format on
 
