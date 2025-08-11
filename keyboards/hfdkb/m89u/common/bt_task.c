@@ -881,10 +881,10 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
             if (reset != false) {
                 indicator_status          = 1;
                 indicator_reset_last_time = true;
-                uint8_t vendor_cmds[]     = {v_host1, v_host2, v_host3, v_2_4g};
+                // uint8_t vendor_cmds[]     = {v_host1, v_host2, v_host3, v_2_4g};
                 uint8_t vendor_names[]    = {DEVS_HOST1, DEVS_HOST2, DEVS_HOST3, DEVS_2_4G};
                 bts_send_name(vendor_names[dev_info.devs - 1]);
-                bts_send_vendor(vendor_cmds[dev_info.devs - 1]);
+                // bts_send_vendor(vendor_cmds[dev_info.devs - 1]);
                 bts_send_vendor(v_pair);
             } else {
                 indicator_status          = 2;

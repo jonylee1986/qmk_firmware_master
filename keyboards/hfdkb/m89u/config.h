@@ -9,9 +9,9 @@
  */
 
 #ifdef MULTIMODE_ENABLE
-#    define MM_BT_HOST1_NAME "FC220TP_1"
-#    define MM_BT_HOST2_NAME "FC220TP_2"
-#    define MM_BT_HOST3_NAME "FC220TP_3"
+#    define MM_BT_HOST1_NAME "FC220TP_$"
+#    define MM_BT_HOST2_NAME "FC220TP_$"
+#    define MM_BT_HOST3_NAME "FC220TP_$"
 
 #    define MM_CABLE_PIN B8
 #    define MM_CHARGE_PIN B9
