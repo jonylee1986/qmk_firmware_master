@@ -8,7 +8,7 @@
     "usb": {
         "vid": "0xFFFE",
         "pid": "0x0070",
-        "device_version": "1.0.3",
+        "device_version": "1.0.4",
         "suspend_wakeup_delay": 1500
     },
     "features": {
@@ -74,10 +74,10 @@
         "driver": "ws2812",
         "react_on_keyup": true,
         "sleep": true,
-        "val_steps": 30,
+        "val_steps": 40,
         "speed_steps": 64,
         "hue_steps": 16,
-        "max_brightness": 120,
+        "max_brightness": 160,
         "default": {
             "speed": 128
         },
