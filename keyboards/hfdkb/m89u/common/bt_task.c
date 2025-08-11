@@ -21,6 +21,10 @@
 #define KEY_NUM 8
 // Wireless-specific settle time after toggling NumLock
 #define BT_NUMLOCK_SETTLE_MS 40
+// Battery full detection tuning
+#define FULL_PVOL_THRESHOLD 100 // consider full at >= this value
+#define FULL_HYSTERESIS_PVOL 96 // must drop to <= this to re-arm next cycle
+#define FULL_DEBOUNCE_MS 1200   // must stay at full for this long to count
 
 #ifdef BT_DEBUG_MODE
 #    define BT_DEBUG_INFO(fmt, ...) dprintf(fmt, ##__VA_ARGS__)
@@ -882,7 +886,7 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
                 indicator_status          = 1;
                 indicator_reset_last_time = true;
                 // uint8_t vendor_cmds[]     = {v_host1, v_host2, v_host3, v_2_4g};
-                uint8_t vendor_names[]    = {DEVS_HOST1, DEVS_HOST2, DEVS_HOST3, DEVS_2_4G};
+                uint8_t vendor_names[] = {DEVS_HOST1, DEVS_HOST2, DEVS_HOST3, DEVS_2_4G};
                 bts_send_name(vendor_names[dev_info.devs - 1]);
                 // bts_send_vendor(vendor_cmds[dev_info.devs - 1]);
                 bts_send_vendor(v_pair);
@@ -1144,9 +1148,9 @@ static void bt_used_pin_init(void) {
 
 static void bt_scan_mode(void) {
 #ifdef MM_MODE_SW_PIN
-    static bool last_switch_state = true; // Track previous switch state
+    static bool last_switch_state = false; // Track previous switch state
 
-    bool switch_state = readPin(MM_MODE_SW_PIN); // false = switch ON (force wired), true = switch OFF (allow all modes)
+    bool switch_state = readPin(MM_MODE_SW_PIN);
 
     // Handle switch state changes
     if (last_switch_state != switch_state) {
@@ -1508,19 +1512,51 @@ static void show_device_state(void) {
 
 static void charging_indicate(void) {
     extern bool charge_full;
+    // Debounced, hysteretic "first full" detector
+    // static uint8_t  prev_pvol               = 0;
+    static uint32_t full_candidate_since    = 0;
+    static bool     full_latched_this_cycle = false;
+    static bool     first_reach_full        = false; // drives the blink once per cycle
 
-    if (get_battery_charge_state() == BATTERY_STATE_CHARGING) {
-        charge_complete_warning.entry_full_time = timer_read32();
+    uint8_t  pv      = bts_info.bt_info.pvol;
+    uint32_t now     = timer_read32();
+    bool     plugged = (get_battery_charge_state() != BATTERY_STATE_UNPLUGGED);
+
+    // Detect and debounce first reach to FULL_PVOL_THRESHOLD
+    if (!full_latched_this_cycle) {
+        if (pv >= FULL_PVOL_THRESHOLD && plugged) {
+            if (full_candidate_since == 0) {
+                full_candidate_since = now;
+            } else if (timer_elapsed32(full_candidate_since) >= FULL_DEBOUNCE_MS) {
+                first_reach_full        = true; // trigger this cycle's indication
+                full_latched_this_cycle = true; // prevent re-trigger until hysteresis clears
+                full_candidate_since    = 0;    // reset candidate window
+            }
+        } else {
+            full_candidate_since = 0; // reset if we dip below threshold
+        }
+    } else {
+        // Re-arm for next cycle only after dropping below hysteresis or unplugging
+        if (pv <= FULL_HYSTERESIS_PVOL || !plugged) {
+            full_latched_this_cycle = false;
+            // Don't force first_reach_full here; it'll be set when we debounce next time
+        }
     }
-    if (get_battery_charge_state() == BATTERY_STATE_CHARGED_FULL) {
-        if (timer_elapsed32(charge_complete_warning.entry_full_time) > 2000) {
+
+    // Track charge state timing window for steady full detection
+    if (get_battery_charge_state() == BATTERY_STATE_CHARGING) {
+        charge_complete_warning.entry_full_time = now;
+    }
+
+    if ((get_battery_charge_state() == BATTERY_STATE_CHARGED_FULL) || first_reach_full) {
+        if (timer_elapsed32(charge_complete_warning.entry_full_time) > 2000 || first_reach_full) {
             // 充满状态
             if (!is_in_full_power_state) {
                 is_in_full_power_state = true;
                 if (!charge_complete_warning.triggered) {
                     charge_complete_warning.triggered   = true;
                     charge_complete_warning.blink_count = 0;
-                    charge_complete_warning.blink_time  = timer_read32();
+                    charge_complete_warning.blink_time  = now;
                     charge_complete_warning.blink_state = false;
                     charge_complete_warning.completed   = false;
                     charge_full                         = true;
@@ -1528,17 +1564,18 @@ static void charging_indicate(void) {
             }
 
             // 只有在未完成闪烁且闪烁次数未达到5次时才显示充电指示
-            if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 5) {
+            if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 6) {
                 if (timer_elapsed32(charge_complete_warning.blink_time) >= 1000) {
-                    charge_complete_warning.blink_time  = timer_read32();
+                    charge_complete_warning.blink_time  = now;
                     charge_complete_warning.blink_state = !charge_complete_warning.blink_state;
 
                     if (charge_complete_warning.blink_state) {
                         charge_complete_warning.blink_count++;
-                        if (charge_complete_warning.blink_count >= 5) {
+                        if (charge_complete_warning.blink_count >= 6) {
                             charge_full                         = false;
                             charge_complete_warning.completed   = true;
                             charge_complete_warning.blink_state = false;
+                            first_reach_full                    = false; // allow future cycles
                         }
                     }
                 }
@@ -1559,6 +1596,8 @@ static void charging_indicate(void) {
             memset(&charge_complete_warning, 0, sizeof(charge_complete_warning_t));
         }
     }
+
+    // prev_pvol = pv;
 }
 
 static void bt_bat_low_level_warning(void) {
@@ -1705,11 +1744,10 @@ bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
             // trurn off backlight when the voltage is low
             bt_bat_low_level_state();
         }
-#if defined(MM_CABLE_PIN) && defined(MM_CHARGE_PIN)
-        // 充电状态指示
-        charging_indicate();
-#endif
     }
+
+    // 充电状态指示: only call when pvol first reaches 100 in each cycle
+    charging_indicate();
 
     // Show the current device state
     show_device_state();

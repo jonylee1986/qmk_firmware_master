@@ -1441,6 +1441,7 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
             eeconfig_update_kb(dev_info.raw);
             LCD_Page_update(dev_info.LCD_PAGE);
             set_single_persistent_default_layer(layer_save);
+            keymap_config.no_gui = false;
         }
         if (EE_CLR_press_cnt & 0x1) {
             if (EE_CLR_press_cnt == 1) {
@@ -1468,26 +1469,26 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
         }
     }
     /*************************************************************************************/
-    static uint32_t charg_full_time = 0;
-    static uint32_t charging_time   = 0;
-    if (!readPin(BT_CABLE_PIN)) {
-        if (!readPin(BT_CHARGE_PIN)) {
-            // 正在充电
-            if (timer_elapsed32(charging_time) > 2000) {
-                rgb_matrix_set_color(0, 100, 0, 0);
-            }
-            charg_full_time = timer_read32();
-        } else {
-            // 充满
-            if (timer_elapsed32(charg_full_time) > 2000) {
-                rgb_matrix_set_color(0, 0, 100, 0);
-            }
-            charging_time = timer_read32();
-        }
-    } else {
-        charging_time   = timer_read32();
-        charg_full_time = timer_read32();
-    }
+    // static uint32_t charg_full_time = 0;
+    // static uint32_t charging_time   = 0;
+    // if (!readPin(BT_CABLE_PIN)) {
+    //     if (!readPin(BT_CHARGE_PIN)) {
+    //         // 正在充电
+    //         if (timer_elapsed32(charging_time) > 2000) {
+    //             rgb_matrix_set_color(0, 100, 0, 0);
+    //         }
+    //         charg_full_time = timer_read32();
+    //     } else {
+    //         // 充满
+    //         if (timer_elapsed32(charg_full_time) > 2000) {
+    //             rgb_matrix_set_color(0, 0, 100, 0);
+    //         }
+    //         charging_time = timer_read32();
+    //     }
+    // } else {
+    //     charging_time   = timer_read32();
+    //     charg_full_time = timer_read32();
+    // }
 
     if (dev_info.devs != DEVS_USB) {
         // FN 按下时显示当前设备状态

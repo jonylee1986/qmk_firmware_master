@@ -373,10 +373,12 @@ void housekeeping_task_user(void) {
     }
 #endif // NKRO_ENABLE
 
-    if (get_highest_layer(default_layer_state) == WIN_B) {
-        if (host_keyboard_led_state().num_lock && !dev_info.num_unsync) {
+    if (host_keyboard_led_state().num_lock && !dev_info.num_unsync && dev_info.unsync) {
+        if (IS_LAYER_OFF(WIN_B1)) {
             layer_on(WIN_B1);
-        } else {
+        }
+    } else {
+        if (IS_LAYER_ON(WIN_B1)) {
             layer_off(WIN_B1);
         }
     }

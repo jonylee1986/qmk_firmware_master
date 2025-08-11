@@ -50,9 +50,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [WIN_FN] = LAYOUT_78_ansi( /* FN */
 		EE_CLR,  KC_BRID, KC_BRIU, KC_TASK, KC_MYCM, KC_WSCH, KC_SNAP, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD, KC_VOLU, _______, LCD_MOD,
-		_______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, RGB_SAD,
-		_______, BT_HOST1,BT_HOST2,BT_HOST3,BT_2_4G, _______, _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______, RGB_SAI,
-		_______, _______, _______, _______, _______, _______, _______, _______, KC_INS,  KC_HOME, KC_PGUP, _______,          RGB_HUI,
+		_______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, RGB_MOD,
+		_______, BT_HOST1,BT_HOST2,BT_HOST3,BT_2_4G, _______, _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______, RGB_HUI,
+		_______, _______, _______, _______, _______, _______, _______, _______, KC_INS,  KC_HOME, KC_PGUP, _______,          _______,
 		_______, _______, _______, _______, _______, _______, _______, _______, _______, KC_END,  KC_PGDN,                   RGB_MOD, RGB_VAI,
 		_______, GU_TOGG, _______,                   _______,                            _______, _______, _______,          RGB_SPD, RGB_VAD, RGB_SPI),
 
@@ -66,9 +66,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [MAC_FN] = LAYOUT_78_ansi( /* FN */
         EE_CLR,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  _______, LCD_MOD,
-		_______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, RGB_SAD,
-		_______, BT_HOST1,BT_HOST2,BT_HOST3,BT_2_4G, _______, _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______, RGB_SAI,
-		_______, _______, _______, _______, _______, _______, _______, _______, KC_INS,  KC_HOME, KC_PGUP, _______,          RGB_HUI,
+		_______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, RGB_MOD,
+		_______, BT_HOST1,BT_HOST2,BT_HOST3,BT_2_4G, _______, _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______, RGB_HUI,
+		_______, _______, _______, _______, _______, _______, _______, _______, KC_INS,  KC_HOME, KC_PGUP, _______,          _______,
 		_______, _______, _______, _______, _______, _______, _______, _______, _______, KC_END,  KC_PGDN,                   RGB_MOD, RGB_VAI,
 		_______, GU_TOGG, _______,                   _______,                            _______, _______, _______,          RGB_SPD, RGB_VAD, RGB_SPI),
 };
@@ -261,5 +261,12 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
             }
         }
         return false;
+    }
+}
+
+void keyboard_post_init_user(void) {
+    if (keymap_config.no_gui) {
+        keymap_config.no_gui = false;
+        eeconfig_update_keymap(&keymap_config);
     }
 }

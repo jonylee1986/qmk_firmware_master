@@ -11,7 +11,7 @@ bool dip_switch_update_kb(uint8_t index, bool active) {
     }
     if (index == 0) {
         default_layer_set(1UL << (!active ? 0 : 2));
-        if (!active) {
+        if (active) {
             keymap_config.no_gui = 0;
         }
     }
@@ -186,6 +186,24 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         return false;
     }
     switch (keycode) {
+        case RGB_TOG: {
+            if (record->event.pressed) {
+                switch (rgb_matrix_get_flags()) {
+                    case LED_FLAG_ALL: {
+                        rgb_matrix_set_flags(LED_FLAG_NONE);
+                        rgb_matrix_set_color_all(0, 0, 0);
+                    } break;
+                    default: {
+                        rgb_matrix_set_flags(LED_FLAG_ALL);
+                    } break;
+                }
+            }
+            if (!rgb_matrix_is_enabled()) {
+                rgb_matrix_set_flags(LED_FLAG_ALL);
+                rgb_matrix_enable();
+            }
+            return false; // Skip further processing for this keycode
+        }
         case LCD_HOME: {
             if (record->event.pressed) {
                 dev_info.LCD_PAGE = 0;
@@ -313,6 +331,10 @@ static const uint8_t rgb_test_color_table[][3] = {
 };
 
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
+    if (!rgb_matrix_get_flags()) {
+        rgb_matrix_set_color_all(0x00, 0x00, 0x00);
+    }
+
     if (rgb_matrix_indicators_advanced_user(led_min, led_max) != true) {
         return false;
     }
@@ -345,9 +367,9 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     // }
 
     // GUI lock red
-    // if (keymap_config.no_gui) {
-    //     RGB_MATRIX_INDICATOR_SET_COLOR(75, 160, 160, 160);
-    // }
+    if (keymap_config.no_gui) {
+        RGB_MATRIX_INDICATOR_SET_COLOR(69, 160, 160, 160);
+    }
 
     return true;
 }
