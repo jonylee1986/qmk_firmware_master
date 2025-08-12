@@ -393,13 +393,13 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
     if (dev_info.devs) {
         // Handle numpad keys with custom behavior when unsync is enabled (BT mode)
         if (!key_eql_pressed && dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
-            if (dev_info.num_unsync) {
-                // Force numpad to produce numbers (NumLock ON behavior)
-                bts_process_keys(code, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
-                bts_task(dev_info.devs);
-                while (bts_is_busy())
-                    wait_ms(1);
+            // Force numpad to produce numbers (NumLock ON behavior)
+            bts_process_keys(code, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            bts_task(dev_info.devs);
+            while (bts_is_busy())
+                wait_ms(1);
 
+            if (dev_info.num_unsync) {
                 // Decrement counter and restore state only when last numpad key is released
                 if (numpad_keys_pressed_count > 0) {
                     numpad_keys_pressed_count--;
@@ -420,10 +420,10 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
                 }
             } else {
                 // Force numpad to produce navigation keys (NumLock OFF behavior)
-                bts_process_keys(code, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
-                bts_task(dev_info.devs);
-                while (bts_is_busy())
-                    wait_ms(1);
+                // bts_process_keys(code, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+                // bts_task(dev_info.devs);
+                // while (bts_is_busy())
+                //     wait_ms(1);
 
                 // Decrement counter and restore state only when last numpad key is released
                 if (numpad_keys_pressed_count > 0) {
@@ -790,11 +790,9 @@ bool bt_process_record(uint16_t keycode, keyrecord_t *record) {
             } else {
                 if (dev_info.unsync) {
                     if (keycode == KC_NUM_LOCK) {
-                        if (dev_info.unsync) {
-                            if (record->event.pressed) {
-                                dev_info.num_unsync = !dev_info.num_unsync;
-                                eeconfig_update_user(dev_info.raw);
-                            }
+                        if (record->event.pressed) {
+                            dev_info.num_unsync = !dev_info.num_unsync;
+                            eeconfig_update_user(dev_info.raw);
                             return false;
                         } else {
                             return false;
