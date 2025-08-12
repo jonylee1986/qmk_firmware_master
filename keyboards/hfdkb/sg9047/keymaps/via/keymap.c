@@ -123,7 +123,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
         case RM_VALU: {
             if (record->event.pressed) {
-                if (rgb_matrix_get_val() >= RGB_MATRIX_MAXIMUM_BRIGHTNESS) {
+                if (rgb_matrix_get_val() >= (RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP)) {
                     all_blink_cnt   = 6;
                     all_blink_time  = timer_read32();
                     all_blink_color = (RGB){COLOR_WHITE}; // White color
@@ -133,7 +133,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
         case RM_VALD: {
             if (record->event.pressed) {
-                if (rgb_matrix_get_val() == 0) {
+                if (rgb_matrix_get_val() <= RGB_MATRIX_VAL_STEP) {
                     all_blink_cnt   = 6;
                     all_blink_time  = timer_read32();
                     all_blink_color = (RGB){COLOR_WHITE}; // White color
@@ -143,7 +143,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
         case RM_SPDU: {
             if (record->event.pressed) {
-                if (rgb_matrix_get_speed() >= UINT8_MAX) {
+                if (rgb_matrix_get_speed() >= (UINT8_MAX - RGB_MATRIX_SPD_STEP)) {
                     all_blink_cnt   = 6;
                     all_blink_time  = timer_read32();
                     all_blink_color = (RGB){COLOR_WHITE}; // White color
@@ -153,7 +153,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
         case RM_SPDD: {
             if (record->event.pressed) {
-                if (rgb_matrix_get_speed() == 0) {
+                if (rgb_matrix_get_speed() <= RGB_MATRIX_SPD_STEP) {
                     all_blink_cnt   = 6;
                     all_blink_time  = timer_read32();
                     all_blink_color = (RGB){COLOR_WHITE}; // White color
