@@ -269,3 +269,9 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
 
     return true;
 }
+
+void keyboard_post_init_kb(void) {
+    #include "snled27351.h"
+    snled27351_pwm_phase_delay_enable(0);
+    snled27351_pwm_phase_delay_enable(1);
+}

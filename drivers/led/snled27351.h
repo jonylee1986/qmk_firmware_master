@@ -146,6 +146,9 @@ void snled27351_flush(void);
 void snled27351_sw_return_normal(uint8_t index);
 void snled27351_sw_shutdown(uint8_t index);
 
+void snled27351_pwm_phase_delay_enable(uint8_t index);
+void snled27351_pwm_phase_delay_disable(uint8_t index)
+
 #define CB1_CA1 0x00
 #define CB1_CA2 0x01
 #define CB1_CA3 0x02
