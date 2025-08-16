@@ -489,6 +489,8 @@ void bt_task(void) {
                 eeconfig_update_user(dev_info.raw);
                 break;
         }
+        bts_send_vendor(v_en_sleep_bt);
+        bts_send_vendor(v_en_sleep_wl);
     }
 
     if (timer_elapsed32(last_time) >= 1) {
@@ -646,6 +648,8 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
             if (reset != false) {
                 indicator_status          = 1;
                 indicator_reset_last_time = true;
+                uint8_t vendor_names[]    = {DEVS_HOST1, DEVS_HOST2, DEVS_HOST3, DEVS_2_4G};
+                bts_send_name(vendor_names[dev_info.devs - 1]);
                 bts_send_vendor(v_pair);
             } else {
                 indicator_status          = 2;
@@ -708,21 +712,6 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
 
         case BT_VOL: {
             if (record->event.pressed) {
-                // bts_send_vendor(v_query_vol);
-                switch (get_battery_charge_state()) {
-                    case BATTERY_STATE_CHARGING:
-                        bts_send_vendor(v_query_vol_chrg);
-                        break;
-
-                    case BATTERY_STATE_CHARGED_FULL:
-                        bts_send_vendor(v_query_vol_full);
-                        break;
-
-                    case BATTERY_STATE_UNPLUGGED:
-                    default:
-                        bts_send_vendor(v_query_vol);
-                        break;
-                }
                 query_vol_flag = true;
             } else {
                 query_vol_flag = false;
@@ -894,7 +883,7 @@ static void bt_used_pin_init(void) {
 
 static void bt_scan_mode(void) {
 #ifdef BT_MODE_SW_PIN
-    static bool last_switch_state = true; // Track previous switch state
+    static bool last_switch_state = false; // Track previous switch state
 
     bool switch_state = readPin(BT_MODE_SW_PIN); // false = switch ON (force wired), true = switch OFF (allow all modes)
 
@@ -1158,7 +1147,7 @@ static void handle_factory_reset_display(void) {
                         bts_send_vendor(v_clear);
                         wait_ms(1000);
                         bt_switch_mode(DEVS_HOST1, DEVS_USB, false);
-                        last_total_time  = timer_read32();
+                        last_total_time = timer_read32();
                     }
                     break;
 
@@ -1173,7 +1162,7 @@ static void handle_factory_reset_display(void) {
                         bts_send_vendor(v_clear);
                         wait_ms(1000);
                         bt_switch_mode(dev_info.devs, DEVS_HOST1, false);
-                        last_total_time  = timer_read32();
+                        last_total_time = timer_read32();
                     }
                     break;
                 default:

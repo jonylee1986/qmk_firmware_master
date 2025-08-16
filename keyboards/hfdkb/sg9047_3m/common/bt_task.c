@@ -957,7 +957,7 @@ static void bt_used_pin_init(void) {
 #endif
 #if defined(MM_CABLE_PIN) && defined(MM_CHARGE_PIN)
     setPinInputHigh(MM_CABLE_PIN);
-    setPinInput(MM_CHARGE_PIN);
+    setPinInputHigh(MM_CHARGE_PIN);
 #endif
 }
 
@@ -1226,14 +1226,21 @@ static void bt_bat_low_level_warning(void) {
 
 static void bt_charging_indication(void) {
     static uint32_t charging_time = 0;
+    bool            charge        = false;
 
-    if (get_battery_charge_state() == BATTERY_STATE_CHARGING) {
+    // HSV charge_led_hsv = {HSV_RED};
+    // RGB charge_led_rgb = hsv_to_rgb(charge_led_hsv);
+    if (get_battery_charge_state() == BATTERY_STATE_CHARGING || charge) {
         // 正在充电
-        if (timer_elapsed32(charging_time) >= 2000) {
+        charge = true;
+        if (timer_elapsed32(charging_time) >= 1500) {
             rgb_matrix_set_color(CHRGE_LOW_LEVEL_INDICATOR_INDEX, CHRGE_LOW_LEVEL_INDICATOR_COLOR); // 红灯
         }
     } else {
         charging_time = timer_read32();
+    }
+    if (get_battery_charge_state() == BATTERY_STATE_UNPLUGGED) {
+        charge = false;
     }
 }
 
@@ -1464,6 +1471,10 @@ void matrix_init_kb(void) {
 
 void bt_suspend_power_down(void) {
     led_deconfig_all();
+}
+
+void bt_suspend_wakeup_init(void) {
+    led_config_all();
 }
 
 void bt_pre_init(void) {}

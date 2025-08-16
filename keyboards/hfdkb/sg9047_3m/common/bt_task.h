@@ -56,6 +56,7 @@ void bt_task(void);
 void bt_post_init(void);
 void bt_pre_init(void);
 void bt_suspend_power_down(void);
+void bt_suspend_wakeup_init(void);
 
 /**
  * @brief 处理和BT相关的按键

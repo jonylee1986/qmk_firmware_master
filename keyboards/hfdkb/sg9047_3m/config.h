@@ -17,9 +17,9 @@
 #pragma once
 
 #ifdef MULTIMODE_ENABLE
-#    define MM_BT_HOST1_NAME "R85Ultra-1"
-#    define MM_BT_HOST2_NAME "R85Ultra-2"
-#    define MM_BT_HOST3_NAME "R85Ultra-3"
+#    define MM_BT_HOST1_NAME "R85Ultra-$"
+#    define MM_BT_HOST2_NAME "R85Ultra-$"
+#    define MM_BT_HOST3_NAME "R85Ultra-$"
 
 // Indicate index of mm device
 #    define MM_BLINK_HOST1_INDEX 26

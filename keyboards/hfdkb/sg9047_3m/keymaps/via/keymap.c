@@ -213,6 +213,10 @@ void suspend_power_down_user(void) {
     bt_suspend_power_down();
 }
 
+void suspend_wakeup_init_user(void) {
+    bt_suspend_wakeup_init();
+}
+
 void keyboard_post_init_user(void) {
     // Customise these values to desired behaviour
     // debug_enable = true;
