@@ -19,6 +19,7 @@
 // clang-format off
 #ifdef RGB_MATRIX_ENABLE
 const snled27351_led_t PROGMEM g_snled27351_leds[SNLED27351_LED_COUNT] = {
+
 /* Refer to IS31 manual for these locations
  *   driver
  *   |   R location
@@ -109,6 +110,7 @@ const snled27351_led_t PROGMEM g_snled27351_leds[SNLED27351_LED_COUNT] = {
 #endif
 
 // clang-format on
+
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     if (!process_record_user(keycode, record)) {
         return false;
