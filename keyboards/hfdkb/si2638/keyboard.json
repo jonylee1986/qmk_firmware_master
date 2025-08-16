@@ -2,7 +2,7 @@
     "manufacturer": " ",
     "keyboard_name": "YUNZII X98",
     "maintainer": "jonylee@hfd",
-    "url": "https://github.com/jonylee1986/qmk_firmware_master/tree/hfdkb_ble_wireless",
+    "url": "https://github.com/jonylee1986",
     "processor": "WB32FQ95",
     "bootloader": "wb32-dfu",
     "usb": {

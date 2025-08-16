@@ -1,0 +1,135 @@
+{
+    "manufacturer": " ",
+    "keyboard_name": "FC220TP",
+    "maintainer": "jonylee@hfd",
+    "url": "https://github.com/jonylee1986",
+    "processor": "WB32FQ95",
+    "bootloader": "wb32-dfu",
+    "usb": {
+        "vid": "0xFFFE",
+        "pid": "0x00A0",
+        "device_version": "1.3.3",
+        "suspend_wakeup_delay": 1000
+    },
+    "diode_direction": "ROW2COL",
+    "features": {
+        "bootmagic": true,
+        "command": false,
+        "console": false,
+        "extrakey": true,
+        "mousekey": true,
+        "nkro": true,
+        "rgb_matrix": true,
+        "dip_switch":true
+    },
+    "matrix_pins": {
+        "cols": ["C1","C2","C3","A0"],
+        "rows": ["B15", "C6", "C7", "C8", "C9", "B14"]
+    },
+    "eeprom": {
+        "driver": "wear_leveling",
+        "wear_leveling": {
+            "driver": "spi_flash",
+            "backing_size": 4096
+        }
+    },
+    "dynamic_keymap": {
+        "layer_count": 5
+    },
+    "dip_switch": {
+        "pins": ["C11"]
+    },
+    "rgb_matrix": {
+        "driver": "snled27351",
+        "react_on_keyup": true,
+        "max_brightness": 200,
+        "val_steps": 40,
+        "speed_steps": 51,
+        "sat_steps": 48,
+        "sleep": true,
+        "center_point": [56, 16],
+        "animations": {
+            "solid_color": true,
+            "breathing": true,
+            "cycle_all": true,
+            "cycle_left_right": true,
+            "cycle_up_down": true,
+            "cycle_pinwheel": true,
+            "dual_beacon": true,
+            "raindrops": true,
+            "typing_heatmap": true,
+            "solid_reactive_simple": true,
+            "solid_reactive": true,
+            "multisplash": true
+        },
+        "default": {
+            "speed": 153,
+            "hue": 170,
+            "animation": "cycle_all"
+        },
+        "layout": [
+            {"flags": 4, "matrix": [0, 0], "x": 0, "y": 0},
+            {"flags": 4, "matrix": [0, 1], "x": 37, "y": 0},
+            {"flags": 4, "matrix": [0, 2], "x": 75, "y": 0},
+            {"flags": 4, "matrix": [0, 3], "x": 112, "y": 0},
+
+            {"flags": 4, "matrix": [1, 0], "x": 0, "y": 6},
+            {"flags": 4, "matrix": [1, 1], "x": 37, "y": 6},
+            {"flags": 4, "matrix": [1, 2], "x": 75, "y": 6},
+            {"flags": 4, "matrix": [1, 3], "x": 112, "y": 6},
+
+            {"flags": 4, "matrix": [2, 0], "x": 0, "y": 13},
+            {"flags": 4, "matrix": [2, 1], "x": 37, "y": 13},
+            {"flags": 4, "matrix": [2, 2], "x": 75, "y": 13},
+            {"flags": 4, "matrix": [2, 3], "x": 112, "y": 13},
+
+            {"flags": 4, "matrix": [3, 0], "x": 0, "y": 19},
+            {"flags": 4, "matrix": [3, 1], "x": 37, "y": 19},
+            {"flags": 4, "matrix": [3, 2], "x": 75, "y": 19},
+            {"flags": 4, "matrix": [3, 3], "x": 112, "y": 19},
+
+            {"flags": 4, "matrix": [4, 0], "x": 0, "y": 25},
+            {"flags": 4, "matrix": [4, 1], "x": 37, "y": 25},
+            {"flags": 4, "matrix": [4, 2], "x": 75, "y": 25},
+            {"flags": 4, "matrix": [4, 3], "x": 112, "y": 29},
+
+            {"flags": 4, "matrix": [5, 1], "x": 18, "y": 32},
+            {"flags": 4, "matrix": [5, 2], "x": 75, "y": 32},
+
+            { "flags": 2, "x": 0, "y": 18}
+        ]
+    },
+    "layouts": {
+        "LAYOUT_numpad_6x4": {
+            "layout": [
+                { "matrix": [0,0], "x": 0, "y": 0 },
+                { "matrix": [0,1], "x": 1, "y": 0 },
+                { "matrix": [0,2], "x": 2, "y": 0 },
+                { "matrix": [0,3], "x": 3, "y": 0 },
+
+                { "matrix": [1,0], "x": 0, "y": 1 },
+                { "matrix": [1,1], "x": 1, "y": 1 },
+                { "matrix": [1,2], "x": 2, "y": 1 },
+                { "matrix": [1,3], "x": 3, "y": 1 },
+
+                { "matrix": [2,0], "x": 0, "y": 2 },
+                { "matrix": [2,1], "x": 1, "y": 2 },
+                { "matrix": [2,2], "x": 2, "y": 2 },
+                { "matrix": [2,3], "x": 3, "y": 2 },
+
+                { "matrix": [3,0], "x": 0, "y": 3 },
+                { "matrix": [3,1], "x": 1, "y": 3 },
+                { "matrix": [3,2], "x": 2, "y": 3 },
+                { "matrix": [3,3], "x": 3, "y": 3 },
+
+                { "matrix": [4,0], "x": 0, "y": 4 },
+                { "matrix": [4,1], "x": 1, "y": 4 },
+                { "matrix": [4,2], "x": 2, "y": 4 },
+                { "matrix": [4,3], "x": 3, "y": 4, "h": 2 },
+
+                { "matrix": [5,1], "x": 0, "y": 5, "w": 2 },
+                { "matrix": [5,2], "x": 2, "y": 5 }
+            ]
+        }
+    }
+}

@@ -34,8 +34,7 @@
 #endif
 
 #ifndef SNLED27351_CURRENT_TUNE
-#    define SNLED27351_CURRENT_TUNE \
-        { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF }
+#    define SNLED27351_CURRENT_TUNE {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
 #endif
 
 const uint8_t i2c_addresses[SNLED27351_DRIVER_COUNT] = {
@@ -263,4 +262,16 @@ void snled27351_sw_shutdown(uint8_t index) {
     snled27351_write_register(index, SNLED27351_FUNCTION_REG_SOFTWARE_SHUTDOWN, SNLED27351_SOFTWARE_SHUTDOWN_SSD_SHUTDOWN);
     // Write SW Sleep Register
     snled27351_write_register(index, SNLED27351_FUNCTION_REG_SOFTWARE_SLEEP, SNLED27351_SOFTWARE_SLEEP_ENABLE);
+}
+
+void snled27351_pwm_phase_delay_enable(uint8_t index) {
+    snled27351_select_page(index, SNLED27351_COMMAND_FUNCTION);
+
+    snled27351_write_register(index, 0x15, 0x04 << 0);
+}
+
+void snled27351_pwm_phase_delay_disable(uint8_t index) {
+    snled27351_select_page(index, SNLED27351_COMMAND_FUNCTION);
+
+    snled27351_write_register(index, 0x15, 0x00 << 0);
 }
