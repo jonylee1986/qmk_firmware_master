@@ -24,16 +24,22 @@ enum multimode_keycodes {
     BT_2_4G,
     BT_USB,
     BT_VOL,
+    SW_MODE,
     RGB_TEST,
-    BT_KEYCODE_END,
 };
+
+typedef enum {
+    MODE_WORKING,
+    MODE_GAMING,
+} mode_t;
+
+extern mode_t mode;
 
 typedef union {
     uint32_t raw;
     struct {
         uint8_t devs;
         uint8_t last_devs;
-        uint8_t paired_status;
     };
 } dev_info_t;
 

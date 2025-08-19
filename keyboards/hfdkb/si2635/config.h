@@ -41,10 +41,23 @@
 #    define MM_BLINK_2G4_COLOR RGB_CYAN   // 2.4G color
 #    define MM_BLINK_USB_COLOR RGB_WHITE  // USB color
 
-#    define BAT_LEVEL_DISPLAY_INDEX {14, 15, 16, 13, 17, 18, 19, 20, 21, 22} // Battery level indicator
+#    define BAT_LEVEL_DISPLAY_INDEX {14, 15, 16, 17, 18, 19, 20, 21, 22, 23} // Battery level indicator
+
+#    define CHRGE_LOW_LEVEL_INDICATOR_INDEX 75
+#    define CHRGE_LOW_LEVEL_INDICATOR_COLOR RGB_RED
 
 // Other config
+#    define LED_Q_INDEX 29
+#    define LED_W_INDEX 30
+#    define LED_E_INDEX 31
+#    define LED_R_INDEX 32
 
+#    define VOL_INDICATE_LED_1_PIN C15
+#    define VOL_INDICATE_LED_2_PIN C11
+#    define VOL_INDICATE_LED_3_PIN A8
+#    define VOL_INDICATE_LED_4_PIN B13
+#    define VOL_INDICATE_LED_5_PIN B12
+#    define VOL_INDICATE_LED_STATE_ON 1
 #endif
 
 /* SPI Config for spi flash*/

@@ -33,11 +33,14 @@
         "enabled": true,
         "rotary": [
             {
-                "pin_a": "C13",
-                "pin_b": "C14",
+                "pin_a": "C14",
+                "pin_b": "C13",
                 "resolution": 2
             }
         ]
+    },
+    "indicators": {
+        "caps_lock": "B10"
     },
     "eeprom": {
         "driver": "wear_leveling",
@@ -62,6 +65,7 @@
         },
         "animations": {
             "solid_color": true,
+            "breathing": true,
             "gradient_up_down": true,
             "band_pinwheel_sat": true,
             "band_spiral_sat": true,
@@ -162,8 +166,8 @@
             {"flags": 4, "matrix": [5, 1],  "x": 20,  "y": 64},
             {"flags": 4, "matrix": [5, 2],  "x": 39,  "y": 64},
             {"flags": 4, "matrix": [5, 5],  "x": 95,  "y": 64},
-            {"flags": 4, "matrix": [5, 10], "x": 151, "y": 64},
-            {"flags": 4, "matrix": [5, 11], "x": 170, "y": 64},
+            {"flags": 4, "matrix": [5, 11], "x": 151, "y": 64},
+            {"flags": 4, "matrix": [5, 12], "x": 170, "y": 64},
             {"flags": 4, "matrix": [5, 13], "x": 194, "y": 64},
             {"flags": 4, "matrix": [5, 14], "x": 209, "y": 64},
             {"flags": 4, "matrix": [5, 15], "x": 224, "y": 64}
@@ -253,8 +257,8 @@
                 {"matrix": [5, 1],  "x": 1.25,  "y": 5.25, "w": 1.25},
                 {"matrix": [5, 2],  "x": 2.5,   "y": 5.25, "w": 1.25},
                 {"matrix": [5, 5],  "x": 3.75,  "y": 5.25, "w": 6.25},
-                {"matrix": [5, 10], "x": 10,    "y": 5.25, "w": 1.25},
-                {"matrix": [5, 11], "x": 11.25, "y": 5.25, "w": 1.25},
+                {"matrix": [5, 11], "x": 10,    "y": 5.25, "w": 1.25},
+                {"matrix": [5, 12], "x": 11.25, "y": 5.25, "w": 1.25},
                 {"matrix": [5, 13], "x": 13,    "y": 5.25},
                 {"matrix": [5, 14], "x": 14,    "y": 5.25},
                 {"matrix": [5, 15], "x": 15,    "y": 5.25}

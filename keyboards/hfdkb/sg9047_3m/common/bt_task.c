@@ -40,6 +40,12 @@ static void show_device_state(void);
 static void bt_indicate(void);
 static void factory_reset_indicate(void);
 static void usb_indicate(void);
+#if 1
+// Pairing status helpers (scoped to this translation unit)
+bool is_channel_never_paired(uint8_t dev);
+void mark_channel_as_paired(uint8_t dev);
+void clear_all_pairing_status(void);
+#endif
 #ifdef RGB_MATRIX_ENABLE
 static void led_off_standby(void);
 static void open_rgb(void);
@@ -72,9 +78,6 @@ static void led_deconfig_all(void);
 /* Hardware validation helpers */
 #define IS_BT_DEVICE(dev) ((dev) >= DEVS_HOST1 && (dev) <= DEVS_HOST3)
 #define IS_VALID_DEVICE(dev) ((dev) >= DEVS_USB && (dev) <= DEVS_2_4G)
-
-#define TASK_UPDATE_INTERVAL_MS 1
-#define BT_INIT_WAIT_MS 2000
 
 // ===========================================
 // 结构体定义
@@ -477,22 +480,34 @@ void bt_task(void) {
     static uint32_t last_time = 0;
 
     // Handle initialization sequence after delay
-    if ((bt_init_time != 0) && (timer_elapsed32(bt_init_time) >= BT_INIT_WAIT_MS)) {
+    if ((bt_init_time != 0) && (timer_elapsed32(bt_init_time) >= 2000)) {
         bt_init_time = 0;
 
-        bts_send_name(DEVS_HOST1);
+        // bts_send_name(DEVS_HOST1);
         switch (dev_info.devs) {
             case DEVS_HOST1: {
                 bts_send_vendor(v_host1);
+                if (is_channel_never_paired(DEVS_HOST1)) {
+                    bt_switch_mode(dev_info.devs, dev_info.last_devs, true);
+                }
             } break;
             case DEVS_HOST2: {
                 bts_send_vendor(v_host2);
+                if (is_channel_never_paired(DEVS_HOST2)) {
+                    bt_switch_mode(dev_info.devs, dev_info.last_devs, true);
+                }
             } break;
             case DEVS_HOST3: {
                 bts_send_vendor(v_host3);
+                if (is_channel_never_paired(DEVS_HOST3)) {
+                    bt_switch_mode(dev_info.devs, dev_info.last_devs, true);
+                }
             } break;
             case DEVS_2_4G: {
                 bts_send_vendor(v_2_4g);
+                if (is_channel_never_paired(DEVS_2_4G)) {
+                    bt_switch_mode(dev_info.devs, dev_info.last_devs, true);
+                }
             } break;
             default: {
                 bts_send_vendor(v_usb);
@@ -506,7 +521,7 @@ void bt_task(void) {
     }
 
     // Update task at regular intervals
-    if (timer_elapsed32(last_time) >= TASK_UPDATE_INTERVAL_MS) {
+    if (timer_elapsed32(last_time) >= 1) {
         last_time = timer_read32();
 
         if (dev_info.devs != DEVS_USB) {
@@ -608,7 +623,7 @@ bool bt_process_record(uint16_t keycode, keyrecord_t *record) {
  * @param dev 设备通道 (DEVS_HOST1, DEVS_HOST2, DEVS_HOST3, DEVS_2_4G)
  * @return true: 从未配对过, false: 已经配对过
  */
-static bool is_channel_never_paired(uint8_t dev) {
+bool is_channel_never_paired(uint8_t dev) {
     uint8_t channel_bit = 0;
 
     switch (dev) {
@@ -628,14 +643,15 @@ static bool is_channel_never_paired(uint8_t dev) {
             return false; // USB 或其他设备不需要配对
     }
 
-    return !(dev_info.paired_status & channel_bit);
+    // 如果对应bit未设置，说明从未配对过
+    return (dev_info.paired_status & channel_bit) == 0;
 }
 
 /**
  * @brief 标记指定通道为已配对
  * @param dev 设备通道
  */
-static void mark_channel_as_paired(uint8_t dev) {
+void mark_channel_as_paired(uint8_t dev) {
     uint8_t channel_bit = 0;
 
     switch (dev) {
@@ -662,7 +678,7 @@ static void mark_channel_as_paired(uint8_t dev) {
 /**
  * @brief 清除所有通道的配对状态 (用于恢复出厂设置)
  */
-static void clear_all_pairing_status(void) {
+void clear_all_pairing_status(void) {
     dev_info.paired_status = 0;
     eeconfig_update_user(dev_info.raw);
 }
@@ -720,98 +736,56 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
     switch (dev_info.devs) {
         case DEVS_HOST1: {
             if (reset != false) {
-                // 强制重置 - 进入配对模式
-                indicator_status          = 1;
+                // Reset - enter pairing mode
+                indicator_status          = INDICATOR_PAIRING;
                 indicator_reset_last_time = true;
                 bts_send_name(DEVS_HOST1);
                 bts_send_vendor(v_host1);
                 bts_send_vendor(v_pair);
             } else {
-                // 检查是否从未配对过
-                if (is_channel_never_paired(DEVS_HOST1)) {
-                    // 从未配对过，自动进入配对模式
-                    indicator_status          = 1;
-                    indicator_reset_last_time = true;
-                    bts_send_name(DEVS_HOST1);
-                    bts_send_vendor(v_host1);
-                    bts_send_vendor(v_pair);
-                } else {
-                    // 已经配对过，尝试连接
-                    indicator_status          = 2;
-                    indicator_reset_last_time = true;
-                    bts_send_vendor(v_host1);
-                }
+                indicator_status          = INDICATOR_CONNECTING;
+                indicator_reset_last_time = true;
+                bts_send_vendor(v_host1);
             }
         } break;
         case DEVS_HOST2: {
             if (reset != false) {
-                // 强制重置 - 进入配对模式
-                indicator_status          = 1;
+                // Reset - enter pairing mode
+                indicator_status          = INDICATOR_PAIRING;
                 indicator_reset_last_time = true;
                 bts_send_name(DEVS_HOST2);
                 bts_send_vendor(v_host2);
                 bts_send_vendor(v_pair);
             } else {
-                // 检查是否从未配对过
-                if (is_channel_never_paired(DEVS_HOST2)) {
-                    // 从未配对过，自动进入配对模式
-                    indicator_status          = 1;
-                    indicator_reset_last_time = true;
-                    bts_send_name(DEVS_HOST2);
-                    bts_send_vendor(v_host2);
-                    bts_send_vendor(v_pair);
-                } else {
-                    // 已经配对过，尝试连接
-                    indicator_status          = 2;
-                    indicator_reset_last_time = true;
-                    bts_send_vendor(v_host2);
-                }
+                indicator_status          = INDICATOR_CONNECTING;
+                indicator_reset_last_time = true;
+                bts_send_vendor(v_host2);
             }
         } break;
         case DEVS_HOST3: {
             if (reset != false) {
-                // 强制重置 - 进入配对模式
-                indicator_status          = 1;
+                // Reset - enter pairing mode
+                indicator_status          = INDICATOR_PAIRING;
                 indicator_reset_last_time = true;
                 bts_send_name(DEVS_HOST3);
                 bts_send_vendor(v_host3);
                 bts_send_vendor(v_pair);
             } else {
-                // 检查是否从未配对过
-                if (is_channel_never_paired(DEVS_HOST3)) {
-                    // 从未配对过，自动进入配对模式
-                    indicator_status          = 1;
-                    indicator_reset_last_time = true;
-                    bts_send_name(DEVS_HOST3);
-                    bts_send_vendor(v_host3);
-                    bts_send_vendor(v_pair);
-                } else {
-                    // 已经配对过，尝试连接
-                    indicator_status          = 2;
-                    indicator_reset_last_time = true;
-                    bts_send_vendor(v_host3);
-                }
+                indicator_status          = INDICATOR_CONNECTING;
+                indicator_reset_last_time = true;
+                bts_send_vendor(v_host3);
             }
         } break;
         case DEVS_2_4G: {
             if (reset != false) {
-                // 强制重置 - 进入配对模式
-                indicator_status          = 1;
+                // Reset - enter pairing mode
+                indicator_status          = INDICATOR_PAIRING;
                 indicator_reset_last_time = true;
                 bts_send_vendor(v_pair);
             } else {
-                // 检查是否从未配对过
-                if (is_channel_never_paired(DEVS_2_4G)) {
-                    // 从未配对过，自动进入配对模式
-                    indicator_status          = 1;
-                    indicator_reset_last_time = true;
-                    bts_send_vendor(v_pair);
-                } else {
-                    // 已经配对过，尝试连接
-                    indicator_status          = 2;
-                    indicator_reset_last_time = true;
-                    bts_send_vendor(v_2_4g);
-                }
+                indicator_status          = INDICATOR_CONNECTING;
+                indicator_reset_last_time = true;
+                bts_send_vendor(v_2_4g);
             }
         } break;
         case DEVS_USB: {
@@ -842,28 +816,44 @@ static bool bt_process_record_other(uint16_t keycode, keyrecord_t *record) {
         case BT_HOST1: {
             if (record->event.pressed) {
                 if (dev_info.devs != DEVS_HOST1) {
-                    bt_switch_mode(dev_info.devs, DEVS_HOST1, false);
+                    if (is_channel_never_paired(DEVS_HOST1)) {
+                        bt_switch_mode(dev_info.devs, DEVS_HOST1, true);
+                    } else {
+                        bt_switch_mode(dev_info.devs, DEVS_HOST1, false);
+                    }
                 }
             }
         } break;
         case BT_HOST2: {
             if (record->event.pressed) {
                 if (dev_info.devs != DEVS_HOST2) {
-                    bt_switch_mode(dev_info.devs, DEVS_HOST2, false);
+                    if (is_channel_never_paired(DEVS_HOST2)) {
+                        bt_switch_mode(dev_info.devs, DEVS_HOST2, true);
+                    } else {
+                        bt_switch_mode(dev_info.devs, DEVS_HOST2, false);
+                    }
                 }
             }
         } break;
         case BT_HOST3: {
             if (record->event.pressed) {
                 if (dev_info.devs != DEVS_HOST3) {
-                    bt_switch_mode(dev_info.devs, DEVS_HOST3, false);
+                    if (is_channel_never_paired(DEVS_HOST3)) {
+                        bt_switch_mode(dev_info.devs, DEVS_HOST3, true);
+                    } else {
+                        bt_switch_mode(dev_info.devs, DEVS_HOST3, false);
+                    }
                 }
             }
         } break;
         case BT_2_4G: {
             if (record->event.pressed) {
                 if (dev_info.devs != DEVS_2_4G) {
-                    bt_switch_mode(dev_info.devs, DEVS_2_4G, false);
+                    if (is_channel_never_paired(DEVS_2_4G)) {
+                        bt_switch_mode(dev_info.devs, DEVS_2_4G, true);
+                    } else {
+                        bt_switch_mode(dev_info.devs, DEVS_2_4G, false);
+                    }
                 }
             }
         } break;
@@ -1089,7 +1079,7 @@ static void bt_indicate(void) {
     }
 
     switch (indicator_status) {
-        case INDICATOR_PAIRING: { // 闪烁模式 5Hz 重置
+        case INDICATOR_PAIRING: {
             if ((last_time == 0) || (timer_elapsed32(last_time) >= WL_PAIR_INTVL_MS)) {
                 last_time = timer_read32();
                 rgb_flip  = !rgb_flip;
@@ -1117,7 +1107,7 @@ static void bt_indicate(void) {
             }
         } break;
 
-        case INDICATOR_CONNECTING: { // 闪烁模式 2Hz 回连
+        case INDICATOR_CONNECTING: {
             if ((last_time == 0) || (timer_elapsed32(last_time) >= WL_CONN_INTVL_MS)) {
                 last_time = timer_read32();
                 rgb_flip  = !rgb_flip;
@@ -1131,9 +1121,6 @@ static void bt_indicate(void) {
             }
 
             if (bts_info.bt_info.paired) {
-                // 连接成功 - 标记当前通道为已配对
-                mark_channel_as_paired(dev_info.devs);
-
                 last_long_time   = timer_read32();
                 indicator_status = INDICATOR_CONNECTED;
                 break;
@@ -1167,7 +1154,7 @@ static void bt_indicate(void) {
                         indicator_status = INDICATOR_CONNECTING;
                         break;
                     }
-                    indicator_status = INDICATOR_CONNECTING;
+                    // indicator_status = INDICATOR_CONNECTING;
                     if ((dev_info.devs != DEVS_USB) && (dev_info.devs != DEVS_2_4G)) {
                         bt_switch_mode(DEVS_USB, dev_info.last_devs, false);
                     }
@@ -1276,7 +1263,7 @@ static battery_charge_state_t get_battery_charge_state(void) {
 
 static void bt_bat_query_period(void) {
     static uint32_t query_vol_time = 0;
-    if (!bt_init_time && !kb_sleep_flag && (bts_info.bt_info.paired) && timer_elapsed32(query_vol_time) >= 4000) {
+    if (!bt_init_time && !kb_sleep_flag && (bts_info.bt_info.paired) && timer_elapsed32(query_vol_time) >= 10000) {
         query_vol_time = timer_read32();
         bts_send_vendor(v_query_vol);
     }
@@ -1292,7 +1279,7 @@ static void bt_bat_level_display(void) {
             RGB color;
             if (pvol < 30) {
                 color = (RGB){RGB_RED}; // 红色
-            } else if (pvol < 60) {
+            } else if (pvol < 50) {
                 color = (RGB){RGB_YELLOW}; // 黄色
             } else {
                 color = (RGB){RGB_GREEN}; // 绿色
@@ -1353,12 +1340,13 @@ static void factory_reset_indicate(void) {
                 wait_ms(1000);
                 // 恢复出厂设置后，如果当前是蓝牙模式，自动进入配对模式
                 if (IS_BT_DEVICE(dev_info.devs)) {
+                    bt_switch_mode(dev_info.devs, dev_info.devs, false);
                     bt_switch_mode(dev_info.devs, dev_info.devs, true);
                 }
             }
         }
         if (EE_CLR_press_cnt & 0x1) {
-            N_RGB_MATRIX_SET_COLOR_ALL(0xC8, 0xC8, 0xC8);
+            N_RGB_MATRIX_SET_COLOR_ALL(0x64, 0x64, 0x64);
         }
     }
 }
