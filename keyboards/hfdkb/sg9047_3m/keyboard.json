@@ -14,7 +14,7 @@
     "features": {
         "bootmagic": true,
         "extrakey": true,
-        "mousekey": false,
+        "mousekey": true,
         "nkro": true,
         "encoder": true,
         "rgb_matrix": true
@@ -25,7 +25,7 @@
         }
     },
     "matrix_pins": {
-        "cols": ["C1", "C2", "C3", "A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "C4", "C5", "B0", "B1"],
+        "cols": ["C1", "C2", "B11", "A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "C4", "C5", "B0", "B1"],
         "rows": ["B15", "C6", "C7", "C8", "C9", "B14"]
     },
     "diode_direction": "ROW2COL",
@@ -47,7 +47,8 @@
         }
     },
     "ws2812": {
-        "pin": "B2"
+        "pin": "C3",
+        "driver": "spi"
     },
     "rgb_matrix": {
         "animations": {

@@ -46,7 +46,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_GRV,  KC_1,     KC_2,     KC_3,     KC_4,     KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS,  KC_EQL,   KC_BSPC,  KC_DEL,
         KC_TAB,  KC_Q,     KC_W,     KC_E,     KC_R,     KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC,  KC_RBRC,  KC_BSLS,  KC_PGUP,
         KC_CAPS, KC_A,     KC_S,     KC_D,     KC_F,     KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,            KC_ENT,   KC_PGDN,
-        KC_LSFT,           KC_Z,     KC_X,     KC_C,     KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,  KC_RSFT,  KC_UP,    KC_HOME,
+        KC_LSFT,           KC_Z,     KC_X,     KC_C,     KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,  KC_RSFT,  KC_UP,    KC_END,
         KC_LCTL, KC_LWIN,  KC_LALT,                               KC_SPC,                             MO(1),   KC_RCTL,  KC_LEFT,  KC_DOWN,  KC_RGHT),
 
     [WIN_FN] = LAYOUT_80_ansi(
@@ -54,7 +54,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         BT_2_4G, BT_HOST1, BT_HOST2, BT_HOST3, _______,  _______, _______, _______, _______, _______, _______, _______,  _______,  _______,  KC_INS,
         RM_HUEU, KEY_AND,  _______,  KEY_MAC,  KEY_IOS,  _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,  _______,  _______,  _______,
         _______, _______,  _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______,            _______,  _______,
-        _______,           _______,  _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RM_VALU,  KC_END,
+        _______,           _______,  _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RM_VALU,  KC_HOME,
         _______, GU_TOGG,  _______,                               _______,                            _______, _______,  RM_SPDD,  RM_VALD,  RM_SPDU),
 
     [AND_BASE] = LAYOUT_80_ansi(
@@ -62,7 +62,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_GRV,  KC_1,     KC_2,     KC_3,     KC_4,     KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS,  KC_EQL,   KC_BSPC,  KC_DEL,
         KC_TAB,  KC_Q,     KC_W,     KC_E,     KC_R,     KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC,  KC_RBRC,  KC_BSLS,  KC_PGUP,
         KC_CAPS, KC_A,     KC_S,     KC_D,     KC_F,     KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,            KC_ENT,   KC_PGDN,
-        KC_LSFT,           KC_Z,     KC_X,     KC_C,     KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,  KC_RSFT,  KC_UP,    KC_HOME,
+        KC_LSFT,           KC_Z,     KC_X,     KC_C,     KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,  KC_RSFT,  KC_UP,    KC_END,
         KC_LCTL, KC_LWIN,  KC_LALT,                               KC_SPC,                             MO(3),   KC_RCTL,  KC_LEFT,  KC_DOWN,  KC_RGHT),
 
     [AND_FN] = LAYOUT_80_ansi(
@@ -70,7 +70,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         BT_2_4G, BT_HOST1, BT_HOST2, BT_HOST3, _______,  _______, _______, _______, _______, _______, _______, _______,  _______,  _______,  _______,
         RM_HUEU, _______,  KEY_WIN,  KEY_MAC,  KEY_IOS,  _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,  _______,  _______,  _______,
         _______, _______,  _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______,            _______,  _______,
-        _______,           _______,  _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RM_VALU,  KC_END,
+        _______,           _______,  _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RM_VALU,  KC_HOME,
         _______, _______,  _______,                               _______,                            _______, _______,  RM_SPDD,  RM_VALD,  RM_SPDU),
 
     [MAC_BASE] = LAYOUT_80_ansi(
@@ -78,7 +78,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_GRV,  KC_1,     KC_2,     KC_3,     KC_4,     KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS,  KC_EQL,   KC_BSPC,  KC_DEL,
         KC_TAB,  KC_Q,     KC_W,     KC_E,     KC_R,     KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC,  KC_RBRC,  KC_BSLS,  KC_PGUP,
         KC_CAPS, KC_A,     KC_S,     KC_D,     KC_F,     KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,            KC_ENT,   KC_PGDN,
-        KC_LSFT,           KC_Z,     KC_X,     KC_C,     KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,  KC_RSFT,  KC_UP,    KC_HOME,
+        KC_LSFT,           KC_Z,     KC_X,     KC_C,     KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,  KC_RSFT,  KC_UP,    KC_END,
         KC_LCTL, KC_LOPT,  KC_LCMD,                               KC_SPC,                             MO(5),   KC_RCTL,  KC_LEFT,  KC_DOWN,  KC_RGHT),
 
     [MAC_FN] = LAYOUT_80_ansi(
@@ -86,7 +86,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         BT_2_4G, BT_HOST1, BT_HOST2, BT_HOST3, BT_2_4G,  _______, _______, _______, _______, _______, _______, _______,  _______,  _______,  _______,
         RM_HUEU, KEY_AND,  KEY_WIN,  _______,  KEY_IOS,  _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,  _______,  _______,  _______,
         _______, _______,  _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______,            _______,  _______,
-        _______,           _______,  _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RM_VALU,  KC_END,
+        _______,           _______,  _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RM_VALU,  KC_HOME,
         _______, _______,  _______,                               _______,                            _______, _______,  RM_SPDD,  RM_VALD,  RM_SPDU),
 
     [IOS_BASE] = LAYOUT_80_ansi(
@@ -94,7 +94,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_GRV,  KC_1,     KC_2,     KC_3,     KC_4,     KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS,  KC_EQL,   KC_BSPC,  KC_DEL,
         KC_TAB,  KC_Q,     KC_W,     KC_E,     KC_R,     KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC,  KC_RBRC,  KC_BSLS,  KC_PGUP,
         KC_CAPS, KC_A,     KC_S,     KC_D,     KC_F,     KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,            KC_ENT,   KC_PGDN,
-        KC_LSFT,           KC_Z,     KC_X,     KC_C,     KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,  KC_RSFT,  KC_UP,    KC_HOME,
+        KC_LSFT,           KC_Z,     KC_X,     KC_C,     KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,  KC_RSFT,  KC_UP,    KC_END,
         KC_LCTL, KC_LOPT,  KC_LCMD,                               KC_SPC,                             MO(7),   KC_RCTL,  KC_LEFT,  KC_DOWN,  KC_RGHT),
 
     [IOS_FN] = LAYOUT_80_ansi(
@@ -102,7 +102,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         BT_2_4G, BT_HOST1, BT_HOST2, BT_HOST3, BT_2_4G,  _______, _______, _______, _______, _______, _______, _______,  _______,  _______,  _______,
         RM_HUEU, KEY_AND,  KEY_WIN,  KEY_MAC,  _______,  _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,  _______,  _______,  _______,
         _______, _______,  _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______,            _______,  _______,
-        _______,           _______,  _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RM_VALU,  KC_END,
+        _______,           _______,  _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RM_VALU,  KC_HOME,
         _______, _______,  _______,                               _______,                            _______, _______,  RM_SPDD,  RM_VALD,  RM_SPDU),
 };
 

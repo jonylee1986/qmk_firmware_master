@@ -258,16 +258,16 @@ bool rgb_matrix_indicators_user(void) {
         rgb_matrix_set_color(GUI_LOCK_LED_INDEX, RGB_WHITE);
     }
 
+    if (!bts_info.bt_info.low_vol && rgb_matrix_get_flags()) {
+        if (!bled_indicators()) {
+            return false;
+        }
+    }
+
     return true;
 }
 
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
-    // if (!bts_info.bt_info.low_vol && rgb_matrix_get_flags()) {
-    //     if (!bled_indicators_advanced(led_min, led_max)) {
-    //         return false;
-    //     }
-    // }
-
     // Bluetooth related indicators
 #    ifdef MULTIMODE_ENABLE
     if (!bt_indicators_advanced(led_min, led_max)) {
@@ -285,12 +285,6 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         }
         if (all_blink_cnt & 0x1) {
             N_RGB_MATRIX_SET_COLOR_ALL(all_blink_color.r, all_blink_color.g, all_blink_color.b);
-        }
-    }
-
-    if (!bts_info.bt_info.low_vol && rgb_matrix_get_flags()) {
-        if (!bled_indicators_advanced(led_min, led_max)) {
-            return false;
         }
     }
 

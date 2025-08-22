@@ -41,14 +41,14 @@ extern dev_info_t dev_info;
 extern bts_info_t bts_info;
 
 /**
- * @brief bluetooth 初始化函数
+ * @brief Bluetooth init function
  * @param None
  * @return None
  */
 void bt_init(void);
 
 /**
- * @brief bluetooth交互任务
+ * @brief Bluetooth interaction task
  * @param None
  * @return None
  */
@@ -59,22 +59,22 @@ void bt_suspend_power_down(void);
 void bt_suspend_wakeup_init(void);
 
 /**
- * @brief 处理和BT相关的按键
- * @param keycode: 键值
- * @param record: 记录值
+ * @brief Handle BT-related keycodes
+ * @param keycode: keycode value
+ * @param record: key event record
  * @return None
  */
 bool bt_process_record(uint16_t keycode, keyrecord_t *record);
 
 /**
- * @brief rgb指示灯任务
+ * @brief RGB indicator task
  * @param None
  * @return None
  */
 bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max);
 
 /**
- * @brief 切换工作模式
+ * @brief Switch working mode
  * @param None
  * @return None
  */

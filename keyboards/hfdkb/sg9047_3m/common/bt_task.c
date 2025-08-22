@@ -23,7 +23,7 @@
 #endif
 
 // ===========================================
-// 函数声明
+// Function declarations
 // ===========================================
 static void bt_long_pressed_keys_hook(void);
 static void bt_long_pressed_keys_cb(uint16_t keycode);
@@ -55,7 +55,7 @@ static void led_deconfig_all(void);
 #endif
 
 // ===========================================
-// 常量定义
+// Constant definitions
 // ===========================================
 /* Wireless connection timing constants */
 #define WL_CONN_TIMEOUT_MS (10 * 1000)       // 10 seconds
@@ -63,9 +63,9 @@ static void led_deconfig_all(void);
 #define WL_PAIR_INTVL_MS (200)               // 5Hz blink for pairing
 #define WL_CONN_INTVL_MS (500)               // 2Hz blink for connecting
 #define WL_CONNECTED_LAST_MS (3 * 1000)      // Show wl connected status for 3s
-#define USB_CONN_INTVL_MS (500)              // Show USB connected status for 3s
-#define USB_CONNECTED_LAST_MS (3 * 1000)     // Show USB connected status for 3s
-#define USB_CONN_BLINK_COUNT 1               // USB blink count when connected
+#define USB_CONNECTED_LAST_MS (1 * 1000)     // Show USB connected status for 1s
+// #define USB_CONN_INTVL_MS (500)              // Show USB connected status for 3s
+// #define USB_CONN_BLINK_COUNT 2               // USB blink count when connected
 
 /* Sleep and standby timeouts */
 #define LED_OFF_STANDBY_TIMEOUT_MS ((4 * 60 + 6) * 1000) // 5 minutes
@@ -77,10 +77,12 @@ static void led_deconfig_all(void);
 
 /* Hardware validation helpers */
 #define IS_BT_DEVICE(dev) ((dev) >= DEVS_HOST1 && (dev) <= DEVS_HOST3)
-#define IS_VALID_DEVICE(dev) ((dev) >= DEVS_USB && (dev) <= DEVS_2_4G)
+#define IS_BT_KEYCODE(keycode) ((keycode) == BT_HOST1 || (keycode) == BT_HOST2 || (keycode) == BT_HOST3)
+#define IS_2G4_KEYCODE(keycode) ((keycode) == BT_2_4G)
+#define IS_USB_KEYCODE(keycode) ((keycode) == BT_USB)
 
 // ===========================================
-// 结构体定义
+// Struct definitions
 // ===========================================
 typedef struct {
     uint32_t press_time;
@@ -95,7 +97,7 @@ typedef enum {
 } battery_charge_state_t;
 static battery_charge_state_t get_battery_charge_state(void);
 
-// 指示器状态
+// Indicator states
 typedef enum {
     INDICATOR_OFF        = 0,
     INDICATOR_PAIRING    = 1,
@@ -107,14 +109,14 @@ static indicator_state_t indicator_status = INDICATOR_CONNECTING;
 
 #if defined(MM_BT_MODE_PIN) && defined(MM_2G4_MODE_PIN)
 typedef enum {
-    MM_MODE_USB = 0, // USB模式
-    MM_MODE_BT,      // 蓝牙模式
-    MM_MODE_2G4,     // 2.4G模式
+    MM_MODE_USB = 0, // USB mode
+    MM_MODE_BT,      // Bluetooth mode
+    MM_MODE_2G4,     // 2.4G mode
 } mm_mode_t;
 #endif
 
 // ===========================================
-// 全局变量
+// Global variables
 // ===========================================
 
 extern keymap_config_t keymap_config;
@@ -133,7 +135,7 @@ bts_info_t bts_info     = {
         .timer_read32   = timer_read32,
 };
 
-// 长按键配置
+// Long-press key configuration
 // clang-format off
 static long_pressed_keys_t long_pressed_keys[] = {
     {.keycode = BT_HOST1, .press_time = 0, .event_cb = bt_long_pressed_keys_cb},
@@ -146,7 +148,7 @@ static long_pressed_keys_t long_pressed_keys[] = {
 // clang-format on
 static bool indicator_reset_last_time = false;
 
-// RGB控制
+// RGB control
 static uint32_t key_press_time = 0;
 static uint32_t close_rgb_time = 0;
 
@@ -156,7 +158,7 @@ static bool bak_rgb_toggle  = false;
 static bool sober           = true;
 static bool kb_sleep_flag   = false;
 
-// 设备指示配置
+// Device indicator configuration
 static const uint8_t rgb_index_table[] = {MM_BLINK_USB_INDEX, MM_BLINK_HOST1_INDEX, MM_BLINK_HOST2_INDEX, MM_BLINK_HOST3_INDEX, MM_BLINK_2G4_INDEX};
 // clang-format off
 static const uint8_t rgb_index_color_table[][3] = {
@@ -168,7 +170,7 @@ static const uint8_t rgb_index_color_table[][3] = {
 };
 // clang-format on
 
-// RGB测试相关
+// RGB test
 static const uint8_t rgb_test_color_table[][3] = {
     {100, 0, 0},
     {0, 100, 0},
@@ -181,7 +183,7 @@ static uint32_t rgb_test_time   = 0;
 static bool     query_vol_flag  = false;
 static uint32_t last_total_time = 0;
 
-// 闪烁效果相关
+// Blink effect (unused)
 // static uint8_t  all_blink_cnt      = 0;
 // static uint32_t all_blink_time     = 0;
 // static RGB      all_blink_color    = {0};
@@ -194,13 +196,12 @@ static uint32_t EE_CLR_press_cnt  = 0;
 static uint32_t EE_CLR_press_time = 0;
 static bool     EE_CLR_flag       = false;
 
-// 电量查询
-/* 电量显示LED */
+// Battery query
+/* Battery level LEDs */
 uint8_t query_index[10] = BAT_LEVEL_DISPLAY_INDEX;
 
-// USB相关
-// static uint32_t USB_switch_time = 0;
-static uint8_t USB_blink_cnt = 0;
+// USB related
+static uint32_t USB_switch_time = 0;
 
 #include "command.h"
 #include "action.h"
@@ -424,7 +425,7 @@ __attribute__((weak)) void unregister_code16(uint16_t code) {
 }
 
 // ===========================================
-// 线程定义
+// Thread definition
 // ===========================================
 static THD_WORKING_AREA(waThread1, 128);
 static THD_FUNCTION(Thread1, arg) {
@@ -437,19 +438,19 @@ static THD_FUNCTION(Thread1, arg) {
 }
 
 // ===========================================
-// 初始化函数
+// Init function
 // ===========================================
 void bt_init(void) {
     bts_init(&bts_info);
     bt_used_pin_init();
 
-    // 读取用户配置
+    // Read user config
     dev_info.raw = eeconfig_read_user();
     if (!dev_info.raw) {
-        // 首次初始化 - 设置默认值
+        // First-time init - set defaults
         dev_info.devs          = DEVS_USB;
         dev_info.last_devs     = DEVS_HOST1;
-        dev_info.paired_status = 0; // 所有通道都未配对
+        dev_info.paired_status = 0; // All channels unpaired
         eeconfig_update_user(dev_info.raw);
     }
 
@@ -474,7 +475,7 @@ void bt_init(void) {
 }
 
 // ===========================================
-// 蓝牙任务函数
+// Bluetooth task function
 // ===========================================
 void bt_task(void) {
     static uint32_t last_time = 0;
@@ -483,7 +484,7 @@ void bt_task(void) {
     if ((bt_init_time != 0) && (timer_elapsed32(bt_init_time) >= 2000)) {
         bt_init_time = 0;
 
-        // bts_send_name(DEVS_HOST1);
+        bts_send_name(DEVS_HOST1);
         switch (dev_info.devs) {
             case DEVS_HOST1: {
                 bts_send_vendor(v_host1);
@@ -541,7 +542,7 @@ void bt_task(void) {
 }
 
 // ===========================================
-// 按键处理函数
+// Key processing function
 // ===========================================
 bool bt_process_record(uint16_t keycode, keyrecord_t *record) {
     bool retval = true;
@@ -615,13 +616,13 @@ bool bt_process_record(uint16_t keycode, keyrecord_t *record) {
 }
 
 // ===========================================
-// 配对状态管理函数
+// Pairing status helpers
 // ===========================================
 
 /**
- * @brief 检查指定通道是否从未配对过
- * @param dev 设备通道 (DEVS_HOST1, DEVS_HOST2, DEVS_HOST3, DEVS_2_4G)
- * @return true: 从未配对过, false: 已经配对过
+ * @brief Check if a channel has never been paired
+ * @param dev Device channel (DEVS_HOST1, DEVS_HOST2, DEVS_HOST3, DEVS_2_4G)
+ * @return true: never paired, false: already paired
  */
 bool is_channel_never_paired(uint8_t dev) {
     uint8_t channel_bit = 0;
@@ -640,16 +641,16 @@ bool is_channel_never_paired(uint8_t dev) {
             channel_bit = 0x08;
             break;
         default:
-            return false; // USB 或其他设备不需要配对
+            return false; // USB or other devices don't need pairing
     }
 
-    // 如果对应bit未设置，说明从未配对过
+    // If the corresponding bit is not set, it was never paired
     return (dev_info.paired_status & channel_bit) == 0;
 }
 
 /**
- * @brief 标记指定通道为已配对
- * @param dev 设备通道
+ * @brief Mark the specified channel as paired
+ * @param dev Device channel
  */
 void mark_channel_as_paired(uint8_t dev) {
     uint8_t channel_bit = 0;
@@ -668,7 +669,7 @@ void mark_channel_as_paired(uint8_t dev) {
             channel_bit = 0x08;
             break;
         default:
-            return; // USB 或其他设备不需要配对
+            return; // USB or other devices don't need pairing
     }
 
     dev_info.paired_status |= channel_bit;
@@ -676,7 +677,7 @@ void mark_channel_as_paired(uint8_t dev) {
 }
 
 /**
- * @brief 清除所有通道的配对状态 (用于恢复出厂设置)
+ * @brief Clear pairing status for all channels (factory reset)
  */
 void clear_all_pairing_status(void) {
     dev_info.paired_status = 0;
@@ -684,7 +685,7 @@ void clear_all_pairing_status(void) {
 }
 
 // ===========================================
-// 设备切换函数
+// Device switching
 // ===========================================
 void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
     // Enable RGB if it was previously enabled
@@ -713,9 +714,9 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
     if ((dev_info.devs != DEVS_USB) && (dev_info.devs != DEVS_2_4G)) {
         dev_info.last_devs = dev_info.devs;
     } else if (dev_info.devs == DEVS_USB) {
-        // USB_switch_time = timer_read32();
-        USB_blink_cnt = 0;
+        USB_switch_time = timer_read32();
     }
+
     // Set hardware control pin
     if (dev_info.devs == DEVS_USB) {
         writePinLow(A14);
@@ -797,10 +798,10 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
 }
 
 // ===========================================
-// 其他按键处理
+// Other key handling
 // ===========================================
 static bool bt_process_record_other(uint16_t keycode, keyrecord_t *record) {
-    // 更新长按键时间
+    // Update long-press timers
     for (uint8_t i = 0; i < NUM_LONG_PRESS_KEYS; i++) {
         if (keycode == long_pressed_keys[i].keycode) {
             if (record->event.pressed) {
@@ -892,7 +893,7 @@ static bool bt_process_record_other(uint16_t keycode, keyrecord_t *record) {
 }
 
 // ===========================================
-// 长按键处理
+// Long-press handling
 // ===========================================
 static void bt_long_pressed_keys_cb(uint16_t keycode) {
     switch (keycode) {
@@ -938,7 +939,7 @@ static void bt_long_pressed_keys_hook(void) {
 }
 
 // ===========================================
-// 硬件管理函数
+// Hardware helpers
 // ===========================================
 static void bt_used_pin_init(void) {
 #if defined(MM_BT_MODE_PIN) && defined(MM_2G4_MODE_PIN)
@@ -954,19 +955,31 @@ static void bt_used_pin_init(void) {
 static void bt_scan_mode(void) {
 #if defined(MM_BT_MODE_PIN) && defined(MM_2G4_MODE_PIN)
     if (readPin(MM_BT_MODE_PIN) && !readPin(MM_2G4_MODE_PIN)) {
-        if (dev_info.devs != DEVS_2_4G) bt_switch_mode(dev_info.devs, DEVS_2_4G, false); // 2_4G mode
+        if (dev_info.devs != DEVS_2_4G) {
+            if (is_channel_never_paired(DEVS_2_4G)) {
+                bt_switch_mode(dev_info.devs, DEVS_2_4G, true); // 2.4G mode (pairing)
+            } else {
+                bt_switch_mode(dev_info.devs, DEVS_2_4G, false); // 2.4G mode (connect)
+            }
+        }
     }
     if (readPin(MM_2G4_MODE_PIN) && !readPin(MM_BT_MODE_PIN)) {
-        if ((dev_info.devs == DEVS_USB) || (dev_info.devs == DEVS_2_4G)) bt_switch_mode(dev_info.devs, dev_info.last_devs, false); // BT mode
+        if ((dev_info.devs == DEVS_USB) || (dev_info.devs == DEVS_2_4G)) {
+            if (is_channel_never_paired(dev_info.last_devs)) {
+                bt_switch_mode(dev_info.devs, dev_info.last_devs, true); // Bluetooth mode (pairing)
+            } else {
+                bt_switch_mode(dev_info.devs, dev_info.last_devs, false); // Bluetooth mode (connect)
+            }
+        }
     }
     if (readPin(MM_BT_MODE_PIN) && readPin(MM_2G4_MODE_PIN)) {
-        if (dev_info.devs != DEVS_USB) bt_switch_mode(dev_info.devs, DEVS_USB, false); // usb mode
+        if (dev_info.devs != DEVS_USB) bt_switch_mode(dev_info.devs, DEVS_USB, false); // USB mode
     }
 #endif
 }
 
 // ===========================================
-// RGB关闭函数
+// RGB off helpers
 // ===========================================
 static void led_off_standby(void) {
     if (timer_elapsed32(key_press_time) >= LED_OFF_STANDBY_TIMEOUT_MS) {
@@ -979,7 +992,7 @@ static void led_off_standby(void) {
 }
 
 // ===========================================
-// 无操作休眠函数
+// Idle/sleep helpers
 // ===========================================
 void led_config_all(void) {
     if (!led_inited) {
@@ -1035,7 +1048,7 @@ static void close_rgb(void) {
 }
 
 // ===========================================
-// 打开RGB函数
+// RGB enable helpers
 // ===========================================
 static void open_rgb(void) {
     key_press_time = timer_read32();
@@ -1058,7 +1071,7 @@ static void open_rgb(void) {
 }
 
 // ===========================================
-// 指示灯函数
+// Indicator function
 // ===========================================
 static void bt_indicate(void) {
     uint8_t         rgb_index      = rgb_index_table[dev_info.devs];
@@ -1093,7 +1106,7 @@ static void bt_indicate(void) {
             }
 
             if (bts_info.bt_info.paired) {
-                // 配对成功 - 标记当前通道为已配对
+                // Paired successfully - mark current channel as paired
                 mark_channel_as_paired(dev_info.devs);
 
                 last_long_time   = timer_read32();
@@ -1121,6 +1134,9 @@ static void bt_indicate(void) {
             }
 
             if (bts_info.bt_info.paired) {
+                // Paired successfully - mark current channel as paired
+                mark_channel_as_paired(dev_info.devs);
+
                 last_long_time   = timer_read32();
                 indicator_status = INDICATOR_CONNECTED;
                 break;
@@ -1132,7 +1148,7 @@ static void bt_indicate(void) {
             }
         } break;
 
-        case INDICATOR_CONNECTED: { // 长亮模式
+        case INDICATOR_CONNECTED: { // Solid on
             if ((timer_elapsed32(last_long_time) < WL_CONNECTED_LAST_MS)) {
                 rgb.r = rgb_index_color_table[dev_info.devs][0];
                 rgb.g = rgb_index_color_table[dev_info.devs][1];
@@ -1142,7 +1158,7 @@ static void bt_indicate(void) {
             }
         } break;
 
-        case INDICATOR_DISABLED: { // 长灭模式
+        case INDICATOR_DISABLED: { // Solid off
             rgb = (RGB){.r = 0, .g = 0, .b = 0};
         } break;
 
@@ -1172,22 +1188,12 @@ static void bt_indicate(void) {
 }
 
 static void usb_indicate(void) {
-    static uint32_t USB_blink_time = 0;
-    static bool     USB_blink      = false;
-
     if (USB_DRIVER.state == USB_ACTIVE) {
-        if (USB_blink_cnt <= USB_CONN_BLINK_COUNT) {
-            if (timer_elapsed32(USB_blink_time) >= USB_CONN_INTVL_MS) {
-                USB_blink_cnt++;
-                USB_blink      = !USB_blink;
-                USB_blink_time = timer_read32();
-            }
-            if (USB_blink % 2) {
-                rgb_matrix_set_color(rgb_index_table[DEVS_USB], rgb_index_color_table[DEVS_USB][0], rgb_index_color_table[DEVS_USB][1], rgb_index_color_table[DEVS_USB][2]);
-            } else {
-                rgb_matrix_set_color(rgb_index_table[DEVS_USB], 0, 0, 0);
-            }
+        if (timer_elapsed32(USB_switch_time) < USB_CONNECTED_LAST_MS) {
+            rgb_matrix_set_color(rgb_index_table[DEVS_USB], rgb_index_color_table[DEVS_USB][0], rgb_index_color_table[DEVS_USB][1], rgb_index_color_table[DEVS_USB][2]);
         }
+    } else {
+        USB_switch_time = timer_read32();
     }
 }
 
@@ -1202,7 +1208,7 @@ static void bt_bat_low_level_warning(void) {
             Low_power_time = timer_read32();
         }
         if (Low_power_bink) {
-            rgb_matrix_set_color(CHRGE_LOW_LEVEL_INDICATOR_INDEX, CHRGE_LOW_LEVEL_INDICATOR_COLOR); // 红色
+            rgb_matrix_set_color(CHRGE_LOW_LEVEL_INDICATOR_INDEX, CHRGE_LOW_LEVEL_INDICATOR_COLOR); // Red
         } else {
             rgb_matrix_set_color(CHRGE_LOW_LEVEL_INDICATOR_INDEX, RGB_OFF);
         }
@@ -1218,10 +1224,10 @@ static void bt_charging_indication(void) {
     // HSV charge_led_hsv = {HSV_RED};
     // RGB charge_led_rgb = hsv_to_rgb(charge_led_hsv);
     if (get_battery_charge_state() == BATTERY_STATE_CHARGING || charge) {
-        // 正在充电
+        // Charging
         charge = true;
         if (timer_elapsed32(charging_time) >= 1500) {
-            rgb_matrix_set_color(CHRGE_LOW_LEVEL_INDICATOR_INDEX, CHRGE_LOW_LEVEL_INDICATOR_COLOR); // 红灯
+            rgb_matrix_set_color(CHRGE_LOW_LEVEL_INDICATOR_INDEX, CHRGE_LOW_LEVEL_INDICATOR_COLOR); // Red LED
         }
     } else {
         charging_time = timer_read32();
@@ -1239,7 +1245,7 @@ static void bt_bat_low_level_shutdown(void) {
 }
 
 // ===========================================
-// 电量查询显示函数
+// Battery query display helpers
 // ===========================================
 static battery_charge_state_t get_battery_charge_state(void) {
 #if defined(MM_CABLE_PIN) && defined(MM_CHARGE_PIN)
@@ -1278,11 +1284,11 @@ static void bt_bat_level_display(void) {
 
             RGB color;
             if (pvol < 30) {
-                color = (RGB){RGB_RED}; // 红色
+                color = (RGB){RGB_RED}; // Red
             } else if (pvol < 50) {
-                color = (RGB){RGB_YELLOW}; // 黄色
+                color = (RGB){RGB_YELLOW}; // Yellow
             } else {
-                color = (RGB){RGB_GREEN}; // 绿色
+                color = (RGB){RGB_GREEN}; // Green
             }
 
             for (uint8_t i = 0; i < led_count; i++) {
@@ -1293,7 +1299,7 @@ static void bt_bat_level_display(void) {
 }
 
 static void show_device_state(void) {
-    // FN 按下时显示当前无线设备状态
+    // Show current wireless device when FN is pressed
     if ((get_highest_layer(default_layer_state | layer_state) == 1) || (get_highest_layer(default_layer_state | layer_state) == 3)) {
         switch (dev_info.devs) {
             case DEVS_HOST1: {
@@ -1330,7 +1336,7 @@ static void factory_reset_indicate(void) {
             EE_CLR_flag       = false;
             eeconfig_init();
 
-            // 清除所有配对状态
+            // Clear all pairing status
             clear_all_pairing_status();
 
             // eeconfig_update_rgb_matrix_default();
@@ -1338,7 +1344,7 @@ static void factory_reset_indicate(void) {
             if (dev_info.devs != DEVS_USB && dev_info.devs != DEVS_2_4G) {
                 bts_send_vendor(v_clear);
                 wait_ms(1000);
-                // 恢复出厂设置后，如果当前是蓝牙模式，自动进入配对模式
+                // After factory reset, if in Bluetooth mode, automatically enter pairing mode
                 if (IS_BT_DEVICE(dev_info.devs)) {
                     bt_switch_mode(dev_info.devs, dev_info.devs, false);
                     bt_switch_mode(dev_info.devs, dev_info.devs, true);
@@ -1352,7 +1358,7 @@ static void factory_reset_indicate(void) {
 }
 
 // ===========================================
-// 主RGB指示器函数
+// Main RGB indicator function
 // ===========================================
 bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
     if ((dev_info.devs != DEVS_USB) && (get_battery_charge_state() == BATTERY_STATE_UNPLUGGED)) {
@@ -1362,7 +1368,7 @@ bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
     }
 
 #if defined(MM_CABLE_PIN) && defined(MM_CHARGE_PIN)
-    // 充电状态指示
+    // Charging indicator
     bt_charging_indication();
 #endif
 
@@ -1413,25 +1419,25 @@ void bt_housekeeping_task(void) {
 
     if (dev_info.devs == DEVS_USB) {
         if (USB_DRIVER.state != USB_ACTIVE) {
-            // USB挂起状态
+            // USB suspend state
             if (!usb_suspend_timer) {
-                // 开始计时
+                // Start timing
                 usb_suspend_timer = timer_read32();
             } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
-                // 挂起超过10秒，关闭背光
+                // Suspend over 10s, turn off backlight
                 if (!usb_suspend) {
-                    // 如果之前没有进入挂起状态，执行挂起操作
+                    // If not previously suspended, perform suspend actions
                     usb_suspend = true;
                     led_deconfig_all();
                 }
                 usb_suspend_timer = 0;
             }
         } else {
-            // USB活跃状态，重置计时器
+            // USB active, reset timer
             if (usb_suspend_timer) {
                 usb_suspend_timer = 0;
                 if (usb_suspend) {
-                    // 如果之前处于挂起状态，恢复背光
+                    // If previously suspended, restore backlight
                     usb_suspend = false;
                     led_config_all();
                 }
@@ -1451,7 +1457,7 @@ void bt_post_init(void) {}
 
 void matrix_init_kb(void) {
 #ifdef MULTIMODE_ENABLE
-    // 初始化蓝牙
+    // Initialize Bluetooth
     bt_init();
     led_config_all();
 #endif

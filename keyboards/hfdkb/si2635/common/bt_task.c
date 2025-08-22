@@ -79,13 +79,6 @@ typedef struct {
     void (*event_cb)(uint16_t);
 } long_pressed_keys_t;
 
-typedef enum {
-    BATTERY_STATE_UNPLUGGED = 0, // No cable connected
-    BATTERY_STATE_CHARGING,      // Cable connected, charging
-    BATTERY_STATE_CHARGED_FULL   // Cable connected, fully charged
-} battery_charge_state_t;
-static battery_charge_state_t get_battery_charge_state(void);
-
 // Indicator status
 typedef enum {
     INDICATOR_OFF        = 0,
@@ -891,6 +884,11 @@ void led_config_all(void) {
         setPinOutputPushPull(VOL_INDICATE_LED_4_PIN);
         setPinOutputPushPull(VOL_INDICATE_LED_5_PIN);
 #endif
+        setPinOutputPushPull(LED_CAPS_LOCK_PIN);
+        if (host_keyboard_led_state().caps_lock) {
+            writePinHigh(LED_CAPS_LOCK_PIN);
+        }
+
         led_inited = true;
     }
 }
@@ -902,12 +900,15 @@ void led_deconfig_all(void) {
         writePinLow(RGB_MATRIX_SHUTDOWN_PIN);
 #endif
 #ifdef VOL_INDICATE_LED_1_PIN
-        setPinInput(VOL_INDICATE_LED_1_PIN);
-        setPinInput(VOL_INDICATE_LED_2_PIN);
-        setPinInput(VOL_INDICATE_LED_3_PIN);
-        setPinInput(VOL_INDICATE_LED_4_PIN);
-        setPinInput(VOL_INDICATE_LED_5_PIN);
+        setPinOutputOpenDrain(VOL_INDICATE_LED_1_PIN);
+        setPinOutputOpenDrain(VOL_INDICATE_LED_2_PIN);
+        setPinOutputOpenDrain(VOL_INDICATE_LED_3_PIN);
+        setPinOutputOpenDrain(VOL_INDICATE_LED_4_PIN);
+        setPinOutputOpenDrain(VOL_INDICATE_LED_5_PIN);
 #endif
+        // gpio_write_pin(LED_CAPS_LOCK_PIN, 0);
+        setPinOutputOpenDrain(LED_CAPS_LOCK_PIN);
+
         led_inited = false;
     }
 }
@@ -1049,9 +1050,16 @@ static void bt_indicate(void) {
             }
 
             if (bts_info.bt_info.paired) {
+                if (host_keyboard_led_state().caps_lock) {
+                    gpio_write_pin(LED_CAPS_LOCK_PIN, 1);
+                }
                 last_long_time   = timer_read32();
                 indicator_status = INDICATOR_CONNECTED;
                 break;
+            }
+
+            if (host_keyboard_led_state().caps_lock) {
+                gpio_write_pin(LED_CAPS_LOCK_PIN, 0);
             }
 
             if (timer_elapsed32(last_total_time) >= WL_CONN_TIMEOUT_MS) {
@@ -1139,17 +1147,29 @@ static void bt_charging_indication(void) {
     static uint32_t charging_time = 0;
     bool            charge        = false;
 
-    if (get_battery_charge_state() == BATTERY_STATE_CHARGING || charge) {
-        charge = true;
-        if (timer_elapsed32(charging_time) >= 1500) {
-            rgb_matrix_set_color(CHRGE_LOW_LEVEL_INDICATOR_INDEX, CHRGE_LOW_LEVEL_INDICATOR_COLOR);
+    if (!readPin(MM_CABLE_PIN)) {
+        if (!readPin(MM_CHARGE_PIN)) {
+            if (timer_elapsed32(charging_time) >= 500 || charge) {
+                charge = true;
+                rgb_matrix_set_color(CHRGE_LOW_LEVEL_INDICATOR_INDEX, CHRGE_LOW_LEVEL_INDICATOR_COLOR);
+            }
+        } else {
+            charging_time = timer_read32();
         }
     } else {
-        charging_time = timer_read32();
-    }
-    if (get_battery_charge_state() == BATTERY_STATE_UNPLUGGED) {
         charge = false;
     }
+    // if (get_battery_charge_state() == BATTERY_STATE_CHARGING || charge) {
+    //     charge = true;
+    //     if (timer_elapsed32(charging_time) >= 1500) {
+    //         rgb_matrix_set_color(CHRGE_LOW_LEVEL_INDICATOR_INDEX, CHRGE_LOW_LEVEL_INDICATOR_COLOR);
+    //     }
+    // } else {
+    //     charging_time = timer_read32();
+    // }
+    // if (get_battery_charge_state() == BATTERY_STATE_UNPLUGGED) {
+    //     charge = false;
+    // }
 }
 
 static void bt_bat_low_level_shutdown(void) {
@@ -1157,26 +1177,6 @@ static void bt_bat_low_level_shutdown(void) {
         kb_sleep_flag       = true;
         low_vol_offed_sleep = true;
     }
-}
-
-static battery_charge_state_t get_battery_charge_state(void) {
-#if defined(MM_CABLE_PIN) && defined(MM_CHARGE_PIN)
-    static battery_charge_state_t stable_state = BATTERY_STATE_UNPLUGGED;
-
-    if (readPin(MM_CABLE_PIN)) {
-        stable_state = BATTERY_STATE_UNPLUGGED;
-    } else {
-        if (!readPin(MM_CHARGE_PIN)) {
-            stable_state = BATTERY_STATE_CHARGING;
-        } else {
-            stable_state = BATTERY_STATE_CHARGED_FULL;
-        }
-    }
-
-    return stable_state;
-#else
-    return BATTERY_STATE_UNPLUGGED;
-#endif
 }
 
 // ===========================================
@@ -1315,7 +1315,7 @@ bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
         bt_indicate();
     }
 
-    if ((dev_info.devs != DEVS_USB) && (get_battery_charge_state() == BATTERY_STATE_UNPLUGGED)) {
+    if ((dev_info.devs != DEVS_USB) && (readPin(MM_CABLE_PIN))) {
         bt_bat_level_display();
         bt_bat_query_period();
         bt_bat_low_level_warning();

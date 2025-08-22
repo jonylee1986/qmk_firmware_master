@@ -32,36 +32,36 @@ typedef enum {
 } devs_t;
 
 typedef enum {
-    v_usb          = 0x11, // USB模式
-    v_2_4g         = 0x30, // 2.4G模式
-    v_host1        = 0x31, // 蓝牙1
-    v_host2        = 0x32, // 蓝牙2
-    v_host3        = 0x33, // 蓝牙3
-    v_host4        = 0x34, // 蓝牙4
-    v_host5        = 0x35, // 蓝牙5
-    v_pair         = 0x51, // 无线配对
-    v_clear        = 0x52, // 清除配对信息
-    v_query_vol    = 0x53, // 查询电量信息
-    v_en_sleep_bt  = 0x55, // 允许休眠蓝牙30分钟
-    v_dis_sleep_bt = 0x56, // 禁止蓝牙休眠
-    v_en_sleep_wl  = 0x57, // 允许休眠2.4G30分钟
-    v_dis_sleep_wl = 0x58, // 禁止2.4G休眠
-    v_ota          = 0x81, // 无线空中升级
-    v_fixed_freq   = 0x82, // 进入定频模式
+    v_usb          = 0x11, // USB mode
+    v_2_4g         = 0x30, // 2.4G mode
+    v_host1        = 0x31, // Bluetooth 1
+    v_host2        = 0x32, // Bluetooth 2
+    v_host3        = 0x33, // Bluetooth 3
+    v_host4        = 0x34, // Bluetooth 4
+    v_host5        = 0x35, // Bluetooth 5
+    v_pair         = 0x51, // Wireless pairing
+    v_clear        = 0x52, // Clear pairing info
+    v_query_vol    = 0x53, // Query battery level
+    v_en_sleep_bt  = 0x55, // Allow Bluetooth sleep for 30 minutes
+    v_dis_sleep_bt = 0x56, // Disable Bluetooth sleep
+    v_en_sleep_wl  = 0x57, // Allow 2.4G sleep for 30 minutes
+    v_dis_sleep_wl = 0x58, // Disable 2.4G sleep
+    v_ota          = 0x81, // OTA update (wireless)
+    v_fixed_freq   = 0x82, // Enter fixed-frequency mode
 } vbs_t;
 
 typedef struct {
-    bool    sleeped;        // 已休眠
-    bool    low_vol;        // 低电压
-    bool    low_vol_offed;  // 低电压关机
-    bool    normal_vol;     // 正常电压
-    bool    pairing;        // 正在配对
-    bool    paired;         // 已配对
-    bool    come_back;      // 进入回连状态
-    bool    come_back_err;  // 回连失败
-    bool    mode_switched;  // 模式已切换
-    uint8_t pvol;           // 电压百分比
-    uint8_t indictor_rgb_s; // rgb指示灯状态
+    bool    sleeped;        // Sleeping
+    bool    low_vol;        // Low voltage
+    bool    low_vol_offed;  // Low-voltage shutdown
+    bool    normal_vol;     // Normal voltage
+    bool    pairing;        // Pairing in progress
+    bool    paired;         // Paired
+    bool    come_back;      // Reconnecting state
+    bool    come_back_err;  // Reconnect failed
+    bool    mode_switched;  // Mode switched
+    uint8_t pvol;           // Battery percentage
+    uint8_t indictor_rgb_s; // RGB indicator state
 } bt_info_t;
 
 /**
@@ -79,7 +79,7 @@ typedef struct {
 } bts_info_t;
 
 void bts_init(bts_info_t *info);
-void bts_task(devs_t dev_state); // 需要每1ms调用一次
+void bts_task(devs_t dev_state); // Must be called every 1ms
 bool bts_process_keys(uint16_t keycode, bool pressed, devs_t dev_state, bool no_gui);
 
 bool    bts_send_fn(bool pressed);
