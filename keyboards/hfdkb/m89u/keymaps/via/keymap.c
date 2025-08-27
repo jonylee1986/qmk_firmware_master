@@ -113,6 +113,7 @@ RGB             single_blink_color = {0};
 
 bool key_eql_pressed = false;
 bool key_eql_release = false;
+// static uint32_t key_eql_presse_timer;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 #ifdef MULTIMODE_ENABLE
@@ -252,22 +253,19 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         }
 
         case KEY_EQL: {
-            if (record->event.pressed) {
-                if (get_highest_layer(default_layer_state) == 0) {
+            if (get_highest_layer(default_layer_state) == 0) {
+                if (record->event.pressed) {
                     key_eql_pressed = true;
                     register_code(KC_LALT);
                     register_code(KC_P6);
                     register_code(KC_P1);
                     key_eql_pressed = false;
-                    // send_char(0x3D); // Send '=' character
-                    // send_char('='); // Send '=' character
-                }
-            } else {
-                if (get_highest_layer(default_layer_state) == 0) {
+                    // key_eql_presse_timer = timer_read32();
+                } else {
                     key_eql_release = true;
-                    unregister_code(KC_P1);
-                    unregister_code(KC_P6);
                     unregister_code(KC_LALT);
+                    unregister_code(KC_P6);
+                    unregister_code(KC_P1);
                     key_eql_release = false;
                 }
             }
@@ -343,8 +341,6 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 
     // All LEDs blink
     if (single_blink_cnt) {
-        // Turn off all LEDs before blinking
-        rgb_matrix_set_color_all(RGB_OFF);
         if (timer_elapsed32(single_blink_time) > 300) {
             single_blink_time = timer_read32();
             single_blink_cnt--;
@@ -382,6 +378,15 @@ void housekeeping_task_user(void) {
             layer_off(WIN_B1);
         }
     }
+
+    // if (key_eql_presse_timer && timer_elapsed32(key_eql_presse_timer) > 50) {
+    //     key_eql_presse_timer = 0;
+    //     key_eql_release      = true;
+    //     unregister_code(KC_LALT);
+    //     unregister_code(KC_P6);
+    //     unregister_code(KC_P1);
+    //     key_eql_release = false;
+    // }
 }
 
 #ifdef DIP_SWITCH_ENABLE

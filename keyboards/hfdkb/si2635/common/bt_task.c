@@ -89,14 +89,6 @@ typedef enum {
 } indicator_state_t;
 static indicator_state_t indicator_status = INDICATOR_CONNECTING;
 
-#if defined(MM_BT_MODE_PIN) && defined(MM_2G4_MODE_PIN)
-typedef enum {
-    MM_MODE_USB = 0, // USB模式
-    MM_MODE_BT,      // 蓝牙模式
-    MM_MODE_2G4,     // 2.4G模式
-} mm_mode_t;
-#endif
-
 // ===========================================
 // Global variables
 // ===========================================
@@ -1159,17 +1151,6 @@ static void bt_charging_indication(void) {
     } else {
         charge = false;
     }
-    // if (get_battery_charge_state() == BATTERY_STATE_CHARGING || charge) {
-    //     charge = true;
-    //     if (timer_elapsed32(charging_time) >= 1500) {
-    //         rgb_matrix_set_color(CHRGE_LOW_LEVEL_INDICATOR_INDEX, CHRGE_LOW_LEVEL_INDICATOR_COLOR);
-    //     }
-    // } else {
-    //     charging_time = timer_read32();
-    // }
-    // if (get_battery_charge_state() == BATTERY_STATE_UNPLUGGED) {
-    //     charge = false;
-    // }
 }
 
 static void bt_bat_low_level_shutdown(void) {

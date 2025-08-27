@@ -230,7 +230,7 @@ __attribute__((weak)) void register_code(uint8_t code) {
     extern bool key_eql_pressed;
     if (dev_info.devs) {
         // Handle numpad keys with custom behavior when unsync is enabled (BT mode)
-        if (!key_eql_pressed && dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
+        if ((key_eql_pressed && IS_NUMPAD_KEYCODE(code)) || (dev_info.unsync && IS_NUMPAD_KEYCODE(code))) {
             if (numpad_keys_pressed_count == 0) {
                 // First numpad key pressed: apply NumLock sync logic
                 if (numpad_keys_pressed_count == 0) {
@@ -242,7 +242,7 @@ __attribute__((weak)) void register_code(uint8_t code) {
                         original_num_lock_state = host_keyboard_led_state().num_lock;
                     }
                     if (dev_info.num_unsync) {
-                        if (original_num_lock_state != dev_info.num_unsync) {
+                        if ((key_eql_pressed && !original_num_lock_state) || (original_num_lock_state != dev_info.num_unsync)) {
                             // Host NumLock is OFF - turn it ON temporarily
                             bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                             bts_task(dev_info.devs);
@@ -256,7 +256,7 @@ __attribute__((weak)) void register_code(uint8_t code) {
                     } else {
                         // original_num_lock_state = host_keyboard_led_state().num_lock;
 
-                        if (original_num_lock_state != dev_info.num_unsync) {
+                        if (key_eql_pressed && !original_num_lock_state) {
                             // Host NumLock is ON - turn it OFF temporarily
                             send_num_lock_manually = true;
                             bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
@@ -334,13 +334,13 @@ __attribute__((weak)) void register_code(uint8_t code) {
             }
 
             // Handle numpad keys with custom behavior when unsync is enabled
-            if (!key_eql_pressed && dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
+            if ((key_eql_pressed && IS_NUMPAD_KEYCODE(code)) || (dev_info.unsync && IS_NUMPAD_KEYCODE(code))) {
                 if (numpad_keys_pressed_count == 0) {
                     // First numpad key pressed: apply NumLock sync logic
                     if (dev_info.num_unsync) {
                         wait_ms(10);
                         original_num_lock_state = host_keyboard_led_state().num_lock;
-                        if (!original_num_lock_state) {
+                        if ((key_eql_pressed && !original_num_lock_state) || !original_num_lock_state) {
                             add_key(KC_NUM_LOCK);
                             send_keyboard_report();
                             del_key(KC_NUM_LOCK);
@@ -349,7 +349,7 @@ __attribute__((weak)) void register_code(uint8_t code) {
                     } else {
                         wait_ms(10);
                         original_num_lock_state = host_keyboard_led_state().num_lock;
-                        if (original_num_lock_state) {
+                        if (key_eql_pressed && !original_num_lock_state) {
                             send_num_lock_manually = true;
                             add_key(KC_NUM_LOCK);
                             send_keyboard_report();
@@ -389,23 +389,23 @@ __attribute__((weak)) void register_code(uint8_t code) {
  * FIXME: Needs documentation.
  */
 __attribute__((weak)) void unregister_code(uint8_t code) {
-    extern bool key_eql_pressed;
+    extern bool key_eql_release;
     if (dev_info.devs) {
         // Handle numpad keys with custom behavior when unsync is enabled (BT mode)
-        if (!key_eql_pressed && dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
-            // Force numpad to produce numbers (NumLock ON behavior)
-            bts_process_keys(code, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
-            bts_task(dev_info.devs);
-            while (bts_is_busy())
-                wait_ms(1);
-
+        if ((key_eql_release && IS_NUMPAD_KEYCODE(code)) || (dev_info.unsync && IS_NUMPAD_KEYCODE(code))) {
             if (dev_info.num_unsync) {
+                // Force numpad to produce numbers (NumLock ON behavior)
+                bts_process_keys(code, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+                bts_task(dev_info.devs);
+                while (bts_is_busy())
+                    wait_ms(1);
+
                 // Decrement counter and restore state only when last numpad key is released
                 if (numpad_keys_pressed_count > 0) {
                     numpad_keys_pressed_count--;
                     if (numpad_keys_pressed_count == 0) {
                         // Last numpad key released - restore original NumLock state if needed
-                        if (!original_num_lock_state && host_keyboard_led_state().num_lock) {
+                        if ((key_eql_release && !original_num_lock_state) || (!original_num_lock_state && host_keyboard_led_state().num_lock)) {
                             // Original was OFF, current is ON, restore to OFF
                             bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                             bts_task(dev_info.devs);
@@ -420,17 +420,17 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
                 }
             } else {
                 // Force numpad to produce navigation keys (NumLock OFF behavior)
-                // bts_process_keys(code, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
-                // bts_task(dev_info.devs);
-                // while (bts_is_busy())
-                //     wait_ms(1);
+                bts_process_keys(code, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+                bts_task(dev_info.devs);
+                while (bts_is_busy())
+                    wait_ms(1);
 
                 // Decrement counter and restore state only when last numpad key is released
                 if (numpad_keys_pressed_count > 0) {
                     numpad_keys_pressed_count--;
                     if (numpad_keys_pressed_count == 0) {
                         // Last numpad key released - restore original NumLock state if needed
-                        if (send_num_lock_manually && original_num_lock_state && !host_keyboard_led_state().num_lock) {
+                        if ((key_eql_release && !original_num_lock_state) || (send_num_lock_manually && original_num_lock_state && !host_keyboard_led_state().num_lock)) {
                             // Original was ON, current is OFF, restore to ON
                             send_num_lock_manually = false;
                             bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
@@ -489,7 +489,7 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
 
         } else if (IS_BASIC_KEYCODE(code)) {
             // Handle numpad keys with custom behavior when unsync is enabled
-            if (!key_eql_pressed && dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
+            if ((key_eql_release && IS_NUMPAD_KEYCODE(code)) || (dev_info.unsync && IS_NUMPAD_KEYCODE(code))) {
                 if (dev_info.num_unsync) {
                     // Force numpad to produce numbers (NumLock ON behavior)
                     del_key(code);
@@ -501,7 +501,7 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
                         if (numpad_keys_pressed_count == 0) {
                             wait_ms(10);
                             // Last numpad key released - restore original NumLock state if needed
-                            if (!original_num_lock_state && host_keyboard_led_state().num_lock) {
+                            if ((key_eql_release && !original_num_lock_state) || (!original_num_lock_state && host_keyboard_led_state().num_lock)) {
                                 // Original was OFF, current is ON, restore to OFF
                                 add_key(KC_NUM_LOCK);
                                 send_keyboard_report();
@@ -521,7 +521,7 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
                         if (numpad_keys_pressed_count == 0) {
                             wait_ms(10);
                             // Last numpad key released - restore original NumLock state if needed
-                            if (send_num_lock_manually && original_num_lock_state && !host_keyboard_led_state().num_lock) {
+                            if ((key_eql_release && !original_num_lock_state) || (send_num_lock_manually && original_num_lock_state && !host_keyboard_led_state().num_lock)) {
                                 // Original was ON, current is OFF, restore to ON
                                 send_num_lock_manually = false;
                                 add_key(KC_NUM_LOCK);
@@ -790,9 +790,11 @@ bool bt_process_record(uint16_t keycode, keyrecord_t *record) {
             } else {
                 if (dev_info.unsync) {
                     if (keycode == KC_NUM_LOCK) {
-                        if (record->event.pressed) {
-                            dev_info.num_unsync = !dev_info.num_unsync;
-                            eeconfig_update_user(dev_info.raw);
+                        if (dev_info.unsync) {
+                            if (record->event.pressed) {
+                                dev_info.num_unsync = !dev_info.num_unsync;
+                                eeconfig_update_user(dev_info.raw);
+                            }
                             return false;
                         } else {
                             return false;
@@ -1510,34 +1512,37 @@ static void show_device_state(void) {
 
 static void charging_indicate(void) {
     extern bool charge_full;
+
     // Debounced, hysteretic "first full" detector
     // static uint8_t  prev_pvol               = 0;
+    static bool     first_reach_full        = false; // drives the blink once per cycle
     static uint32_t full_candidate_since    = 0;
     static bool     full_latched_this_cycle = false;
-    static bool     first_reach_full        = false; // drives the blink once per cycle
 
     uint8_t  pv      = bts_info.bt_info.pvol;
     uint32_t now     = timer_read32();
     bool     plugged = (get_battery_charge_state() != BATTERY_STATE_UNPLUGGED);
 
-    // Detect and debounce first reach to FULL_PVOL_THRESHOLD
-    if (!full_latched_this_cycle) {
-        if (pv >= FULL_PVOL_THRESHOLD && plugged) {
-            if (full_candidate_since == 0) {
-                full_candidate_since = now;
-            } else if (timer_elapsed32(full_candidate_since) >= FULL_DEBOUNCE_MS) {
-                first_reach_full        = true; // trigger this cycle's indication
-                full_latched_this_cycle = true; // prevent re-trigger until hysteresis clears
-                full_candidate_since    = 0;    // reset candidate window
+    if (dev_info.devs != DEVS_USB) {
+        // Detect and debounce first reach to FULL_PVOL_THRESHOLD
+        if (!full_latched_this_cycle) {
+            if (pv >= FULL_PVOL_THRESHOLD && plugged) {
+                if (full_candidate_since == 0) {
+                    full_candidate_since = now;
+                } else if (timer_elapsed32(full_candidate_since) >= FULL_DEBOUNCE_MS) {
+                    first_reach_full        = true; // trigger this cycle's indication
+                    full_latched_this_cycle = true; // prevent re-trigger until hysteresis clears
+                    full_candidate_since    = 0;    // reset candidate window
+                }
+            } else {
+                full_candidate_since = 0; // reset if we dip below threshold
             }
         } else {
-            full_candidate_since = 0; // reset if we dip below threshold
-        }
-    } else {
-        // Re-arm for next cycle only after dropping below hysteresis or unplugging
-        if (pv <= FULL_HYSTERESIS_PVOL || !plugged) {
-            full_latched_this_cycle = false;
-            // Don't force first_reach_full here; it'll be set when we debounce next time
+            // Re-arm for next cycle only after dropping below hysteresis or unplugging
+            if (pv <= FULL_HYSTERESIS_PVOL || !plugged) {
+                full_latched_this_cycle = false;
+                // Don't force first_reach_full here; it'll be set when we debounce next time
+            }
         }
     }
 
@@ -1744,6 +1749,8 @@ bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
         }
     }
 
+    bt_bat_query_period();
+
     // 充电状态指示: only call when pvol first reaches 100 in each cycle
     charging_indicate();
 
@@ -1794,9 +1801,11 @@ bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
 void matrix_scan_user(void) {
 #ifdef MULTIMODE_ENABLE
     bt_task();
+#endif
+}
 
-    bt_bat_query_period();
-
+void housekeeping_task_kb(void) {
+#ifdef MULTIMODE_ENABLE
     extern void housekeeping_task_bt(void);
     housekeeping_task_bt();
 #endif
@@ -1839,6 +1848,8 @@ void matrix_scan_user(void) {
         }
     }
 #endif
+
+    housekeeping_task_user();
 }
 
 void matrix_init_user(void) {
@@ -1850,9 +1861,11 @@ void matrix_init_user(void) {
 }
 
 void suspend_power_down_user(void) {
+    // rgb_matrix_disable_noeeprom();
     led_deconfig_all();
 }
 
 void suspend_wakeup_init_user(void) {
+    // rgb_matrix_enable_noeeprom();
     led_config_all();
 }

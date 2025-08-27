@@ -170,10 +170,10 @@ static void exti_init(void) {
                     break;
             }
         }
-    }else{
-        setPinInputHigh(MM_CHARGE_PIN);
-        _pal_lld_enablepadevent(PAL_PORT(MM_CHARGE_PIN), PAL_PAD(MM_CHARGE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
-        switch (PAL_PAD(MM_CHARGE_PIN)) {
+    } else {
+        setPinInputHigh(MM_CABLE_PIN);
+        _pal_lld_enablepadevent(PAL_PORT(MM_CABLE_PIN), PAL_PAD(MM_CABLE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
+        switch (PAL_PAD(MM_CABLE_PIN)) {
             case 0:
                 nvicEnableVector(EXTI0_IRQn, WB32_IRQ_EXTI0_PRIORITY);
                 break;
