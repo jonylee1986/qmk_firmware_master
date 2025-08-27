@@ -228,7 +228,7 @@ void register_mouse(uint8_t mouse_keycode, bool pressed);
  */
 __attribute__((weak)) void register_code(uint8_t code) {
     extern bool key_eql_pressed;
-    if (dev_info.devs) {
+    if (dev_info.devs && bts_info.bt_info.paired) {
         // Handle numpad keys with custom behavior when unsync is enabled (BT mode)
         if ((key_eql_pressed && IS_NUMPAD_KEYCODE(code)) || (dev_info.unsync && IS_NUMPAD_KEYCODE(code))) {
             if (numpad_keys_pressed_count == 0) {
@@ -390,7 +390,7 @@ __attribute__((weak)) void register_code(uint8_t code) {
  */
 __attribute__((weak)) void unregister_code(uint8_t code) {
     extern bool key_eql_release;
-    if (dev_info.devs) {
+    if (dev_info.devs && bts_info.bt_info.paired) {
         // Handle numpad keys with custom behavior when unsync is enabled (BT mode)
         if ((key_eql_release && IS_NUMPAD_KEYCODE(code)) || (dev_info.unsync && IS_NUMPAD_KEYCODE(code))) {
             if (dev_info.num_unsync) {
