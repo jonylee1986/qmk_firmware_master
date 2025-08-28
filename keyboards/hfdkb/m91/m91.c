@@ -26,7 +26,7 @@ const snled27351_led_t PROGMEM g_snled27351_leds[SNLED27351_LED_COUNT] = {
     {1, CB1_CA11,  CB2_CA11,  CB3_CA11},
     {1, CB1_CA12,  CB2_CA12,  CB3_CA12},
     {1, CB1_CA13,  CB2_CA13,  CB3_CA13},
-    {1, CB1_CA14,  CB2_CA14,  CB3_CA14},
+    {1, CB1_CA2,   CB2_CA2,   CB3_CA2},
     {1, CB4_CA11,  CB5_CA11,  CB6_CA11},
     {1, CB4_CA12,  CB5_CA12,  CB6_CA12},
     {1, CB4_CA13,  CB5_CA13,  CB6_CA13},
