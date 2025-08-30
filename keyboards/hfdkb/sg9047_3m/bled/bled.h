@@ -37,14 +37,14 @@ typedef enum {
 typedef union {
     uint32_t raw;
     struct {
-        uint8_t bled_Brightness; // 灯效亮度值
-        uint8_t bled_speed;      // 呼吸速度
-        uint8_t bled_color;      // 颜色
-        uint8_t bled_mode;       // 灯效模式
+        uint8_t bled_Brightness; // LED effect brightness
+        uint8_t bled_speed;      // Breathing speed
+        uint8_t bled_color;      // Color
+        uint8_t bled_mode;       // LED effect mode
     };
 } bled_info_t;
 
-bool bled_indicators_advanced(uint8_t led_min, uint8_t led_max);
+bool bled_indicators(void);
 bool bled_process_record(uint16_t keycode, keyrecord_t *record);
 void bled_post_init(void);
 void bled_init(void);

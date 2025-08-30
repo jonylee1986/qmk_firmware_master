@@ -34,14 +34,14 @@
 #    define MM_BT_MODE_PIN C0
 #    define MM_2G4_MODE_PIN B11
 
-// Indicate color of mm device
-#    define MM_BLINK_HOST1_COLOR RGB_BLUE   // 蓝牙1指示灯颜色
-#    define MM_BLINK_HOST2_COLOR RGB_CYAN   // 蓝牙2指示灯颜色
-#    define MM_BLINK_HOST3_COLOR RGB_PURPLE // 蓝牙3指示灯颜色
-#    define MM_BLINK_2G4_COLOR RGB_GREEN    // 2.4G指示灯颜色
-#    define MM_BLINK_USB_COLOR RGB_WHITE    // USB指示灯颜色
+// Indicator color per multi-mode device
+#    define MM_BLINK_HOST1_COLOR RGB_BLUE   // Indicator color for Bluetooth host 1
+#    define MM_BLINK_HOST2_COLOR RGB_CYAN   // Indicator color for Bluetooth host 2
+#    define MM_BLINK_HOST3_COLOR RGB_PURPLE // Indicator color for Bluetooth host 3
+#    define MM_BLINK_2G4_COLOR RGB_GREEN    // Indicator color for 2.4G
+#    define MM_BLINK_USB_COLOR RGB_WHITE    // Indicator color for USB
 
-#    define BAT_LEVEL_DISPLAY_INDEX {26, 25, 24, 23, 22, 21, 20, 19, 18, 17} // 电量显示LED
+#    define BAT_LEVEL_DISPLAY_INDEX {26, 25, 24, 23, 22, 21, 20, 19, 18, 17} // Battery level LEDs
 
 // Other config
 #    define USB_SUSPEND_CHECK_ENABLE
@@ -81,3 +81,7 @@
 
 // Encoder Config
 #define ENCODER_DEFAULT_POS 0x0
+
+/* SPI Config for ws2812 */
+// #define WS2812_SPI_DRIVER SPIDM2
+// #define WS2812_SPI_DIVISOR 32

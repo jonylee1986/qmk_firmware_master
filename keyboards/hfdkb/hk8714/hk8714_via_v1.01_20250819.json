@@ -4,14 +4,13 @@
     "productId": "0x00B5",
     "matrix": { "rows": 6, "cols": 17 },
     "customKeycodes":[
-        {"name": "BL_MOD","title": "Cycle switching the backlight mode", "shortName":"BL_NEXT"},
-        {"name": "BL_VAI","title": "Increase the backlight brightness", "shortName":"BL_VALI"},
-        {"name": "BL_VAD","title": "Decrease the backlight brightness", "shortName":"BL_VALD"},
-        {"name": "BL_SPI","title": "Increase the backlight speed", "shortName":"BL_SPDI"},
-        {"name": "BL_SPD","title": "Decrease the backlight speed", "shortName":"BL_SPDD"},
-        {"name": "BL_COL","title": "Cycle switching the backlight color", "shortName":"BL_HUE"},
-        {"name": "SW_OS","title": "Sitch system os between windows and ios", "shortName":"SW_MODE"},
-        {"name": "KEY_GU","title": "Swap key app and key gui toggle", "shortName":"KEY_GUI"}
+        {"name": "BL_NEXT","title": "Cycle switching the backlight mode", "shortName":"BL_NEXT"},
+        {"name": "BL_VAI","title": "Increase the backlight brightness", "shortName":"BL_VAI"},
+        {"name": "BL_VAD","title": "Decrease the backlight brightness", "shortName":"BL_VAD"},
+        {"name": "BL_SPI","title": "Increase the backlight speed", "shortName":"BL_SPI"},
+        {"name": "BL_SPD","title": "Decrease the backlight speed", "shortName":"BL_SPD"},
+        {"name": "BL_COL","title": "Cycle switching the backlight color", "shortName":"BL_COL"},
+        {"name": "SW_OS","title": "Sitch system os between windows and ios", "shortName":"SW_OS"}
     ],
     "layouts": {
       "keymap":[

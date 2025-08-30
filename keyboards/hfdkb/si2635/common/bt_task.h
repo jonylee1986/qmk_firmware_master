@@ -10,71 +10,77 @@
 
 #pragma once
 
-#include "bled.h"
 #include "bts_lib.h"
+#include "quantum.h"
 
 // #define BT_DEBUG_MODE
 #define ENTRY_STOP_TIMEOUT 100 // ms
 // #define ENTRY_STOP_TIMEOUT (30 * 60000) // ms
 
 enum multimode_keycodes {
-    BT_HOST1 = BLED_KEYCODE_END,
+    BT_HOST1 = QK_KB_0,
     BT_HOST2,
     BT_HOST3,
     BT_2_4G,
     BT_USB,
     BT_VOL,
+    SW_MODE,
     RGB_TEST,
-    BT_KEYCODE_END,
 };
+
+typedef enum {
+    MODE_WORKING,
+    MODE_GAMING,
+} mode_t;
+
+extern mode_t mode;
 
 typedef union {
     uint32_t raw;
     struct {
         uint8_t devs;
         uint8_t last_devs;
-        uint8_t paired_status;
     };
 } dev_info_t;
 
 extern dev_info_t dev_info;
 extern bts_info_t bts_info;
 
+void bt_housekeeping_task(void);
+void led_config_all(void);
+void led_deconfig_all(void);
+
 /**
- * @brief Bluetooth init function
+ * @brief bluetooth 初始化函数
  * @param None
  * @return None
  */
 void bt_init(void);
 
 /**
- * @brief Bluetooth interaction task
+ * @brief bluetooth交互任务
  * @param None
  * @return None
  */
 void bt_task(void);
-void bt_post_init(void);
-void bt_pre_init(void);
-void bt_suspend_power_down(void);
-void bt_suspend_wakeup_init(void);
 
 /**
- * @brief Handle BT-related keycodes
- * @param keycode: keycode value
- * @param record: key event record
+ * @brief 处理和BT相关的按键
+ * @param keycode: 键值
+ * @param record: 记录值
  * @return None
  */
 bool bt_process_record(uint16_t keycode, keyrecord_t *record);
 
 /**
- * @brief RGB indicator task
+ * @brief rgb指示灯任务
  * @param None
  * @return None
  */
 bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max);
 
 /**
- * @brief Switch working mode
+ * @brief 切换工作模式
  * @param None
  * @return None
  */

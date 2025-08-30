@@ -83,7 +83,7 @@ bool bled_process_record(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
-bool bled_indicators_advanced(uint8_t led_min, uint8_t led_max) {
+bool bled_indicators(void) {
     bled_task();
 
     return true;

@@ -27,8 +27,9 @@ enum _layers {
 };
 
 enum _custom_keycodes {
-    SW_MODE = BLED_Keycodes_End,
-    KEY_GUI,
+    SW_OS = BLED_Keycodes_End,
+    F_KEY1,
+    F_KEY2,
 };
 
 #define BL_NEXT BLED_Mode_Next
@@ -46,15 +47,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_TAB,  KC_Q,     KC_W,    KC_E,     KC_R,     KC_T,     KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC,   KC_RBRC,  KC_BSLS,  KC_DEL,   KC_END,   KC_PGDN,
         KC_CAPS, KC_A,     KC_S,    KC_D,     KC_F,     KC_G,     KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,             KC_ENT,
         KC_LSFT,           KC_Z,    KC_X,     KC_C,     KC_V,     KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,   KC_RSFT,                      KC_UP,
-        KC_LCTL, KC_LWIN,  KC_LALT,                               KC_SPC,                             KC_RALT, MO(WIN_FN),KC_RCTL,            KC_LEFT,  KC_DOWN,  KC_RGHT),
+        KC_LCTL, KC_LWIN,  KC_LALT,                               KC_SPC,                             MO(WIN_FN), MO(WIN_FN),KC_RCTL,            KC_LEFT,  KC_DOWN,  KC_RGHT),
 
     [WIN_FN] = LAYOUT_86_ansi(
-        _______,           KC_MYCM, KC_MAIL,  KC_WSCH,  KC_WHOM,  KC_CALC, KC_MSEL, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE,  KC_VOLD,  KC_VOLU,   _______,  _______,  _______,
+        F_KEY2,            KC_MYCM, KC_MAIL,  KC_WSCH,  KC_WHOM,  KC_CALC, KC_MSEL, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE,  KC_VOLD,  KC_VOLU,   _______,  _______,  _______,
         _______, _______,  _______, _______,  _______,  _______,  _______, _______, _______, _______, _______, _______,  _______,  _______,   BL_NEXT,  BL_HUEU,  _______,
         _______, _______,  _______, _______,  _______,  _______,  _______, _______, _______, _______, _______, _______,  _______,  _______,   _______,  _______,  _______,
         _______, _______,  _______, _______,  _______,  _______,  _______, _______, _______, _______, _______, _______,            _______,
-        _______,           _______, _______,  _______,  _______,  _______, _______, SW_MODE, _______, _______, _______,  _______,                       BL_VALU,
-        _______, KEY_GUI,  _______,                               _______,                            _______, _______,  _______,             BL_SPDD,  BL_VALD,  BL_SPDU),
+        _______,           _______, _______,  _______,  _______,  _______, _______, SW_OS,   _______, _______, _______,  _______,                       BL_VALU,
+        _______, GU_TOGG,  _______,                               F_KEY1,                              _______, _______,  _______,             BL_SPDD,  BL_VALD,  BL_SPDU),
 
     [MAC_BASE] = LAYOUT_86_ansi(
         KC_ESC,            KC_BRID, KC_BRIU,  KC_MCTL,  G(KC_SPC),KC_NO,   KC_NO,   KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE,   KC_VOLD,  KC_VOLU,  KC_PSCR,  KC_SCRL,  KC_PAUS,
@@ -62,15 +63,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_TAB,  KC_Q,     KC_W,    KC_E,     KC_R,     KC_T,     KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC,   KC_RBRC,  KC_BSLS,  KC_DEL,   KC_END,   KC_PGDN,
         KC_CAPS, KC_A,     KC_S,    KC_D,     KC_F,     KC_G,     KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,             KC_ENT,
         KC_LSFT,           KC_Z,    KC_X,     KC_C,     KC_V,     KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,   KC_RSFT,                      KC_UP,
-        KC_LCTL, KC_LOPT,  KC_LCMD,                               KC_SPC,                             KC_ROPT, MO(MAC_FN),KC_RCTL,            KC_LEFT,  KC_DOWN,  KC_RGHT),
+        KC_LCTL, KC_LOPT,  KC_LCMD,                               KC_SPC,                             MO(MAC_FN), MO(MAC_FN),KC_RCTL,            KC_LEFT,  KC_DOWN,  KC_RGHT),
 
     [MAC_FN] = LAYOUT_86_ansi(
-        _______,           KC_F1,   KC_F2,    KC_F3,    KC_F4,    KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,    KC_F11,   KC_F12,   _______,  _______,  _______,
+        F_KEY2,            KC_F1,   KC_F2,    KC_F3,    KC_F4,    KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,    KC_F11,   KC_F12,   _______,  _______,  _______,
         _______, _______,  _______, _______,  _______,  _______,  _______, _______, _______, _______, _______, _______,   _______,  _______,  BL_NEXT,  BL_HUEU,  _______,
-        _______, _______,  SW_MODE, _______,  _______,  _______,  _______, _______, _______, _______, _______, _______,   _______,  _______,  _______,  _______,  _______,
+        _______, _______,  SW_OS,   _______,  _______,  _______,  _______, _______, _______, _______, _______, _______,   _______,  _______,  _______,  _______,  _______,
         _______, _______,  _______, _______,  _______,  _______,  _______, _______, _______, _______, _______, _______,             _______,
         _______,           _______, _______,  _______,  _______,  _______, _______, _______, _______, _______, _______,   _______,                      BL_VALU,
-        _______, KC_APP,   _______,                               _______,                            _______, _______,   _______,            BL_SPDD,  BL_VALD,  BL_SPDU),
+        _______, _______,  _______,                               F_KEY1,                              _______, _______,   _______,            BL_SPDD,  BL_VALD,  BL_SPDU),
 };
 
 // clang-format on
@@ -81,8 +82,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 #define KEY_PRESS_Z (0x1 << 2)
 #define FN_KEY1 MO(WIN_FN)
 #define FN_KEY2 MO(MAC_FN)
-#define F_RESET_KEY1 KC_SPC
-#define F_RESET_KEY2 KC_ESC
+#define F_RESET_KEY1 F_KEY1
+#define F_RESET_KEY2 F_KEY2
 #define KEY_PRESS_FACTORY_RESET (KEY_PRESS_FN | KEY_PRESS_J | KEY_PRESS_Z)
 
 #define COLOR_WHITE 0xC8, 0xC8, 0xC8
@@ -97,7 +98,6 @@ static uint32_t all_blink_time       = 0;
 static RGB      all_blink_color      = {0};
 static uint32_t long_pressed_time    = 0;
 static uint16_t long_pressed_keycode = 0;
-static bool     key_app_gui          = false;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
@@ -177,29 +177,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         }
 
-        case SW_MODE: {
+        case SW_OS: {
             if (record->event.pressed) {
                 // Do something when SW_OS1 is pressed
                 long_pressed_time    = timer_read32();
-                long_pressed_keycode = SW_MODE;
+                long_pressed_keycode = SW_OS;
             } else {
                 long_pressed_time = 0;
-            }
-        }
-            return false;
-
-        case KEY_GUI: {
-            if (record->event.pressed) {
-                if (!key_app_gui) {
-                    // tap_code_delay(KC_APP, 250);
-                    register_code(KC_APP);
-                } else {
-                    keymap_config.no_gui = !keymap_config.no_gui;
-                    eeconfig_update_keymap(&keymap_config);
-                }
-            } else {
-                if (!key_app_gui) unregister_code(KC_APP);
-                key_app_gui = !key_app_gui;
             }
         }
             return false;
@@ -231,7 +215,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 key_press_status &= ~KEY_PRESS_J;
                 timer_3s_buffer = 0;
             }
-        } break;
+        }
+            return false;
 
         case F_RESET_KEY2: {
             if (record->event.pressed) {
@@ -243,7 +228,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 key_press_status &= ~KEY_PRESS_Z;
                 timer_3s_buffer = 0;
             }
-        } break;
+        }
+            return false;
 
         default:
             break;
@@ -292,7 +278,7 @@ static void execute_factory_reset(void) {
     key_press_status = 0;
 
     // Start animation
-    factory_reset_count = 2;
+    factory_reset_count = 6;
     fr_blink_color      = (RGB){RGB_WHITE};
     timer_300ms_buffer  = timer_read32();
 
@@ -311,7 +297,7 @@ void housekeeping_task_user(void) {
     if (long_pressed_time && (timer_elapsed32(long_pressed_time) > 1000)) {
         long_pressed_time = 0;
         switch (long_pressed_keycode) {
-            case SW_MODE: {
+            case SW_OS: {
                 if (get_highest_layer(default_layer_state) == WIN_BASE) { // WIN_BASE
                     set_single_persistent_default_layer(MAC_BASE);
                     keymap_config.no_gui = 0;
