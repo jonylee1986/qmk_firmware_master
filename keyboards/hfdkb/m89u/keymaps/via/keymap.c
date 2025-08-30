@@ -111,9 +111,9 @@ static uint8_t  single_blink_cnt   = 0;
 static uint32_t single_blink_time  = 0;
 RGB             single_blink_color = {0};
 
-bool key_eql_pressed = false;
-bool key_eql_release = false;
-// static uint32_t key_eql_presse_timer;
+bool            key_eql_pressed       = false;
+static uint32_t key_eql_numlock_timer = 0;
+static uint8_t  host_numlock_state    = 0;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 #ifdef MULTIMODE_ENABLE
@@ -255,18 +255,18 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KEY_EQL: {
             if (get_highest_layer(default_layer_state) == 0) {
                 if (record->event.pressed) {
-                    key_eql_pressed = true;
+                    key_eql_pressed    = true;
+                    host_numlock_state = host_keyboard_led_state().num_lock;
+                    if (!host_numlock_state) {
+                        register_code(KC_NUM_LOCK);
+                    }
                     register_code(KC_LALT);
                     register_code(KC_P6);
                     register_code(KC_P1);
-                    key_eql_pressed = false;
-                    // key_eql_presse_timer = timer_read32();
-                } else {
-                    key_eql_release = true;
-                    unregister_code(KC_LALT);
-                    unregister_code(KC_P6);
-                    unregister_code(KC_P1);
-                    key_eql_release = false;
+                    // if (dev_info.devs) {
+                    //     unregister_code(KC_NUM_LOCK);
+                    // }
+                    key_eql_numlock_timer = timer_read32(); // 50ms delay
                 }
             }
             return false;
@@ -379,14 +379,23 @@ void housekeeping_task_user(void) {
         }
     }
 
-    // if (key_eql_presse_timer && timer_elapsed32(key_eql_presse_timer) > 50) {
-    //     key_eql_presse_timer = 0;
-    //     key_eql_release      = true;
-    //     unregister_code(KC_LALT);
-    //     unregister_code(KC_P6);
-    //     unregister_code(KC_P1);
-    //     key_eql_release = false;
-    // }
+    if (key_eql_numlock_timer && (timer_elapsed32(key_eql_numlock_timer) >= 50)) {
+        unregister_code(KC_P6);
+        unregister_code(KC_P1);
+        unregister_code(KC_LALT);
+
+        if (dev_info.devs) {
+            unregister_code(KC_NUM_LOCK);
+        }
+        if (key_eql_pressed && !host_numlock_state) {
+            // USB mode - send NumLock toggle
+            register_code(KC_NUM_LOCK);
+            wait_ms(10);
+            unregister_code(KC_NUM_LOCK);
+        }
+        key_eql_numlock_timer = 0; // Reset timer
+        key_eql_pressed       = false;
+    }
 }
 
 #ifdef DIP_SWITCH_ENABLE
