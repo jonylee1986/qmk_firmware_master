@@ -226,6 +226,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (dev_info.unsync) {
                 if (record->event.pressed) {
                     dev_info.num_unsync = !dev_info.num_unsync;
+                    // uprintf("num_unsync: %d", dev_info.num_unsync);
                     eeconfig_update_user(dev_info.raw);
                     return false;
                 }

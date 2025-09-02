@@ -38,7 +38,7 @@ enum bt_keycodes {
 typedef union {
     uint32_t raw;
     struct PACKED {
-        // 3+3+8+3+3+4+1+1+1+1
+        // 3+3+1+1+4+4+1+1+6
         uint8_t devs : 3;
         uint8_t last_devs : 3;
         bool    eco_tog_flag : 1;
@@ -48,6 +48,7 @@ typedef union {
         uint8_t ind_brightness;
         bool    unsync : 1;
         bool    num_unsync : 1;
+        uint8_t revered : 6;
     };
 } dev_info_t;
 

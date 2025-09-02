@@ -314,8 +314,8 @@ __attribute__((weak)) void register_code(uint8_t code) {
             // Handle numpad keys with custom behavior when unsync is enabled
             if (!key_eql_pressed && dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
                 if (numpad_keys_pressed_count == 0) {
+                    // First numpad key pressed: apply NumLock sync logic
                     if (dev_info.num_unsync) {
-                        // First numpad key pressed: apply NumLock sync logic
                         wait_ms(10);
                         original_num_lock_state = host_keyboard_led_state().num_lock;
                         if (!original_num_lock_state) {
@@ -390,6 +390,9 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
                 while (bts_is_busy()) {
                     wait_ms(1);
                 }
+                if (numpad_keys_pressed_count > 0) {
+                    numpad_keys_pressed_count = 0;
+                }
             }
         } else {
             // Normal BT behavior for non-numpad keys
@@ -445,9 +448,8 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
                     if (numpad_keys_pressed_count > 0) {
                         numpad_keys_pressed_count--;
                         if (numpad_keys_pressed_count == 0) {
-                            wait_ms(10);
                             // Last numpad key released - restore original NumLock state if needed
-                            if (!original_num_lock_state) {
+                            if (!original_num_lock_state && host_keyboard_led_state().num_lock) {
                                 // Original was OFF, current is ON, restore to OFF
                                 add_key(KC_NUM_LOCK);
                                 send_keyboard_report();
@@ -459,6 +461,9 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
                 } else {
                     del_key(code);
                     send_keyboard_report();
+                    if (numpad_keys_pressed_count > 0) {
+                        numpad_keys_pressed_count = 0;
+                    }
                 }
             } else {
                 // Normal behavior: follow host state or non-numpad keys
