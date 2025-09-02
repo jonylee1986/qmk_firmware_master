@@ -191,10 +191,6 @@ static uint8_t  rgb_test_index = 0;
 static bool     rgb_test_en    = false;
 static uint32_t rgb_test_time  = 0;
 
-static bool rgb_status_save = 1;
-
-const uint32_t sleep_time_table[4] = {0, 10 * 60 * 1000, 30 * 60 * 1000, 60 * 60 * 1000};
-
 // 闪烁效果相关
 static uint8_t  all_blink_cnt;
 static uint32_t all_blink_time;
@@ -604,8 +600,6 @@ void bt_init(void) {
     } else {
         writePinHigh(A14);
     }
-
-    rgb_status_save = rgb_matrix_config.enable;
 }
 
 // ===========================================
@@ -638,8 +632,7 @@ void bt_task(void) {
                 break;
         }
 
-        bts_send_vendor(v_en_sleep_bt);
-        bts_send_vendor(v_en_sleep_wl);
+        bts_send_vendor(v_dis_sleep_bt);
     }
 
     if (timer_elapsed32(last_time) >= 1) {
@@ -681,12 +674,6 @@ bool bt_process_record(uint16_t keycode, keyrecord_t *record) {
                      \n mode_switched = [%d] \
                      \n pvol          = [%d]\n\n\n",
                       dev_info.devs, bts_info.bt_info.sleeped, bts_info.bt_info.low_vol, bts_info.bt_info.low_vol_offed, bts_info.bt_info.normal_vol, bts_info.bt_info.pairing, bts_info.bt_info.paired, bts_info.bt_info.come_back, bts_info.bt_info.come_back_err, bts_info.bt_info.mode_switched, bts_info.bt_info.pvol);
-
-        if (!rgb_matrix_config.enable) {
-            if (rgb_status_save) {
-                rgb_matrix_enable_noeeprom();
-            }
-        }
     }
 
     retval = bt_process_record_other(keycode, record);
@@ -759,12 +746,6 @@ bool bt_process_record(uint16_t keycode, keyrecord_t *record) {
 // 设备切换函数
 // ===========================================
 void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
-    if (!rgb_matrix_config.enable) {
-        if (rgb_status_save) {
-            rgb_matrix_enable_noeeprom();
-        }
-    }
-
     bool usb_sws = !!last_mode ? !now_mode : !!now_mode;
 
     extern uint8_t  indicator_status;
@@ -1161,8 +1142,12 @@ static void close_rgb(void) {
         return;
     }
 
+    if (dev_info.devs == DEVS_USB) {
+        return;
+    }
+
     if (sober) {
-        if (kb_sleep_flag || ((timer_elapsed32(key_press_time) >= sleep_time_table[dev_info.sleep_mode]) && (sleep_time_table[dev_info.sleep_mode] != 0))) {
+        if (kb_sleep_flag || (timer_elapsed32(key_press_time) >= (10 * 60 * 1000))) {
             bak_rgb_toggle = rgb_matrix_config.enable;
             sober          = false;
             close_rgb_time = timer_read32();
@@ -1617,7 +1602,7 @@ static void bt_bat_query_period(void) {
     static uint32_t query_vol_time = 0;
 
     // Check if we should query battery (avoid querying too frequently)
-    if (!bt_init_time && (bts_info.bt_info.paired) && !kb_sleep_flag && timer_elapsed32(query_vol_time) > 4000) {
+    if (!bt_init_time && bts_info.bt_info.paired && !kb_sleep_flag && timer_elapsed32(query_vol_time) > 10000) {
         query_vol_time = timer_read32();
 
         // Send appropriate query command based on charge state

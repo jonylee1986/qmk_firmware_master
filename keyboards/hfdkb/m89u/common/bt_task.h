@@ -31,14 +31,13 @@ enum bt_keycodes {
     FACTORY_RESET,
     KEYBOARD_RESET,
     BLE_RESET,
-    SLEEP_TOGGLE,
     KEY_EQL,
     RGB_TEST,
 };
 
 typedef union {
     uint32_t raw;
-    struct PACKED{
+    struct PACKED {
         // 3+3+8+3+3+4+1+1+1+1
         uint8_t devs : 3;
         uint8_t last_devs : 3;
@@ -47,7 +46,6 @@ typedef union {
         uint8_t smd_color_index : 4;
         uint8_t ind_color_index : 4;
         uint8_t ind_brightness;
-        uint8_t sleep_mode : 4;
         bool    unsync : 1;
         bool    num_unsync : 1;
     };

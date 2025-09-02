@@ -36,7 +36,6 @@ enum __layers {
 #define FACTORY FACTORY_RESET
 #define KEY_RES KEYBOARD_RESET
 #define BLE_RES BLE_RESET
-#define SW_SLEP SLEEP_TOGGLE
 
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -60,7 +59,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [WIN_FN] = LAYOUT_numpad_6x4(
-        NK_TOGG, SW_SLEP, KEY_ECO, _______,
+        NK_TOGG, _______, KEY_ECO, _______,
         RGB_TOG, BLE_RES, KEY_RES, FACTORY,
         RGB_HUI, RGB_VAI, RGB_MOD, RGB_SAI,
         BT_2_4G, BT_USB,  RGB_SPI, BT_VOL,
@@ -78,7 +77,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [MAC_FN] = LAYOUT_numpad_6x4(
-        NK_TOGG, SW_SLEP, KEY_ECO, _______,
+        NK_TOGG, _______, KEY_ECO, _______,
         RGB_TOG, BLE_RES, KEY_RES, FACTORY,
         RGB_HUI, RGB_VAI, RGB_MOD, RGB_SAI,
         BT_2_4G, BT_USB,  RGB_SPI, BT_VOL,
@@ -199,55 +198,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 dev_info.eco_tog_flag = !dev_info.eco_tog_flag;
                 eeconfig_update_user(dev_info.raw);
-            }
-            return false;
-        }
-
-        case SW_SLEP: {
-            if (record->event.pressed) {
-                if (dev_info.devs != DEVS_USB) {
-                    dev_info.sleep_mode += 1;
-                    if (dev_info.sleep_mode > 3) {
-                        dev_info.sleep_mode = 0;
-                    }
-                    switch (dev_info.sleep_mode) {
-                        case 0: // 关闭睡眠
-                            bts_send_vendor(v_dis_sleep_bt);
-                            bts_send_vendor(v_dis_sleep_wl);
-                            single_blink_index = 1;
-                            single_blink_cnt   = 8;
-                            single_blink_time  = timer_read32();
-                            single_blink_color = (RGB){RGB_BLUE};
-                            break;
-                        case 1: // 开启睡眠1
-                            bts_send_vendor(v_en_sleep_bt);
-                            bts_send_vendor(v_en_sleep_wl);
-                            single_blink_index = 1;
-                            single_blink_cnt   = 2;
-                            single_blink_time  = timer_read32();
-                            single_blink_color = (RGB){RGB_BLUE};
-                            break;
-                        case 2: // 开启睡眠2
-                            bts_send_vendor(v_en_sleep_bt);
-                            bts_send_vendor(v_en_sleep_wl);
-                            single_blink_index = 1;
-                            single_blink_cnt   = 4;
-                            single_blink_color = (RGB){RGB_BLUE};
-                            single_blink_time  = timer_read32();
-                            break;
-                        case 3: // 开启睡眠3
-                            bts_send_vendor(v_en_sleep_bt);
-                            bts_send_vendor(v_en_sleep_wl);
-                            single_blink_index = 1;
-                            single_blink_cnt   = 6;
-                            single_blink_color = (RGB){RGB_BLUE};
-                            single_blink_time  = timer_read32();
-                            break;
-                        default:
-                            break;
-                    }
-                    eeconfig_update_user(dev_info.raw);
-                }
             }
             return false;
         }
@@ -423,7 +373,6 @@ void eeconfig_init_user(void) { // EEPROM is getting reset!
     dev_info.ind_brightness  = RGB_MATRIX_VAL_STEP * 3;
     dev_info.smd_color_index = 0;
     dev_info.ind_color_index = 0;
-    dev_info.sleep_mode      = 1;
     dev_info.eco_tog_flag    = false;
     dev_info.manual_usb_mode = false;
     dev_info.unsync          = false;
