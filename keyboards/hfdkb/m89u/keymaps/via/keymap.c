@@ -213,9 +213,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     register_code(KC_LALT);
                     register_code(KC_P6);
                     register_code(KC_P1);
-                    // if (dev_info.devs) {
-                    //     unregister_code(KC_NUM_LOCK);
-                    // }
                     key_eql_numlock_timer = timer_read32(); // 50ms delay
                 }
             }
@@ -330,10 +327,10 @@ void housekeeping_task_user(void) {
         }
     }
 
-    if (key_eql_numlock_timer && (timer_elapsed32(key_eql_numlock_timer) >= 50)) {
+    if (key_eql_numlock_timer && (timer_elapsed32(key_eql_numlock_timer) >= 20)) {
+        unregister_code(KC_LALT);
         unregister_code(KC_P6);
         unregister_code(KC_P1);
-        unregister_code(KC_LALT);
 
         if (dev_info.devs) {
             unregister_code(KC_NUM_LOCK);
