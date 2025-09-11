@@ -21,6 +21,9 @@
 
 enum user_keycodes {
     SW_OS1 = QK_KB_0,
+    WIN_LOCK,
+    KC_MICT,
+    KC_LAPA,
 };
 
 #define KC_PRS LCMD(LSFT(KC_4))
@@ -37,9 +40,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [1] = LAYOUT_72_jis( /* FN */
 		KC_GRV,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  _______, _______, _______,
 		_______, KC_MPRV, KC_MPLY, KC_MNXT, EE_CLR,  _______, KC_CALC, _______, KC_UP,   _______, KC_PSCR, KC_SCRL, KC_PAUS,                   _______,
-		RM_TOGG, RM_HUEU, KC_VOLU, KC_VOLD, KC_MUTE, _______, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_INS,  _______, _______, _______,          _______,
-		_______,          KC_APP,  _______, _______, _______, _______, NK_TOGG, RM_NEXT, KC_NO,   SW_OS1,  _______, _______, _______, RM_VALU, _______,
-		_______, GU_TOGG, _______, _______,                   _______,                   _______, MO(4),   _______, _______, RM_SPDD, RM_VALD, RM_SPDU),
+		RGB_TOG, RGB_HUI, KC_VOLU, KC_VOLD, KC_MUTE, _______, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_INS,  _______, _______, _______,          _______,
+		_______,          KC_APP,  _______, _______, _______, _______, NK_TOGG, RGB_MOD, KC_NO,   SW_OS1,  _______, _______, _______, RGB_VAI, _______,
+		_______, WIN_LOCK,_______, _______,                   _______,                   _______, MO(4),   _______, _______, RGB_SPD, RGB_VAD, RGB_SPI),
 
     [2] = LAYOUT_72_jis( /* Base */
 		KC_ESC,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS, KC_EQL,  JP_YEN,  KC_BSPC, KC_DEL,
@@ -49,16 +52,16 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 		KC_LCTL, KC_LOPT, KC_LCMD, KC_LNG2,                   KC_SPC,                    KC_LNG1, KC_RCMD, MO(3),   KC_RCTL, KC_LEFT, KC_DOWN, KC_RGHT),
 
     [3] = LAYOUT_72_jis( /* FN */
-		KC_GRV,  KC_BRID, KC_BRIU, KC_MCTL, KC_LPAD, _______, _______, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD, KC_VOLU, _______, _______, _______,
+		KC_GRV,  KC_BRID, KC_BRIU, KC_MICT, KC_LAPA, _______, _______, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD, KC_VOLU, _______, _______, _______,
 		_______, KC_MPRV, KC_MPLY, KC_MNXT, EE_CLR,  _______, KC_CALC, _______, KC_UP,   _______, KC_PRS,  KC_SCRL, KC_PAUS,                   _______,
-		_______, RM_HUEU, KC_VOLU, KC_VOLD, KC_MUTE, _______, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_INS,  _______, _______, _______,          _______,
-		_______,          KC_APP,  _______, _______, _______, _______, NK_TOGG, RM_NEXT, SW_OS1,  KC_NO,   _______, _______, _______, RM_VALU, _______,
-		_______, _______, _______, _______,                   _______,                   _______, MO(4),   _______, _______, RM_SPDD, RM_VALD, RM_SPDU),
+		_______, RGB_HUI, KC_VOLU, KC_VOLD, KC_MUTE, _______, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_INS,  _______, _______, _______,          _______,
+		_______,          KC_APP,  _______, _______, _______, _______, NK_TOGG, RGB_MOD, SW_OS1,  KC_NO,   _______, _______, _______, RGB_VAI, _______,
+		_______, _______, _______, _______,                   _______,                   _______, MO(4),   _______, _______, RGB_SPD, RGB_VAD, RGB_SPI),
 
     [4] = LAYOUT_72_jis( /* FN */
 		_______, KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  _______, _______, _______,
 		_______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,                   _______,
-		RM_TOGG, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______,
+		RGB_TOG, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______,
 		_______,          _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
 		_______, _______, _______, _______,                   _______,                   _______, _______, _______, _______, _______, _______, _______),
 
@@ -130,7 +133,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         }
             return false;
 
-        case RM_SPDD: {
+        case RGB_SPD: {
             if (record->event.pressed) {
                 if (rgb_matrix_get_speed() <= RGB_MATRIX_SPD_STEP) {
                     rgb_matrix_config.speed = 27;
@@ -141,7 +144,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         }
             return false;
 
-        case RM_NEXT: {
+        case RGB_MOD: {
             if (record->event.pressed) {
                 keyboard_config.rgb_mode++;
                 if (keyboard_config.rgb_mode > (sizeof(rgb_matrix_effects_table) / sizeof(rgb_matrix_effects_table[0]) - 1)) {
@@ -159,6 +162,22 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 single_blink_cnt   = 2;
                 single_blink_index = 73;
                 single_blink_color = (RGB){100, 100, 100};
+            }
+        } break;
+
+        case WIN_LOCK: {
+            if (record->event.pressed) {
+                keymap_config.no_gui = !keymap_config.no_gui;
+            }
+        } break;
+        case KC_MICT: {
+            if (record->event.pressed) {
+                tap_code16(KC_MCTL);
+            }
+        } break;
+        case KC_LAPA: {
+            if (record->event.pressed) {
+                tap_code16(KC_LPAD);
             }
         } break;
 

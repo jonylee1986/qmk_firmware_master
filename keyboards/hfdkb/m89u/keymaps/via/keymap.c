@@ -59,10 +59,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [WIN_FN] = LAYOUT_numpad_6x4(
-        NK_TOGG, _______, KEY_ECO, _______,
+        NK_TOGG, BT_VOL,  KEY_ECO, _______,
         RGB_TOG, BLE_RES, KEY_RES, FACTORY,
         RGB_HUI, RGB_VAI, RGB_MOD, RGB_SAI,
-        BT_2_4G, BT_USB,  RGB_SPI, BT_VOL,
+        BT_2_4G, BT_USB,  RGB_SPI, _______,
         BT_HOST1,BT_HOST2,BT_HOST3,_______,
         SW_OS,   RGB_TEST
     ),
@@ -77,10 +77,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [MAC_FN] = LAYOUT_numpad_6x4(
-        NK_TOGG, _______, KEY_ECO, _______,
+        NK_TOGG, BT_VOL,  KEY_ECO, _______,
         RGB_TOG, BLE_RES, KEY_RES, FACTORY,
         RGB_HUI, RGB_VAI, RGB_MOD, RGB_SAI,
-        BT_2_4G, BT_USB,  RGB_SPI, BT_VOL,
+        BT_2_4G, BT_USB,  RGB_SPI, _______,
         BT_HOST1,BT_HOST2,BT_HOST3,_______,
         SW_OS,   RGB_TEST
     )

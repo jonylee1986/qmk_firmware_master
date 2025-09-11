@@ -68,7 +68,7 @@
     {"name": "Reset_ All", "title": "Reset the PCB setting", "shortName": "Reset_All"},
     {"name": "Reset_ Keymap", "title": "Reset the keyboard resetting", "shortName": "Reset_Keymap"},
     {"name": "Reset_ BT", "title": "Reset the Bluetooth setting", "shortName": "Reset_BT"},
-    {"name": "Win_ Eql", "title": "Key equal for windows", "shortName": "="}
+    {"name": "=", "title": "Key equal for windows", "shortName": "="}
   ],
   "layouts": {
     "keymap": [

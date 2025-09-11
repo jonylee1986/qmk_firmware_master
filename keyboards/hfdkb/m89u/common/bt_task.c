@@ -33,7 +33,7 @@
 #endif
 
 // Macro to check if a keycode is a numpad key
-#define IS_NUMPAD_KEYCODE(code) ((code) >= KC_KP_1 && (code) <= KC_KP_DOT)
+#define IS_NUMPAD_KEYCODE(code) ((code) >= KC_KP_SLASH && (code) <= KC_KP_DOT)
 
 // ===========================================
 // 函数声明
@@ -724,15 +724,17 @@ bool bt_process_record(uint16_t keycode, keyrecord_t *record) {
                             return false;
                         }
                     }
-                    if (IS_NUMPAD_KEYCODE(keycode)) {
-                        // Use register_code/unregister_code for consistent numpad behavior
-                        if (record->event.pressed) {
-                            register_code(keycode);
-                        } else {
-                            unregister_code(keycode);
-                        }
-                        retval = false; // We handled the key
+                }
+
+                if (IS_NUMPAD_KEYCODE(keycode)) {
+                    // Use register_code/unregister_code for consistent numpad behavior
+                    if (record->event.pressed) {
+                        register_code(keycode);
+                    } else {
+                        unregister_code(keycode);
                     }
+                    retval = false; // We handled the key
+
                 } else {
                     retval = bts_process_keys(keycode, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                 }
