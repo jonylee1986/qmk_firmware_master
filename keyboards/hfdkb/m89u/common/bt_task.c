@@ -1348,11 +1348,14 @@ static void execute_factory_reset(void) {
             eeconfig_init();
             keymap_config.nkro = false;
             dip_switch_read(true);
-            if (readPin(MM_MODE_SW_PIN) && (dev_info.devs != DEVS_USB)) {
-                bts_send_vendor(v_clear);
-                wait_ms(1000);
+            bts_send_vendor(v_clear);
+            wait_ms(1000);
+            if (readPin(MM_MODE_SW_PIN) && dev_info.devs != DEVS_USB) {
                 bt_switch_mode(DEVS_HOST1, DEVS_USB, false);
                 last_total_time = timer_read32();
+            } else if (!readPin(MM_MODE_SW_PIN)) {
+                dev_info.last_devs = DEVS_USB;
+                eeconfig_update_user(dev_info.raw);
             }
             break;
 
@@ -1363,10 +1366,16 @@ static void execute_factory_reset(void) {
             break;
 
         case _BLE: // BLE reset
+            bts_send_vendor(v_clear);
+            wait_ms(1000);
             if (readPin(MM_MODE_SW_PIN) && (dev_info.devs != DEVS_USB) && (dev_info.devs != DEVS_2_4G)) {
-                bts_send_vendor(v_clear);
-                wait_ms(1000);
                 bt_switch_mode(dev_info.devs, DEVS_HOST1, false);
+                last_total_time = timer_read32();
+            } else if (!readPin(MM_MODE_SW_PIN)) {
+                dev_info.last_devs = DEVS_USB;
+                eeconfig_update_user(dev_info.raw);
+            } else if (dev_info.devs == DEVS_2_4G) {
+                bt_switch_mode(dev_info.devs, DEVS_2_4G, false);
                 last_total_time = timer_read32();
             }
             break;

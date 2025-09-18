@@ -21,7 +21,6 @@ enum bt_keycodes {
     BLE_RESET,
     FN_FUN,
     FN_MENU,
-    SLEEP_TOGGLE,
     WIN_LOCK,
     RGB_TEST,
     MAC_Spotlight,

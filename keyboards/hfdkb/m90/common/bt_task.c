@@ -23,6 +23,11 @@
 #define LED_OFF_STANDBY_MS (10 * 60 * 1000)
 #define KEY_NUM 8
 
+// Battery full detection tuning
+#define FULL_PVOL_THRESHOLD 100 // consider full at >= this value
+#define FULL_HYSTERESIS_PVOL 96 // must drop to <= this to re-arm next cycle
+#define FULL_DEBOUNCE_MS 1200   // must stay at full for this long to count
+
 #ifdef BT_DEBUG_MODE
 #    define BT_DEBUG_INFO(fmt, ...) dprintf(fmt, ##__VA_ARGS__)
 #else
@@ -956,8 +961,12 @@ static void close_rgb(void) {
         return;
     }
 
+    if (dev_info.devs == DEVS_USB) {
+        return;
+    }
+
     if (sober) {
-        if (kb_sleep_flag || ((timer_elapsed32(key_press_time) >= sleep_time_table[dev_info.sleep_mode]) && (sleep_time_table[dev_info.sleep_mode] != 0))) {
+        if (kb_sleep_flag || (timer_elapsed32(key_press_time) >= LED_OFF_STANDBY_MS)) {
             bak_rgb_toggle = rgb_matrix_config.enable;
             sober          = false;
             close_rgb_time = timer_read32();
@@ -1155,11 +1164,11 @@ static void handle_factory_reset_display(void) {
                     eeconfig_init();
                     keymap_config.nkro   = false;
                     keymap_config.no_gui = false;
+                    bts_send_vendor(v_clear);
+                    wait_ms(1000);
                     if (readPin(BT_MODE_SW_PIN) && (dev_info.devs != DEVS_USB)) {
-                        bts_send_vendor(v_clear);
-                        wait_ms(1000);
                         bt_switch_mode(DEVS_HOST1, DEVS_USB, false);
-                        last_total_time  = timer_read32();
+                        last_total_time = timer_read32();
                     }
                     break;
 
@@ -1170,11 +1179,11 @@ static void handle_factory_reset_display(void) {
                     break;
 
                 case 3: // ble reset
+                    bts_send_vendor(v_clear);
+                    wait_ms(1000);
                     if (readPin(BT_MODE_SW_PIN) && (dev_info.devs != DEVS_USB) && (dev_info.devs != DEVS_2_4G)) {
-                        bts_send_vendor(v_clear);
-                        wait_ms(1000);
                         bt_switch_mode(dev_info.devs, DEVS_HOST1, false);
-                        last_total_time  = timer_read32();
+                        last_total_time = timer_read32();
                     }
                     break;
                 default:
@@ -1230,11 +1239,43 @@ static void handle_layer_indication(void) {
 }
 
 static void handle_charging_indication(void) {
+    // Debounced, hysteretic "first full" detector
+    // static uint8_t  prev_pvol               = 0;
+    static bool     first_reach_full        = false; // drives the blink once per cycle
+    static uint32_t full_candidate_since    = 0;
+    static bool     full_latched_this_cycle = false;
+
+    uint8_t pv      = bts_info.bt_info.pvol;
+    bool    plugged = (get_battery_charge_state() != BATTERY_STATE_UNPLUGGED);
+
+    if (dev_info.devs != DEVS_USB) {
+        // Detect and debounce first reach to FULL_PVOL_THRESHOLD
+        if (!full_latched_this_cycle) {
+            if (pv >= FULL_PVOL_THRESHOLD && plugged) {
+                if (full_candidate_since == 0) {
+                    full_candidate_since = timer_read32();
+                } else if (timer_elapsed32(full_candidate_since) >= FULL_DEBOUNCE_MS) {
+                    first_reach_full        = true; // trigger this cycle's indication
+                    full_latched_this_cycle = true; // prevent re-trigger until hysteresis clears
+                    full_candidate_since    = 0;    // reset candidate window
+                }
+            } else {
+                full_candidate_since = 0; // reset if we dip below threshold
+            }
+        } else {
+            // Re-arm for next cycle only after dropping below hysteresis or unplugging
+            if (pv <= FULL_HYSTERESIS_PVOL || !plugged) {
+                full_latched_this_cycle = false;
+                // Don't force first_reach_full here; it'll be set when we debounce next time
+            }
+        }
+    }
+
     if (!readPin(BT_CABLE_PIN)) {
         if (!readPin(BT_CHARGE_PIN)) {
             charge_complete_warning.entry_full_time = timer_read32();
         } else {
-            if (timer_elapsed32(charge_complete_warning.entry_full_time) > 2000) {
+            if ((timer_elapsed32(charge_complete_warning.entry_full_time) > 2000) || first_reach_full) {
                 // 充满状态
                 if (!is_in_full_power_state) {
                     is_in_full_power_state = true;

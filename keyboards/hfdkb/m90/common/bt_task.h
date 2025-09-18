@@ -27,7 +27,6 @@ typedef union {
         uint8_t smd_color_index : 4;
         uint8_t ind_color_index : 4;
         uint8_t ind_brightness;
-        uint8_t sleep_mode;
     };
 } dev_info_t;
 

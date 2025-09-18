@@ -30,7 +30,6 @@ extern uint8_t sleep_time;
 #define FACTORY FACTORY_RESET
 #define KEY_RES KEYBOARD_RESET
 #define BLE_RES BLE_RESET
-#define SW_SLEP SLEEP_TOGGLE
 
 #define KC_SPOT MAC_Spotlight
 #define KC_DICT MAC_Dictation
@@ -58,7 +57,7 @@ enum __layers {
         NK_TOGG,           KC_BRID, KC_BRIU, KC_NO,   KC_NO,    KC_NO,   KC_NO,   KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,  KC_VOLU,
         FN_FUN,   BT_HOST1,BT_HOST2,BT_HOST3,BT_2_4G, BT_USB,   _______, _______, _______, IND_VAL, IND_HUE, RGB_HUD, RGB_HUI,  FACTORY, KC_PSCR, KC_SCRL, KC_PAUS,
         BT_VOL,   _______, _______, _______, _______, _______,  _______, _______, _______, _______, _______, RGB_SAI, RGB_SAD,  RGB_MOD, BLE_RES, KEY_RES, _______,
-        RGB_TEST, _______, _______, _______, _______, _______,  _______, _______, _______, _______, SW_SLEP, KEY_ECO,           RGB_TOG,
+        RGB_TEST, _______, _______, _______, _______, _______,  _______, _______, _______, _______, _______, KEY_ECO,           RGB_TOG,
         _______,           _______, _______, _______, _______,  _______, _______, _______, _______, SW_OS,   FN_MENU,           _______,          RGB_VAI,
         _______,  WIN_LOCK,_______,                             _______,                            _______, KC_RWIN, _______,  _______, RGB_SPD, RGB_VAD, RGB_SPI),
 
@@ -74,7 +73,7 @@ enum __layers {
         NK_TOGG,           KC_F1,   KC_F2,   KC_F3,   KC_F4,    KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,   KC_F12,
         FN_FUN,   BT_HOST1,BT_HOST2,BT_HOST3,BT_2_4G, BT_USB,   _______, _______, _______, IND_VAL, IND_HUE, RGB_HUD, RGB_HUI,  FACTORY, KC_PSCR, KC_SCRL, KC_PAUS,
         BT_VOL,   _______, _______, _______, _______, _______,  _______, _______, _______, _______, _______, RGB_SAI, RGB_SAD,  RGB_MOD, BLE_RES, KEY_RES, _______,
-        RGB_TEST, _______, _______, _______, _______, _______,  _______, _______, _______, _______, SW_SLEP, KEY_ECO,           RGB_TOG,
+        RGB_TEST, _______, _______, _______, _______, _______,  _______, _______, _______, _______, _______, KEY_ECO,           RGB_TOG,
         _______,           _______, _______, _______, _______,  _______, _______, _______, SW_OS,   _______, FN_MENU,           _______,          RGB_VAI,
         KC_SPOT,  KC_DND,  _______,                             _______,                            _______, KC_ROPT, _______,  _______, RGB_SPD, RGB_VAD, RGB_SPI),
 
@@ -267,60 +266,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
         }
             return false;
-        case SW_SLEP: {
-            if (record->event.pressed) {
-                dev_info.sleep_mode += 1;
-                if (dev_info.sleep_mode > 3) {
-                    dev_info.sleep_mode = 0;
-                }
-                switch (dev_info.sleep_mode) {
-                    case 0: // 关闭睡眠
-                        bts_send_vendor(v_dis_sleep_bt);
-                        wait_ms(50);
-                        bts_send_vendor(v_dis_sleep_wl);
-                        wait_ms(50);
-                        VAL_OUT_blink_cnt   = 8;
-                        VAL_OUT_LEDINDEX    = 57;
-                        VAL_OUT_blink_color = (RGB){0, 0, 100};
-                        VAL_OUT_blink_time  = timer_read32();
-                        break;
-                    case 1: // 开启睡眠1
-                        bts_send_vendor(v_en_sleep_bt);
-                        wait_ms(50);
-                        bts_send_vendor(v_en_sleep_wl);
-                        wait_ms(50);
-                        VAL_OUT_blink_cnt   = 2;
-                        VAL_OUT_LEDINDEX    = 57;
-                        VAL_OUT_blink_color = (RGB){0, 0, 100};
-                        VAL_OUT_blink_time  = timer_read32();
-                        break;
-                    case 2: // 开启睡眠2
-                        bts_send_vendor(v_en_sleep_bt);
-                        wait_ms(50);
-                        bts_send_vendor(v_en_sleep_wl);
-                        wait_ms(50);
-                        VAL_OUT_blink_cnt   = 4;
-                        VAL_OUT_LEDINDEX    = 57;
-                        VAL_OUT_blink_color = (RGB){0, 0, 100};
-                        VAL_OUT_blink_time  = timer_read32();
-                        break;
-                    case 3: // 开启睡眠3
-                        bts_send_vendor(v_en_sleep_bt);
-                        wait_ms(50);
-                        bts_send_vendor(v_en_sleep_wl);
-                        wait_ms(50);
-                        VAL_OUT_blink_cnt   = 6;
-                        VAL_OUT_LEDINDEX    = 57;
-                        VAL_OUT_blink_color = (RGB){0, 0, 100};
-                        VAL_OUT_blink_time  = timer_read32();
-                        break;
-                    default:
-                        break;
-                }
-                eeconfig_update_user(dev_info.raw);
-            }
-        }
-            return false;
 
         case KC_DICT: {
             if (record->event.pressed) {
@@ -412,7 +357,6 @@ void eeconfig_init_user(void) {
     dev_info.ind_brightness  = RGB_MATRIX_VAL_STEP * 3;
     dev_info.smd_color_index = 0;
     dev_info.ind_color_index = 0;
-    dev_info.sleep_mode      = 1;
     dev_info.eco_tog_flag    = false;
     dev_info.manual_usb_mode = false;
     eeconfig_update_user(dev_info.raw);
