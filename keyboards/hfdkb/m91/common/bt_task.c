@@ -62,6 +62,9 @@ static void open_rgb(void);
 static void close_rgb(void);
 #endif
 
+extern void function_multimedia_swap(void);
+extern void function_menu_swap(void);
+
 extern keymap_config_t keymap_config;
 
 // ===========================================
@@ -134,7 +137,11 @@ long_pressed_keys_t long_pressed_keys[] = {
     {.keycode = FACTORY_RESET, .press_time = 0, .event_cb = long_pressed_keys_cb},
     {.keycode = KEYBOARD_RESET, .press_time = 0, .event_cb = long_pressed_keys_cb},
     {.keycode = BLE_RESET, .press_time = 0, .event_cb = long_pressed_keys_cb},
-    {.keycode = RGB_TEST, .press_time = 0, .event_cb = long_pressed_keys_cb}
+    {.keycode = RGB_TEST, .press_time = 0, .event_cb = long_pressed_keys_cb},
+    {.keycode = FN_FUN, .press_time = 0, .event_cb = long_pressed_keys_cb},
+    {.keycode = FN_MENU, .press_time = 0, .event_cb = long_pressed_keys_cb},
+    {.keycode = WIN_LOCK, .press_time = 0, .event_cb = long_pressed_keys_cb},
+    {.keycode = SW_OS, .press_time = 0, .event_cb = long_pressed_keys_cb},
 };
 // clang-format on
 // 指示器状态
@@ -745,22 +752,8 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
             }
         } break;
 
-        case SW_OS: {
-            if (record->event.pressed) {
-                if (get_highest_layer(default_layer_state) == 0) {
-                    set_single_persistent_default_layer(2);
-                    keymap_config.no_gui = 0;
-                    eeconfig_update_keymap(&keymap_config);
-                    single_blink_index = 83;
-                } else if (get_highest_layer(default_layer_state) == 2) {
-                    set_single_persistent_default_layer(0);
-                    single_blink_index = 82;
-                }
-                single_blink_time  = timer_read32();
-                single_blink_cnt   = 6;
-                single_blink_color = (RGB){100, 100, 100};
-            }
-        } break;
+        case SW_OS:
+            break;
 
         case RGB_TEST: {
             if (record->event.pressed) {
@@ -774,6 +767,9 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
         case FACTORY_RESET:
         case KEYBOARD_RESET:
         case BLE_RESET:
+        case FN_FUN:
+        case FN_MENU:
+        case GU_TOGG:
             break;
         default:
             return true;
@@ -782,9 +778,6 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
     return false;
 }
 
-// ===========================================
-// 长按键处理
-// ===========================================
 static void long_pressed_keys_cb(uint16_t keycode) {
     switch (keycode) {
         case BT_HOST1:
@@ -815,6 +808,34 @@ static void long_pressed_keys_cb(uint16_t keycode) {
                 rgb_test_index = 1;
                 rgb_test_time  = timer_read32();
             }
+        } break;
+
+        case FN_FUN: {
+            function_multimedia_swap();
+        } break;
+
+        case FN_MENU: {
+            function_menu_swap();
+        } break;
+
+        case WIN_LOCK: {
+            keymap_config.no_gui = !keymap_config.no_gui;
+            eeconfig_update_keymap(&keymap_config);
+        } break;
+
+        case SW_OS: {
+            if (get_highest_layer(default_layer_state) == 0) {
+                set_single_persistent_default_layer(2);
+                keymap_config.no_gui = 0;
+                eeconfig_update_keymap(&keymap_config);
+                single_blink_index = 83;
+            } else if (get_highest_layer(default_layer_state) == 2) {
+                set_single_persistent_default_layer(0);
+                single_blink_index = 82;
+            }
+            single_blink_time  = timer_read32();
+            single_blink_cnt   = 6;
+            single_blink_color = (RGB){100, 100, 100};
         } break;
 
         default:
@@ -1163,6 +1184,9 @@ static void handle_factory_reset_display(void) {
                     if (readPin(BT_MODE_SW_PIN) && (dev_info.devs != DEVS_USB)) {
                         bt_switch_mode(DEVS_HOST1, DEVS_USB, false);
                         last_total_time = timer_read32();
+                    } else if (!readPin(BT_MODE_SW_PIN)) {
+                        dev_info.last_devs = DEVS_USB;
+                        eeconfig_update_user(dev_info.raw);
                     }
                     break;
 
@@ -1177,6 +1201,12 @@ static void handle_factory_reset_display(void) {
                     wait_ms(1000);
                     if (readPin(BT_MODE_SW_PIN) && (dev_info.devs != DEVS_USB) && (dev_info.devs != DEVS_2_4G)) {
                         bt_switch_mode(dev_info.devs, DEVS_HOST1, false);
+                        last_total_time = timer_read32();
+                    } else if (!readPin(BT_MODE_SW_PIN)) {
+                        dev_info.last_devs = DEVS_USB;
+                        eeconfig_update_user(dev_info.raw);
+                    } else if (dev_info.devs == DEVS_2_4G) {
+                        bt_switch_mode(dev_info.devs, DEVS_2_4G, false);
                         last_total_time = timer_read32();
                     }
                     break;

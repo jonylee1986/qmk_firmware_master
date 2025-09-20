@@ -118,83 +118,76 @@ static uint8_t indicator_color_tab[][3] = {
     {HSV_CYAN},    // CYAN
 };
 
+void function_multimedia_swap(void) {
+    if (get_highest_layer(default_layer_state) == WIN_B) {
+        if (dynamic_keymap_get_keycode(WIN_B, KC_F1_ROW, KC_F1_COL) == KC_F1) {
+            for (size_t i = 0; i < 12; i++) {
+                dynamic_keymap_set_keycode(WIN_B, KC_F1_ROW, i + KC_F1_COL, FN_FUN_table[WIN_FN][i]);
+                dynamic_keymap_set_keycode(WIN_FN, KC_F1_ROW, i + KC_F1_COL, FN_FUN_table[WIN_B][i]);
+            }
+            VAL_OUT_blink_time  = timer_read32();
+            VAL_OUT_blink_cnt   = 6;
+            VAL_OUT_LEDINDEX    = 16;
+            VAL_OUT_blink_color = (RGB){0, 0, 100};
+        } else {
+            for (size_t i = 0; i < 12; i++) {
+                dynamic_keymap_set_keycode(WIN_B, KC_F1_ROW, i + KC_F1_COL, FN_FUN_table[WIN_B][i]);
+                dynamic_keymap_set_keycode(WIN_FN, KC_F1_ROW, i + KC_F1_COL, FN_FUN_table[WIN_FN][i]);
+            }
+            VAL_OUT_blink_time  = timer_read32();
+            VAL_OUT_blink_cnt   = 6;
+            VAL_OUT_LEDINDEX    = 16;
+            VAL_OUT_blink_color = (RGB){100, 100, 100};
+        }
+    } else if (get_highest_layer(default_layer_state) == MAC_B) {
+        if (dynamic_keymap_get_keycode(MAC_B, KC_F1_ROW, KC_F1_COL) == KC_F1) {
+            for (size_t i = 0; i < 12; i++) {
+                dynamic_keymap_set_keycode(MAC_B, KC_F1_ROW, i + KC_F1_COL, FN_FUN_table[MAC_FN][i]);
+                dynamic_keymap_set_keycode(MAC_FN, KC_F1_ROW, i + KC_F1_COL, FN_FUN_table[MAC_B][i]);
+            }
+            VAL_OUT_blink_time  = timer_read32();
+            VAL_OUT_blink_cnt   = 6;
+            VAL_OUT_LEDINDEX    = 16;
+            VAL_OUT_blink_color = (RGB){0, 0, 100};
+        } else {
+            for (size_t i = 0; i < 12; i++) {
+                dynamic_keymap_set_keycode(MAC_B, KC_F1_ROW, i + KC_F1_COL, FN_FUN_table[MAC_B][i]);
+                dynamic_keymap_set_keycode(MAC_FN, KC_F1_ROW, i + KC_F1_COL, FN_FUN_table[MAC_FN][i]);
+            }
+            VAL_OUT_blink_time  = timer_read32();
+            VAL_OUT_blink_cnt   = 6;
+            VAL_OUT_LEDINDEX    = 16;
+            VAL_OUT_blink_color = (RGB){100, 100, 100};
+        }
+    }
+}
+
+void function_menu_swap(void) {
+    if (get_highest_layer(default_layer_state) == WIN_B) {
+        if (dynamic_keymap_get_keycode(WIN_B, KC_MENU_ROW, KC_MENU_COL) == KC_APP) {
+            dynamic_keymap_set_keycode(WIN_B, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[WIN_FN][0]);
+            dynamic_keymap_set_keycode(WIN_FN, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[WIN_B][0]);
+        } else {
+            dynamic_keymap_set_keycode(WIN_B, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[WIN_B][0]);
+            dynamic_keymap_set_keycode(WIN_FN, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[WIN_FN][0]);
+        }
+    } else if (get_highest_layer(default_layer_state) == MAC_B) {
+        if (dynamic_keymap_get_keycode(MAC_B, KC_MENU_ROW, KC_MENU_COL) == KC_APP) {
+            dynamic_keymap_set_keycode(MAC_B, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[MAC_FN][0]);
+            dynamic_keymap_set_keycode(MAC_FN, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[MAC_B][0]);
+        } else {
+            dynamic_keymap_set_keycode(MAC_B, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[MAC_B][0]);
+            dynamic_keymap_set_keycode(MAC_FN, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[MAC_FN][0]);
+        }
+    }
+    VAL_OUT_blink_time  = timer_read32();
+    VAL_OUT_blink_cnt   = 6;
+    VAL_OUT_LEDINDEX    = 84;
+    VAL_OUT_blink_color = (RGB){100, 100, 100};
+}
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
-        case FN_FUN: {
-            if (record->event.pressed) {
-                if (get_highest_layer(default_layer_state) == WIN_B) {
-                    if (dynamic_keymap_get_keycode(WIN_B, KC_F1_ROW, KC_F1_COL) == KC_F1) {
-                        for (size_t i = 0; i < 12; i++) {
-                            dynamic_keymap_set_keycode(WIN_B, KC_F1_ROW, i + KC_F1_COL, FN_FUN_table[WIN_FN][i]);
-                            dynamic_keymap_set_keycode(WIN_FN, KC_F1_ROW, i + KC_F1_COL, FN_FUN_table[WIN_B][i]);
-                        }
-                        VAL_OUT_blink_time  = timer_read32();
-                        VAL_OUT_blink_cnt   = 6;
-                        VAL_OUT_LEDINDEX    = 16;
-                        VAL_OUT_blink_color = (RGB){0, 0, 100};
-                    } else {
-                        for (size_t i = 0; i < 12; i++) {
-                            dynamic_keymap_set_keycode(WIN_B, KC_F1_ROW, i + KC_F1_COL, FN_FUN_table[WIN_B][i]);
-                            dynamic_keymap_set_keycode(WIN_FN, KC_F1_ROW, i + KC_F1_COL, FN_FUN_table[WIN_FN][i]);
-                        }
-                        VAL_OUT_blink_time  = timer_read32();
-                        VAL_OUT_blink_cnt   = 6;
-                        VAL_OUT_LEDINDEX    = 16;
-                        VAL_OUT_blink_color = (RGB){100, 100, 100};
-                    }
-                } else if (get_highest_layer(default_layer_state) == MAC_B) {
-                    if (dynamic_keymap_get_keycode(MAC_B, KC_F1_ROW, KC_F1_COL) == KC_F1) {
-                        for (size_t i = 0; i < 12; i++) {
-                            dynamic_keymap_set_keycode(MAC_B, KC_F1_ROW, i + KC_F1_COL, FN_FUN_table[MAC_FN][i]);
-                            dynamic_keymap_set_keycode(MAC_FN, KC_F1_ROW, i + KC_F1_COL, FN_FUN_table[MAC_B][i]);
-                        }
-                        VAL_OUT_blink_time  = timer_read32();
-                        VAL_OUT_blink_cnt   = 6;
-                        VAL_OUT_LEDINDEX    = 16;
-                        VAL_OUT_blink_color = (RGB){0, 0, 100};
-                    } else {
-                        for (size_t i = 0; i < 12; i++) {
-                            dynamic_keymap_set_keycode(MAC_B, KC_F1_ROW, i + KC_F1_COL, FN_FUN_table[MAC_B][i]);
-                            dynamic_keymap_set_keycode(MAC_FN, KC_F1_ROW, i + KC_F1_COL, FN_FUN_table[MAC_FN][i]);
-                        }
-                        VAL_OUT_blink_time  = timer_read32();
-                        VAL_OUT_blink_cnt   = 6;
-                        VAL_OUT_LEDINDEX    = 16;
-                        VAL_OUT_blink_color = (RGB){100, 100, 100};
-                    }
-                }
-            }
-        }
-            return false;
-        case FN_MENU: {
-            if (record->event.pressed) {
-                if (get_highest_layer(default_layer_state) == WIN_B) {
-                    if (dynamic_keymap_get_keycode(WIN_B, KC_MENU_ROW, KC_MENU_COL) == KC_APP) {
-                        dynamic_keymap_set_keycode(WIN_B, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[WIN_FN][0]);
-                        dynamic_keymap_set_keycode(WIN_FN, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[WIN_B][0]);
-                    } else {
-                        dynamic_keymap_set_keycode(WIN_B, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[WIN_B][0]);
-                        dynamic_keymap_set_keycode(WIN_FN, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[WIN_FN][0]);
-                    }
-                } else if (get_highest_layer(default_layer_state) == MAC_B) {
-                    if (dynamic_keymap_get_keycode(MAC_B, KC_MENU_ROW, KC_MENU_COL) == KC_APP) {
-                        dynamic_keymap_set_keycode(MAC_B, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[MAC_FN][0]);
-                        dynamic_keymap_set_keycode(MAC_FN, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[MAC_B][0]);
-                    } else {
-                        dynamic_keymap_set_keycode(MAC_B, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[MAC_B][0]);
-                        dynamic_keymap_set_keycode(MAC_FN, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[MAC_FN][0]);
-                    }
-                }
-            }
-        }
-            return false;
-        case WIN_LOCK: {
-            if (record->event.pressed) {
-                keymap_config.no_gui = !keymap_config.no_gui;
-                eeconfig_update_keymap(&keymap_config);
-            }
-        }
-            return false;
         case RGB_VAD: {
             if (record->event.pressed) {
                 rgb_matrix_config.hsv.v = rgb_matrix_get_val() - RGB_MATRIX_VAL_STEP;

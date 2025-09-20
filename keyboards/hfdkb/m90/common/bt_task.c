@@ -1169,6 +1169,9 @@ static void handle_factory_reset_display(void) {
                     if (readPin(BT_MODE_SW_PIN) && (dev_info.devs != DEVS_USB)) {
                         bt_switch_mode(DEVS_HOST1, DEVS_USB, false);
                         last_total_time = timer_read32();
+                    } else if (!readPin(BT_MODE_SW_PIN)) {
+                        dev_info.last_devs = DEVS_USB;
+                        eeconfig_update_user(dev_info.raw);
                     }
                     break;
 
@@ -1183,6 +1186,12 @@ static void handle_factory_reset_display(void) {
                     wait_ms(1000);
                     if (readPin(BT_MODE_SW_PIN) && (dev_info.devs != DEVS_USB) && (dev_info.devs != DEVS_2_4G)) {
                         bt_switch_mode(dev_info.devs, DEVS_HOST1, false);
+                        last_total_time = timer_read32();
+                    } else if (!readPin(BT_MODE_SW_PIN)) {
+                        dev_info.last_devs = DEVS_USB;
+                        eeconfig_update_user(dev_info.raw);
+                    } else if (dev_info.devs == DEVS_2_4G) {
+                        bt_switch_mode(dev_info.devs, DEVS_2_4G, false);
                         last_total_time = timer_read32();
                     }
                     break;
