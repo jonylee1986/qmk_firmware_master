@@ -73,7 +73,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______,           _______, _______,  _______,  _______,  _______, _______, _______, _______, _______, _______,   _______,                      BL_VALU,
         _______, _______,  _______,                               F_KEY1,                              _______, _______,   _______,            BL_SPDD,  BL_VALD,  BL_SPDU),
 };
-
 // clang-format on
 
 /* Factory reset */
