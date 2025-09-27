@@ -898,6 +898,7 @@ static bool bt_process_record_other(uint16_t keycode, keyrecord_t *record) {
         case NK_TOGG: {
             if (record->event.pressed) {
                 keymap_config.nkro = !keymap_config.nkro;
+                eeconfig_update_keymap(&keymap_config);
                 if (keymap_config.nkro) {
                     single_blink_cnt   = 6;
                     single_blink_index = 0;

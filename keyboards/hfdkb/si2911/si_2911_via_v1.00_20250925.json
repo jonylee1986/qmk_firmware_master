@@ -1,7 +1,7 @@
 {
-    "name": "K81",
+    "name": "YUNZII YZ99 Keyboard",
     "vendorId": "0xFFFE",
-    "productId": "0x00A9",
+    "productId": "0x00AA",
     "keycodes": ["qmk_lighting"],
     "menus": [
       {
@@ -23,8 +23,8 @@
                 "options": [
                   ["All Off", 0],
                   ["SOLID_COLOR", 1],
-                  ["BREATHING", 2],
-                  ["GRADIENT_UP_DOWN", 3],
+                  ["GRADIENT_UP_DOWN", 2],
+                  ["BREATHING", 3],
                   ["BAND_PINWHEEL_SAT", 4],
                   ["BAND_SPIRAL_SAT", 5],
                   ["CYCLE_ALL", 6],
@@ -62,15 +62,23 @@
         ]
       }
     ],
-    "matrix": { "rows": 6, "cols": 16 },
+    "matrix": { "rows": 6, "cols": 19 },
     "customKeycodes":[
         {"name": "BT_1","title":"BT_HOST1","shortName":"BT_1"},
         {"name": "BT_2","title":"BT_HOST2","shortName":"BT_2"},
         {"name": "BT_3","title":"BT_HOST3","shortName":"BT_3"},
         {"name": "2_4G","title":"2_4G","shortName":"2_4G"},
         {"name": "USB","title":"USB","shortName":"USB"},
-        {"name": "BT_VOL","title":"Query the voltage of battery","shortName":"BT_VOL"},
-        {"name": "SW_ MODE","title":"Switch between gaming and working mode","shortName":"SW_MODE"}
+        {"name": "Batt. Check","title":"Query the voltage of battery","shortName":"Batt.Check"},
+        {"name": "BLED _MOD","title":"Switch the mode of usb light","shortName":"BLED_MOD"},
+        {"name": "BLED _HUI","title":"Adjust the color of usb light","shortName":"BLED_HUI"},
+        {"name": "BLED _VAI","title":"Adjust the brightness of usb light","shortName":"BLED_VAI"},
+        {"name": "BLED _SPI","title":"Adjust the speed of usb light","shortName":"BLED_SPI"},
+        {"name": "SLED _MOD","title":"Switch the mode of side light","shortName":"SLED_MOD"},
+        {"name": "SLED _HUI","title":"Adjust the color of side light","shortName":"SLED_HUI"},
+        {"name": "SLED _VAI","title":"Adjust the brightness of side light","shortName":"SLED_VAI"},
+        {"name": "SLED _SPI","title":"Adjust the speed of side light","shortName":"SLED_SPI"},
+        {"name": "RGB _TEST","title":"RGB test mode","shortName":"RGB_TEST"}
     ],
     "layouts": {
       "keymap":[
@@ -83,34 +91,45 @@
             "x": 1,
             "c": "#cccccc"
           },
+          "0,2",
           "0,3",
           "0,4",
           "0,5",
-          "0,6",
           {
-            "x": 0.25
+            "c": "#aaaaaa",
+            "x": 0.5
           },
+          "0,6",
           "0,7",
           "0,8",
           "0,9",
-          "0,10",
           {
-            "x": 0.25
+            "c": "#cccccc",
+            "x": 0.5
           },
+          "0,10",
           "0,11",
           "0,12",
           "0,13",
+          {
+            "c": "#aaaaaa",
+            "x": 0.25
+          },
           "0,14",
           {
-            "x": 0.25,
-            "w": 1,
-            "h": 1
+            "x": 0.25
           },
-          "1,14"
+          "0,15",
+          "0,16",
+          "0,17",
+          {
+            "c": "#cccccc"
+          },
+          "3,18\n\n\n\n\n\n\n\n\ne0"
         ],
         [
           {
-            "y": 0.25
+            "y": 0.5
           },
           "1,0",
           "1,1",
@@ -130,7 +149,17 @@
             "w": 2
           },
           "1,13",
-          "1,15"
+          {
+            "x": 0.25
+          },
+          "1,14",
+          {
+            "x": 0.25
+          },
+          "1,15",
+          "1,16",
+          "1,17",
+          "1,18"
         ],
         [
           {
@@ -157,9 +186,22 @@
           },
           "2,13",
           {
-            "c": "#aaaaaa"
+            "c": "#aaaaaa",
+            "x": 0.25
           },
-          "2,15"
+          "1,14",
+          {
+            "c": "#cccccc",
+            "x": 0.25
+          },
+          "2,15",
+          "2,16",
+          "2,17",
+          {
+            "c": "#aaaaaa",
+            "h": 2
+          },
+          "2,18"
         ],
         [
           {
@@ -186,12 +228,21 @@
           },
           "3,13",
           {
-            "c": "#aaaaaa"
+            "c": "#aaaaaa",
+            "x": 0.25
           },
-          "3,15"
+          "3,14",
+          {
+            "c": "#cccccc",
+            "x": 0.25
+          },
+          "3,15",
+          "3,16",
+          "3,17"
         ],
         [
           {
+            "c": "#aaaaaa",
             "w": 2.25
           },
           "4,0",
@@ -218,9 +269,17 @@
           },
           "4,14",
           {
-            "c": "#aaaaaa"
+            "c": "#cccccc",
+            "x": 1.5
           },
-          "4,15"
+          "4,15",
+          "4,16",
+          "4,17",
+          {
+            "c": "#aaaaaa",
+            "h": 2
+          },
+          "4,18"
         ],
         [
           {
@@ -236,7 +295,7 @@
           },
           "5,2",
           {
-            "c": "#cccccc",
+            "c": "#777777",
             "w": 6.25
           },
           "5,5",
@@ -255,7 +314,14 @@
           },
           "5,13",
           "5,14",
-          "5,15"
+          "5,15",
+          {
+            "c": "#cccccc",
+            "x": 0.5,
+            "w": 2
+          },
+          "5,16",
+          "5,17"
         ]
       ]
     }

@@ -1,6 +1,6 @@
 {
     "manufacturer": "hfd",
-    "keyboard_name": "K81",
+    "keyboard_name": "AULA-F75",
     "maintainer": "jonylee@hfd",
     "url": "https://github.com/jonylee1986",
     "processor": "WB32FQ95",
@@ -8,8 +8,8 @@
     "usb": {
         "vid": "0xFFFE",
         "pid": "0x00A9",
-        "device_version": "1.0.2",
-        "suspend_wakeup_delay": 1500
+        "device_version": "1.0.3",
+        "suspend_wakeup_delay": 1000
     },
     "features": {
         "bootmagic": true,
@@ -50,7 +50,7 @@
         }
     },
     "dynamic_keymap": {
-        "layer_count": 8
+        "layer_count": 6
     },
     "rgb_matrix": {
         "driver": "snled27351",

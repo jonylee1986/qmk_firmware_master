@@ -739,6 +739,7 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
         case NK_TOGG: {
             if (record->event.pressed) {
                 keymap_config.nkro = !keymap_config.nkro;
+                eeconfig_update_keymap(&keymap_config);
                 if (keymap_config.nkro) {
                     single_blink_cnt   = 6;
                     single_blink_index = 0;
@@ -826,8 +827,8 @@ static void long_pressed_keys_cb(uint16_t keycode) {
         case SW_OS: {
             if (get_highest_layer(default_layer_state) == 0) {
                 set_single_persistent_default_layer(2);
-                keymap_config.no_gui = 0;
-                eeconfig_update_keymap(&keymap_config);
+                // keymap_config.no_gui = 0;
+                // eeconfig_update_keymap(&keymap_config);
                 single_blink_index = 83;
             } else if (get_highest_layer(default_layer_state) == 2) {
                 set_single_persistent_default_layer(0);
@@ -1540,7 +1541,7 @@ bool bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
             }
         }
 
-        for (uint8_t i = 0; i < 87; i++) {
+        for (uint8_t i = 0; i < 107; i++) {
             rgb_matrix_set_color(i, rgb_test_color_table[rgb_test_index - 1][0], rgb_test_color_table[rgb_test_index - 1][1], rgb_test_color_table[rgb_test_index - 1][2]);
         }
     }

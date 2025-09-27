@@ -72,12 +72,12 @@
     {"name": "IND_ Bright", "title": "Increase the brightness level of LED indicator", "shortName": "IND_Bright"},
     {"name": "ECO MODE", "title": "Toggle the ON/OFF state of LED indicator", "shortName": "ECO_MODE"},
     {"name": "Reset_ All", "title": "Reset the PCB setting", "shortName": "Reset_All"},
-    {"name": "Reset_ Keymap", "title": "Reset the keyboard resetting", "shortName": "Reset_Keymap"},
+    {"name": "Reset_ Key map", "title": "Reset the keyboard resetting", "shortName": "Reset_Keymap"},
     {"name": "Reset_ BT", "title": "Reset the Bluetooth setting", "shortName": "Reset_BT"},
     {"name": "FN_ Func tion", "title": "Swap the function keys", "shortName": "FN_Function"},
     {"name": "FN_ MENU", "title": "Swap the menu and alt", "shortName": "FN_MENU"},
-    {"name": "Sleep Mode", "title": "Switch the sleep level", "shortName": "Sleep Mode"},
-    {"name": "WIN_ LOCK", "title": "WIN key lock", "shortName": "WIN_LOCK"}
+    {"name": "WIN_ LOCK", "title": "WIN key lock", "shortName": "WIN_LOCK"},
+    {"name": "KC_ MICT", "title": "Mission Control in macOS", "shortName": "MCtrl"}
   ],
   "layouts": {
     "keymap": [

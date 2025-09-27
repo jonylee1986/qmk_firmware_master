@@ -22,8 +22,12 @@ enum bt_keycodes {
     FN_FUN,
     FN_MENU,
     WIN_LOCK,
-    RGB_TEST,
+    KC_MICT,
     MAC_Spotlight,
     MAC_Dictation,
     MAC_Do_Not_Disturb,
+};
+
+enum _keycodes{
+    RGB_TEST = SAFE_RANGE,
 };

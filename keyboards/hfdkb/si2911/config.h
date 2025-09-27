@@ -17,16 +17,16 @@
 #pragma once
 
 #ifdef MULTIMODE_ENABLE
-#    define MM_BT_HOST1_NAME "AULA-F75 5.0 KB"
-#    define MM_BT_HOST2_NAME "AULA-F75 5.0 KB"
-#    define MM_BT_HOST3_NAME "AULA-F75 5.0 KB"
+#    define MM_BT_HOST1_NAME "YUNZII YZ99 BT$"
+#    define MM_BT_HOST2_NAME "YUNZII YZ99 BT$"
+#    define MM_BT_HOST3_NAME "YUNZII YZ99 BT$"
 
 // Indicate index of mm device
-#    define MM_BLINK_HOST1_INDEX 14
-#    define MM_BLINK_HOST2_INDEX 15
-#    define MM_BLINK_HOST3_INDEX 16
-#    define MM_BLINK_2G4_INDEX 13
-#    define MM_BLINK_USB_INDEX 17
+#    define MM_BLINK_HOST1_INDEX 18
+#    define MM_BLINK_HOST2_INDEX 19
+#    define MM_BLINK_HOST3_INDEX 20
+#    define MM_BLINK_2G4_INDEX 21
+#    define MM_BLINK_USB_INDEX 22
 
 // Multi mode used pins
 #    define MM_CABLE_PIN B9
@@ -41,25 +41,13 @@
 #    define MM_BLINK_2G4_COLOR RGB_CYAN   // 2.4G color
 #    define MM_BLINK_USB_COLOR RGB_WHITE  // USB color
 
-#    define BAT_LEVEL_DISPLAY_INDEX {14, 15, 16, 17, 18, 19, 20, 21, 22, 23} // Battery level indicator
-
-#    define CHRGE_LOW_LEVEL_INDICATOR_INDEX 75
-#    define CHRGE_LOW_LEVEL_INDICATOR_COLOR RGB_RED
-
-// Other config
-#    define LED_Q_INDEX 29
-#    define LED_W_INDEX 30
-#    define LED_E_INDEX 31
-#    define LED_R_INDEX 32
-#    define LED_LWIN_INDEX 72
-
-#    define VOL_INDICATE_LED_1_PIN C15
-#    define VOL_INDICATE_LED_2_PIN C11
-#    define VOL_INDICATE_LED_3_PIN A8
-#    define VOL_INDICATE_LED_4_PIN B13
-#    define VOL_INDICATE_LED_5_PIN B12
-#    define VOL_INDICATE_LED_STATE_ON 1
+#    define BAT_LEVEL_DISPLAY_INDEX {102, 103, 104, 105, 106} // Battery level indicator
 #endif
+
+// Win lock indicator
+#define LED_LWIN_INDEX 90
+// Num lock indicator
+#define LED_NUM_INDEX 32
 
 /* SPI Config for spi flash*/
 #define SPI_DRIVER SPIDQ
@@ -82,3 +70,4 @@
 
 // Encoder Config
 #define ENCODER_DEFAULT_POS 0x0
+#define ENCODER_DIRECTION_FLIP
