@@ -69,7 +69,11 @@
         {"name": "BT_3","title":"BT_HOST3","shortName":"BT_3"},
         {"name": "2_4G","title":"2_4G","shortName":"2_4G"},
         {"name": "USB","title":"USB","shortName":"USB"},
-        {"name": "BT_VOL","title":"Query the voltage of battery","shortName":"BT_VOL"}
+        {"name": "BT_VOL","title":"Query the voltage of battery","shortName":"BT_VOL"},
+        {"name": "BLED _MOD","title":"Switch the mode of usb light","shortName":"BLED_MOD"},
+        {"name": "BLED _HUI","title":"Adjust the color of usb light","shortName":"BLED_HUI"},
+        {"name": "BLED _VAI","title":"Adjust the brightness of usb light","shortName":"BLED_VAI"},
+        {"name": "BLED _SPI","title":"Adjust the speed of usb light","shortName":"BLED_SPI"}
     ],
     "layouts": {
       "keymap":[

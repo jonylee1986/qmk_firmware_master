@@ -156,9 +156,9 @@ static const uint8_t rgb_test_color_table[][3] = {
     {0, 0, 100},
     {50, 50, 50},
 };
-static uint8_t  rgb_test_index  = 0;
-static bool     rgb_test_en     = false;
-static uint32_t rgb_test_time   = 0;
+// static uint8_t  rgb_test_index  = 0;
+static bool rgb_test_en = false;
+// static uint32_t rgb_test_time   = 0;
 static bool     query_vol_flag  = false;
 static uint32_t last_total_time = 0;
 
@@ -763,9 +763,14 @@ static bool bt_process_record_other(uint16_t keycode, keyrecord_t *record) {
 
         case RGB_TEST: {
             if (record->event.pressed) {
-                if (rgb_test_en) {
-                    rgb_test_en    = false;
-                    rgb_test_index = 0;
+                // if (rgb_test_en) {
+                //     rgb_test_en    = false;
+                //     rgb_test_index = 0;
+                // }
+                if (!rgb_test_en) {
+                    rgb_test_en = true;
+                } else {
+                    rgb_test_en = false;
                 }
             }
         } break;
@@ -801,13 +806,13 @@ static void bt_long_pressed_keys_cb(uint16_t keycode) {
             }
         } break;
 
-        case RGB_TEST: {
-            if (rgb_test_en != true) {
-                rgb_test_en    = true;
-                rgb_test_index = 1;
-                rgb_test_time  = timer_read32();
-            }
-        } break;
+            // case RGB_TEST: {
+            //     if (rgb_test_en != true) {
+            //         rgb_test_en    = true;
+            //         rgb_test_index = 1;
+            //         rgb_test_time  = timer_read32();
+            //     }
+            // } break;
 
         default:
             break;
@@ -1097,7 +1102,7 @@ static void bt_bat_low_level_warning(void) {
     static uint32_t Low_power_time = 0;
 
     if (bts_info.bt_info.low_vol) {
-        rgb_matrix_set_color_all(0x00, 0x00, 0x00);
+        rgb_matrix_set_color_all(RGB_OFF);
         if (timer_elapsed32(Low_power_time) >= 500) {
             Low_power_bink = !Low_power_bink;
             Low_power_time = timer_read32();
@@ -1112,16 +1117,20 @@ static void bt_bat_low_level_warning(void) {
     }
 }
 
-static uint32_t charging_time = 0;
-
 static void bt_charging_indication(void) {
+    static uint32_t charging_time = 0;
+    static uint32_t charged_time  = 0;
+
     if (!readPin(MM_CABLE_PIN)) {
         if (!readPin(MM_CHARGE_PIN)) {
+            charged_time = timer_read32();
             if (timer_elapsed32(charging_time) >= 2000) {
                 bled_charging_indicate();
             }
         } else {
-            bled_charged_indicate();
+            if (timer_elapsed32(charged_time) >= 2000) {
+                bled_charged_indicate();
+            }
         }
     } else {
         charging_time = timer_read32();
@@ -1151,7 +1160,7 @@ static void bt_bat_query_period(void) {
 
         uint8_t led_count = (pvol <= 20) ? 1 : (pvol / 20);
 
-        for (uint8_t i = 0; i < 5; i++) {
+        for (uint8_t i = 0; i < (sizeof(query_index) / sizeof(query_index[0])); i++) {
             rgb_matrix_set_color(query_index[i], RGB_OFF);
         }
 
@@ -1232,8 +1241,6 @@ bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
 
     if ((dev_info.devs != DEVS_USB) && (readPin(MM_CABLE_PIN))) {
         bt_bat_low_level_warning();
-        bt_bat_low_level_shutdown();
-        bt_bat_query_period();
     }
 
     // Show the current keyboard state
@@ -1243,12 +1250,14 @@ bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
         usb_indicate();
     } else {
         bt_indicate();
+        if (readPin(MM_CABLE_PIN)) {
+            bt_bat_query_period();
+            bt_bat_low_level_shutdown();
+        }
     }
 
-#if defined(MM_CABLE_PIN) && defined(MM_CHARGE_PIN)
     // Charging status indicator
     bt_charging_indication();
-#endif
 
     // Factory reset
     factory_reset_indicate();

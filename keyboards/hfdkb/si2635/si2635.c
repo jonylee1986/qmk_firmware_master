@@ -111,6 +111,12 @@ const snled27351_led_t PROGMEM g_snled27351_leds[SNLED27351_LED_COUNT] = {
     {0, CB7_CA16,  CB8_CA16,  CB9_CA16},
     {1, CB10_CA1,  CB11_CA1,  CB12_CA1},
     {1, CB10_CA2,  CB11_CA2,  CB12_CA2},
+
+    {1, CB1_CA2,   CB2_CA2,   CB3_CA2},
+    {1, CB1_CA3,   CB2_CA3,   CB3_CA3},
+    {1, CB4_CA1,   CB5_CA1,   CB6_CA1},
+    {1, CB4_CA2,   CB5_CA2,   CB6_CA2},
+    {1, CB4_CA3,   CB5_CA3,   CB6_CA3},
 };
 #endif
 
@@ -119,7 +125,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         return false;
     }
     switch (keycode) {
-        case QK_RGB_MATRIX_TOGGLE:
+        case RGB_TOG:
             if (record->event.pressed) {
                 switch (rgb_matrix_get_flags()) {
                     case LED_FLAG_ALL: {

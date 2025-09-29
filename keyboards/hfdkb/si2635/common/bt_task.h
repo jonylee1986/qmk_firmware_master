@@ -24,7 +24,11 @@ enum multimode_keycodes {
     BT_2_4G,
     BT_USB,
     BT_VOL,
-    SW_MODE,
+    BLED_MOD,
+    BLED_HUI,
+    BLED_VAI,
+    BLED_SPI,
+    WORK_MOD,
     RGB_TEST,
 };
 
@@ -38,8 +42,12 @@ extern mode_t mode;
 typedef union {
     uint32_t raw;
     struct {
-        uint8_t devs;
-        uint8_t last_devs;
+        uint8_t devs : 3;
+        uint8_t last_devs : 3;
+        uint8_t bled_speed;
+        uint8_t bled_val;
+        uint8_t bled_mode : 3;
+        uint8_t bled_color : 4;
     };
 } dev_info_t;
 

@@ -81,8 +81,8 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 #define MODE_ROW 3
 #define MODE_COLUMN 18
 
-static bool     mode_long_pressed_flag = false;
-static uint32_t mode_long_pressed_time = 0;
+// static bool     mode_long_pressed_flag = false;
+// static uint32_t mode_long_pressed_time = 0;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 #ifdef MULTIMODE_ENABLE
@@ -90,14 +90,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         return false;
     }
 #endif
-
-    for (uint8_t layer = 0; layer < DYNAMIC_KEYMAP_LAYER_COUNT; layer += 1) {
-        if ((dynamic_keymap_get_keycode(layer, MODE_ROW, MODE_COLUMN) != KC_NO) && (record->event.pressed)) {
-            mode_long_pressed_time = timer_read32();
-        } else {
-            mode_long_pressed_time = 0;
-        }
-    }
 
     switch (keycode) {
         case SLED_MOD:
@@ -207,6 +199,10 @@ bool rgb_matrix_indicators_user(void) {
         rgb_matrix_set_color_all(RGB_OFF);
     }
 
+    for (uint8_t i = 100; i <= 106; i++) {
+        rgb_matrix_set_color(i, RGB_OFF);
+    }
+
     return true;
 }
 
@@ -238,33 +234,33 @@ void housekeeping_task_user(void) {
     bt_housekeeping_task();
 #endif
 
-    if (mode_long_pressed_time && (timer_elapsed32(mode_long_pressed_time) >= 3000)) {
-        mode_long_pressed_time = 0;
-        mode_long_pressed_flag = true;
-        if (mode == MODE_WORKING) {
-            mode = MODE_GAMING;
-            for (int layer = 0; layer < DYNAMIC_KEYMAP_LAYER_COUNT; layer += 1) {
-                if (dynamic_keymap_get_encoder(layer, 0, true) != RGB_VAI || dynamic_keymap_get_encoder(layer, 0, false) != RGB_VAD) {
-                    dynamic_keymap_set_encoder(layer, 0, true, RGB_VAI);
-                    dynamic_keymap_set_encoder(layer, 0, false, RGB_VAD);
-                }
-                if (dynamic_keymap_get_keycode(layer, MODE_ROW, MODE_COLUMN) != RGB_MOD) {
-                    dynamic_keymap_set_keycode(layer, MODE_ROW, MODE_COLUMN, RGB_MOD);
-                }
-            }
-        } else {
-            mode = MODE_WORKING;
-            for (int layer = 0; layer < DYNAMIC_KEYMAP_LAYER_COUNT; layer += 1) {
-                if (dynamic_keymap_get_encoder(layer, 0, true) != KC_VOLU || dynamic_keymap_get_encoder(layer, 0, false) != KC_VOLD) {
-                    dynamic_keymap_set_encoder(layer, 0, true, KC_VOLU);
-                    dynamic_keymap_set_encoder(layer, 0, false, KC_VOLD);
-                }
-                if (dynamic_keymap_get_keycode(layer, MODE_ROW, MODE_COLUMN) != KC_MUTE) {
-                    dynamic_keymap_set_keycode(layer, MODE_ROW, MODE_COLUMN, KC_MUTE);
-                }
-            }
-        }
-    }
+    // if (mode_long_pressed_time && (timer_elapsed32(mode_long_pressed_time) >= 3000)) {
+    //     mode_long_pressed_time = 0;
+    //     mode_long_pressed_flag = true;
+    //     if (mode == MODE_WORKING) {
+    //         mode = MODE_GAMING;
+    //         for (int layer = 0; layer < DYNAMIC_KEYMAP_LAYER_COUNT; layer += 1) {
+    //             if (dynamic_keymap_get_encoder(layer, 0, true) != RGB_VAI || dynamic_keymap_get_encoder(layer, 0, false) != RGB_VAD) {
+    //                 dynamic_keymap_set_encoder(layer, 0, true, RGB_VAI);
+    //                 dynamic_keymap_set_encoder(layer, 0, false, RGB_VAD);
+    //             }
+    //             if (dynamic_keymap_get_keycode(layer, MODE_ROW, MODE_COLUMN) != RGB_MOD) {
+    //                 dynamic_keymap_set_keycode(layer, MODE_ROW, MODE_COLUMN, RGB_MOD);
+    //             }
+    //         }
+    //     } else {
+    //         mode = MODE_WORKING;
+    //         for (int layer = 0; layer < DYNAMIC_KEYMAP_LAYER_COUNT; layer += 1) {
+    //             if (dynamic_keymap_get_encoder(layer, 0, true) != KC_VOLU || dynamic_keymap_get_encoder(layer, 0, false) != KC_VOLD) {
+    //                 dynamic_keymap_set_encoder(layer, 0, true, KC_VOLU);
+    //                 dynamic_keymap_set_encoder(layer, 0, false, KC_VOLD);
+    //             }
+    //             if (dynamic_keymap_get_keycode(layer, MODE_ROW, MODE_COLUMN) != KC_MUTE) {
+    //                 dynamic_keymap_set_keycode(layer, MODE_ROW, MODE_COLUMN, KC_MUTE);
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 void matrix_scan_user(void) {

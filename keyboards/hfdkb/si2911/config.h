@@ -70,4 +70,4 @@
 
 // Encoder Config
 #define ENCODER_DEFAULT_POS 0x0
-#define ENCODER_DIRECTION_FLIP
+// #define ENCODER_DIRECTION_FLIP
