@@ -29,7 +29,6 @@ enum _layers {
     MAC_FN,
 };
 
-#define WIN_TSK G(KC_TAB)
 #define MAC_TSK C(KC_UP)
 #define MAC_SEH G(KC_SPACE)
 
@@ -162,11 +161,21 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
         case WIN_TSK: {
             if (record->event.pressed) {
-                register_code(KC_LWIN);
-                register_code(KC_TAB);
+                if (dev_info.devs == DEVS_USB) {
+                    register_code(KC_LWIN);
+                    register_code(KC_TAB);
+                } else {
+                    bts_process_keys(KC_LWIN, 1, dev_info.devs, 0);
+                    bts_process_keys(KC_TAB, 1, dev_info.devs, 0);
+                }
             } else {
-                unregister_code(KC_TAB);
-                unregister_code(KC_LWIN);
+                if (dev_info.devs == DEVS_USB) {
+                    unregister_code(KC_TAB);
+                    unregister_code(KC_LWIN);
+                } else {
+                    bts_process_keys(KC_TAB, 0, dev_info.devs, 0);
+                    bts_process_keys(KC_LWIN, 0, dev_info.devs, 0);
+                }
             }
             return false;
         }

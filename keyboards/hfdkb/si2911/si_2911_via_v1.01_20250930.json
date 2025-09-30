@@ -78,7 +78,8 @@
         {"name": "SLED _HUI","title":"Adjust the color of side light","shortName":"SLED_HUI"},
         {"name": "SLED _VAI","title":"Adjust the brightness of side light","shortName":"SLED_VAI"},
         {"name": "SLED _SPI","title":"Adjust the speed of side light","shortName":"SLED_SPI"},
-        {"name": "RGB _TEST","title":"RGB test mode","shortName":"RGB_TEST"}
+        {"name": "RGB _TEST","title":"RGB test mode","shortName":"RGB_TEST"},
+        {"name": "WIN _TSK","title":"Turn back to desktop in windows","shortName":"WIN_TSK"}
     ],
     "layouts": {
       "keymap":[

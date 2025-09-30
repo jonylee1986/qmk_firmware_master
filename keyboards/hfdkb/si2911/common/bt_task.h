@@ -33,6 +33,7 @@ enum multimode_keycodes {
     SLED_VAI,
     SLED_SPI,
     RGB_TEST,
+    WIN_TSK,
 };
 
 typedef enum {

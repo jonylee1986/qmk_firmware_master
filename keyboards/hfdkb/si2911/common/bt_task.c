@@ -479,7 +479,7 @@ void bt_task(void) {
         }
 
         bts_send_vendor(v_en_sleep_bt);
-        bts_send_vendor(v_en_sleep_wl);
+        // bts_send_vendor(v_en_sleep_wl);
     }
 
     // Update task at regular intervals
@@ -1149,7 +1149,7 @@ static void bt_bat_low_level_shutdown(void) {
 // ===========================================
 static void bt_bat_query_period(void) {
     static uint32_t query_vol_time = 0;
-    if (!bt_init_time && !kb_sleep_flag && (bts_info.bt_info.paired) && timer_elapsed32(query_vol_time) >= 10000) {
+    if (!backlight_sleep_flag && !bt_init_time && !kb_sleep_flag && (bts_info.bt_info.paired) && timer_elapsed32(query_vol_time) >= 10000) {
         query_vol_time = timer_read32();
         bts_send_vendor(v_query_vol);
     }
