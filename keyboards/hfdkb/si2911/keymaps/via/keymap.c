@@ -29,7 +29,7 @@ enum _layers {
     MAC_FN,
 };
 
-#define WIN_TSK LALT(KC_TAB)
+#define WIN_TSK G(KC_TAB)
 #define MAC_TSK C(KC_UP)
 #define MAC_SEH G(KC_SPACE)
 
@@ -155,7 +155,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 } else {
                     dev_info.bled_color = (dev_info.bled_color == COLOR_WHITE) ? COLOR_RAINBOW : (dev_info.bled_color + 1);
                 }
-                eeconfig_update_kb(bled_info.raw);
+                eeconfig_update_user(dev_info.raw);
             }
             return false;
         }
@@ -195,7 +195,7 @@ void suspend_wakeup_init_user(void) {
 }
 
 bool rgb_matrix_indicators_user(void) {
-    if (!rgb_matrix_get_flags()) {
+    if (!rgb_matrix_get_flags() || backlight_sleep_flag) {
         rgb_matrix_set_color_all(RGB_OFF);
     }
 
@@ -222,8 +222,14 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         rgb_matrix_set_color(LED_LWIN_INDEX, 0xC8, 0xC8, 0xC8);
     }
 
-    if (!host_keyboard_led_state().num_lock) {
-        rgb_matrix_set_color(LED_NUM_INDEX, 0xC8, 0xC8, 0xC8);
+    if (dev_info.devs == DEVS_USB) {
+        if (!host_keyboard_led_state().num_lock && (get_highest_layer(default_layer_state) != MAC_BASE)) {
+            rgb_matrix_set_color(LED_NUM_INDEX, 0xC8, 0xC8, 0xC8);
+        }
+    } else {
+        if (!host_keyboard_led_state().num_lock && bts_info.bt_info.paired && (get_highest_layer(default_layer_state) != MAC_BASE)) {
+            rgb_matrix_set_color(LED_NUM_INDEX, 0xC8, 0xC8, 0xC8);
+        }
     }
 
     return true;

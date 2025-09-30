@@ -133,7 +133,7 @@ static bool bak_rgb_toggle = false;
 static bool sober          = true;
 static bool kb_sleep_flag  = false;
 
-static bool backlight_sleep_flag = false;
+bool backlight_sleep_flag = false;
 
 // static bool long_pressed_flag = false;
 
@@ -692,13 +692,13 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
 // Other key processing functions
 // ===========================================
 static bool bt_process_record_other(uint16_t keycode, keyrecord_t *record) {
-    if (readPin(MM_BT_MODE_PIN) && !readPin(MM_2G4_MODE_PIN)) {
-        if (keycode >= BT_USB && keycode <= BT_HOST3) return false;
+    if (dev_info.devs == DEVS_2_4G) {
+        if ((keycode == BT_USB) || (keycode >= BT_HOST1 && keycode <= BT_HOST3)) return false;
     }
-    if (readPin(MM_2G4_MODE_PIN) && !readPin(MM_BT_MODE_PIN)) {
+    if (dev_info.devs >= DEVS_HOST1 && dev_info.devs <= DEVS_HOST3) {
         if (keycode == BT_2_4G || keycode == BT_USB) return false;
     }
-    if (readPin(MM_BT_MODE_PIN) && readPin(MM_2G4_MODE_PIN)) {
+    if (dev_info.devs == DEVS_USB) {
         if (keycode >= BT_HOST1 && keycode <= BT_2_4G) return false;
     }
 
@@ -889,7 +889,7 @@ void led_deconfig_all(void) {
 
 static void led_off_standby(void) {
     if (timer_elapsed32(key_press_time) >= LED_OFF_STANDBY_TIMEOUT_MS) {
-        if (backlight_sleep_flag) {
+        if (!backlight_sleep_flag) {
             backlight_sleep_flag = true;
             // led_deconfig_all();
         }
@@ -1157,14 +1157,25 @@ static void bt_bat_query_period(void) {
     if (query_vol_flag) {
         uint8_t query_index[] = {102, 103, 104, 105, 106};
         uint8_t pvol          = bts_info.bt_info.pvol;
+        uint8_t led_count     = 0;
+        RGB     color;
 
-        uint8_t led_count = (pvol <= 20) ? 1 : (pvol / 20);
+        if (pvol <= 20) {
+            led_count = 1;
+        } else if (pvol <= 40) {
+            led_count = 2;
+        } else if (pvol <= 60) {
+            led_count = 3;
+        } else if (pvol <= 80) {
+            led_count = 4;
+        } else {
+            led_count = 5;
+        }
 
         for (uint8_t i = 0; i < (sizeof(query_index) / sizeof(query_index[0])); i++) {
             rgb_matrix_set_color(query_index[i], RGB_OFF);
         }
 
-        RGB color;
         if (pvol <= 20) {
             color = (RGB){100, 0, 0}; // 红色
         } else {
@@ -1219,6 +1230,7 @@ static void factory_reset_indicate(void) {
             keymap_config.no_gui = false;
 
             mode = MODE_WORKING;
+            dip_switch_read(true);
 
             if (dev_info.devs != DEVS_USB) {
                 last_total_time  = 0;
@@ -1235,9 +1247,9 @@ static void factory_reset_indicate(void) {
 // Main RGB indicator functions
 // ===========================================
 bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
-    if (backlight_sleep_flag) {
-        rgb_matrix_set_color_all(RGB_OFF);
-    }
+    // if (backlight_sleep_flag) {
+    //     rgb_matrix_set_color_all(RGB_OFF);
+    // }
 
     if ((dev_info.devs != DEVS_USB) && (readPin(MM_CABLE_PIN))) {
         bt_bat_low_level_warning();
