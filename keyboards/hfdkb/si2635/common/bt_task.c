@@ -15,6 +15,7 @@
 #include "usb_main.h"
 #include "dynamic_keymap.h"
 #include "bled/bled.h"
+#include "lib/lib8tion/lib8tion.h"
 
 #ifdef BT_DEBUG_MODE
 #    define BT_DEBUG_INFO(fmt, ...) dprintf(fmt, ##__VA_ARGS__)
@@ -480,7 +481,7 @@ void bt_task(void) {
         }
 
         bts_send_vendor(v_en_sleep_bt);
-        bts_send_vendor(v_en_sleep_wl);
+        // bts_send_vendor(v_en_sleep_wl);
     }
 
     // Update task at regular intervals
@@ -693,13 +694,13 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
 // Other key processing functions
 // ===========================================
 static bool bt_process_record_other(uint16_t keycode, keyrecord_t *record) {
-    if (readPin(MM_BT_MODE_PIN) && !readPin(MM_2G4_MODE_PIN)) {
-        if (keycode >= BT_USB && keycode <= BT_HOST3) return false;
+    if (dev_info.devs == DEVS_2_4G) {
+        if ((keycode == BT_USB) || (keycode >= BT_HOST1 && keycode <= BT_HOST3)) return false;
     }
-    if (readPin(MM_2G4_MODE_PIN) && !readPin(MM_BT_MODE_PIN)) {
+    if (dev_info.devs >= DEVS_HOST1 && dev_info.devs <= DEVS_HOST3) {
         if (keycode == BT_2_4G || keycode == BT_USB) return false;
     }
-    if (readPin(MM_BT_MODE_PIN) && readPin(MM_2G4_MODE_PIN)) {
+    if (dev_info.devs == DEVS_USB) {
         if (keycode >= BT_HOST1 && keycode <= BT_2_4G) return false;
     }
 
@@ -1109,14 +1110,25 @@ static void bt_bat_low_level_warning(void) {
 }
 
 static void bt_charging_indication(void) {
-    static uint32_t charging_time = 0;
-    static uint32_t charged_time  = 0;
+    static uint32_t charging_time  = 0;
+    static uint32_t charged_time   = 0;
+    static uint32_t breathing_time = 0;
 
     if (!readPin(MM_CABLE_PIN)) {
         if (!readPin(MM_CHARGE_PIN)) {
             charged_time = timer_read32();
             if (timer_elapsed32(charging_time) >= 2000) {
                 bled_charging_indicate();
+                if (timer_elapsed32(breathing_time) <= 5000) {
+                    uint8_t time       = scale16by8(g_rgb_timer, qadd8(192 / 4, 1));
+                    uint8_t brightness = scale8(abs8(sin8(time / 2) - 128) * 2, 200);
+                    HSV     hsv;
+                    hsv.h   = 0;
+                    hsv.s   = 255;
+                    hsv.v   = brightness;
+                    RGB rgb = hsv_to_rgb(hsv);
+                    rgb_matrix_set_color(75, rgb.r, rgb.g, rgb.b);
+                }
             }
         } else {
             if (timer_elapsed32(charged_time) >= 2000) {
@@ -1124,7 +1136,8 @@ static void bt_charging_indication(void) {
             }
         }
     } else {
-        charging_time = timer_read32();
+        breathing_time = timer_read32();
+        charging_time  = timer_read32();
     }
 }
 
@@ -1140,7 +1153,7 @@ static void bt_bat_low_level_shutdown(void) {
 // ===========================================
 static void bt_bat_query_period(void) {
     static uint32_t query_vol_time = 0;
-    if (!bt_init_time && !kb_sleep_flag && (bts_info.bt_info.paired) && timer_elapsed32(query_vol_time) >= 10000) {
+    if (!kb_light_sleep_flag && !bt_init_time && !kb_sleep_flag && (bts_info.bt_info.paired) && timer_elapsed32(query_vol_time) >= 10000) {
         query_vol_time = timer_read32();
         bts_send_vendor(v_query_vol);
     }

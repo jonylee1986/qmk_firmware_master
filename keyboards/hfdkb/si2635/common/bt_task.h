@@ -30,6 +30,8 @@ enum multimode_keycodes {
     BLED_SPI,
     WORK_MOD,
     RGB_TEST,
+    KC_FLXP,
+    MAC_TSK,
 };
 
 typedef enum {

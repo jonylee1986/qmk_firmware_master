@@ -33,8 +33,7 @@ enum _layers {
 
 #define KC_TASK LALT(KC_TAB)
 #define AN_HOME LALT(KC_ESC)
-#define KC_FLXP LWIN(KC_E)
-#define MAC_DSK LWIN(KC_TAB)
+// #define MAC_TSK LWIN(KC_TAB)
 #define KEY_WIN PDF(0)
 #define KEY_AND PDF(2)
 #define KEY_MAC PDF(4)
@@ -74,7 +73,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         BLED_SPI, _______,  BLED_VAI,                               _______,                            _______, _______,  RGB_SPD,  RGB_VAD,  RGB_SPI),
 
     [MAC_BASE] = LAYOUT_80_ansi(
-        KC_ESC,  KC_BRID,  KC_BRIU,  MAC_DSK,  KC_MCTL,  RGB_VAD, RGB_VAI, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,  KC_VOLU,            WORK_MOD,
+        KC_ESC,  KC_BRID,  KC_BRIU,  MAC_TSK,  KC_MCTL,  RGB_VAD, RGB_VAI, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,  KC_VOLU,            WORK_MOD,
         KC_GRV,  KC_1,     KC_2,     KC_3,     KC_4,     KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS,  KC_EQL,   KC_BSPC,  KC_DEL,
         KC_TAB,  KC_Q,     KC_W,     KC_E,     KC_R,     KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC,  KC_RBRC,  KC_BSLS,  KC_PGUP,
         KC_CAPS, KC_A,     KC_S,     KC_D,     KC_F,     KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,            KC_ENT,   KC_PGDN,
@@ -203,15 +202,17 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             break;
 
-        case MAC_DSK:
-            if (!record->event.pressed) {
-                unregister_code(KC_TAB);
-                GUI_pressed_time = timer_read32();
-            } else {
+        case MAC_TSK: {
+            if (record->event.pressed) {
                 register_code(KC_LGUI);
                 register_code(KC_TAB);
+                GUI_pressed_time = 0; // Reset timer when pressed
+            } else {
+                unregister_code(KC_TAB);
+                GUI_pressed_time = timer_read32(); // Start timer when released
             }
             return false;
+        }
 
         case BLED_MOD: {
             if (record->event.pressed) {
@@ -271,6 +272,38 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         }
 
+        case KC_FLXP: {
+            if (record->event.pressed) {
+                if (dev_info.devs == DEVS_USB) {
+                    register_code(KC_LWIN);
+                    register_code(KC_E);
+                } else {
+                    bts_process_keys(KC_LWIN, 1, dev_info.devs, 0);
+                    bts_process_keys(KC_E, 1, dev_info.devs, 0);
+                }
+            } else {
+                if (dev_info.devs == DEVS_USB) {
+                    unregister_code(KC_E);
+                    unregister_code(KC_LWIN);
+                } else {
+                    bts_process_keys(KC_E, 0, dev_info.devs, 0);
+                    bts_process_keys(KC_LWIN, 0, dev_info.devs, 0);
+                }
+            }
+            return false;
+        }
+
+        case KC_LEFT:
+        case KC_RIGHT:
+        case KC_UP:
+        case KC_DOWN:
+        case KC_TAB:
+            // Reset GUI timer if user is still navigating
+            if (GUI_pressed_time) {
+                GUI_pressed_time = timer_read32();
+            }
+            break;
+
         default:
             break;
     }
@@ -321,7 +354,7 @@ bool rgb_matrix_indicators_user(void) {
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     static bool f_caps_blink = false;
 
-    if (rgb_matrix_get_flags() && readPin(MM_CABLE_PIN) && (!bts_info.bt_info.low_vol)) {
+    if (rgb_matrix_get_flags()) {
         bled_task();
     }
 
@@ -388,7 +421,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 }
 
 void housekeeping_task_user(void) {
-    if (GUI_pressed_time && (timer_elapsed(GUI_pressed_time) >= 300)) {
+    if (GUI_pressed_time && (timer_elapsed32(GUI_pressed_time) >= 500)) {
         GUI_pressed_time = 0;
         unregister_code(KC_LGUI);
     }
