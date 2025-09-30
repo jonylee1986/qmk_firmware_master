@@ -891,7 +891,7 @@ static void led_off_standby(void) {
     if (timer_elapsed32(key_press_time) >= LED_OFF_STANDBY_TIMEOUT_MS) {
         if (!backlight_sleep_flag) {
             backlight_sleep_flag = true;
-            // led_deconfig_all();
+            led_deconfig_all();
         }
     }
 }
@@ -942,7 +942,7 @@ static void open_rgb(void) {
 
     if (backlight_sleep_flag) {
         backlight_sleep_flag = false;
-        // led_config_all();
+        led_config_all();
     }
 
     if (!sober) {

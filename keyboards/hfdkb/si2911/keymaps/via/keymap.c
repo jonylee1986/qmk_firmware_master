@@ -160,6 +160,17 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         }
 
+        case WIN_TSK: {
+            if (record->event.pressed) {
+                register_code(KC_LWIN);
+                register_code(KC_TAB);
+            } else {
+                unregister_code(KC_TAB);
+                unregister_code(KC_LWIN);
+            }
+            return false;
+        }
+
         default:
             break;
     }
