@@ -73,7 +73,10 @@
         {"name": "BLED _MOD","title":"Switch the mode of usb light","shortName":"BLED_MOD"},
         {"name": "BLED _HUI","title":"Adjust the color of usb light","shortName":"BLED_HUI"},
         {"name": "BLED _VAI","title":"Adjust the brightness of usb light","shortName":"BLED_VAI"},
-        {"name": "BLED _SPI","title":"Adjust the speed of usb light","shortName":"BLED_SPI"}
+        {"name": "BLED _SPI","title":"Adjust the speed of usb light","shortName":"BLED_SPI"},
+        {"name": "WORK _MOD","title":"Switch encoder mode","shortName":"WORK_MOD"},
+        {"name": "KC _FLXP","title":"Open file explore in Windows os","shortName":"KC_FLXP"},
+        {"name": "MAC _TSK","title":"Turn back to desktop in MAC os","shortName":"MAC_TSK"}
     ],
     "layouts": {
       "keymap":[
