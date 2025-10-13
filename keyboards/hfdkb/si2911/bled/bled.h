@@ -35,6 +35,7 @@ typedef enum {
     SLED_MODE_BREATHING,
     SLED_MODE_SOLID,
     SLED_MODE_COUNT,
+    SLED_MODE_CHARGE,
     // SLED_MODE_CYCLE1,
     // SLED_MODE_CYCLE2,
 } sled_mode_t;

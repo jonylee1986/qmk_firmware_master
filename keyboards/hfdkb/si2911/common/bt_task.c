@@ -1118,22 +1118,36 @@ static void bt_bat_low_level_warning(void) {
 }
 
 static void bt_charging_indication(void) {
-    static uint32_t charging_time = 0;
-    static uint32_t charged_time  = 0;
+    static uint32_t charging_time      = 0;
+    static uint32_t charged_time       = 0;
+    static bool     charged_indicated  = false;
+    static bool     charging_indicated = false;
 
     if (!readPin(MM_CABLE_PIN)) {
         if (!readPin(MM_CHARGE_PIN)) {
+            // Charging
             charged_time = timer_read32();
             if (timer_elapsed32(charging_time) >= 2000) {
-                bled_charging_indicate();
+                if (!charging_indicated) {
+                    charging_indicated = true;
+                    // bled_charging_indicate();
+                    dev_info.sled_mode = 6;
+                }
             }
         } else {
+            // Charged full
             if (timer_elapsed32(charged_time) >= 2000) {
-                bled_charged_indicate();
+                // bled_charged_indicate();
+                if (!charged_indicated) {
+                    charged_indicated  = true;
+                    dev_info.sled_mode = 0;
+                }
             }
         }
     } else {
-        charging_time = timer_read32();
+        charging_indicated = false;
+        charged_indicated  = false;
+        charging_time      = timer_read32();
     }
 }
 

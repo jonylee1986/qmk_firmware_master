@@ -827,8 +827,8 @@ static void long_pressed_keys_cb(uint16_t keycode) {
         case SW_OS: {
             if (get_highest_layer(default_layer_state) == 0) {
                 set_single_persistent_default_layer(2);
-                // keymap_config.no_gui = 0;
-                // eeconfig_update_keymap(&keymap_config);
+                keymap_config.no_gui = 0;
+                eeconfig_update_keymap(&keymap_config);
                 single_blink_index = 83;
             } else if (get_highest_layer(default_layer_state) == 2) {
                 set_single_persistent_default_layer(0);

@@ -95,7 +95,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case BLED_MOD: {
             if (record->event.pressed) {
                 if (keycode == SLED_MOD) {
-                    dev_info.sled_mode = (dev_info.sled_mode + 1) % SLED_MODE_COUNT;
+                    if (dev_info.sled_mode == SLED_MODE_CHARGE) {
+                        dev_info.sled_mode = SLED_MODE_FLOW;
+                    } else {
+                        dev_info.sled_mode = (dev_info.sled_mode + 1) % SLED_MODE_COUNT;
+                    }
                 } else {
                     dev_info.bled_mode = (dev_info.bled_mode + 1) % BLED_MODE_COUNT;
                 }
@@ -219,9 +223,9 @@ bool rgb_matrix_indicators_user(void) {
         rgb_matrix_set_color_all(RGB_OFF);
     }
 
-    for (uint8_t i = 100; i <= 106; i++) {
-        rgb_matrix_set_color(i, RGB_OFF);
-    }
+    // for (uint8_t i = 100; i <= 106; i++) {
+    //     rgb_matrix_set_color(i, RGB_OFF);
+    // }
 
     return true;
 }

@@ -167,23 +167,35 @@ void function_menu_swap(void) {
         if (dynamic_keymap_get_keycode(WIN_B, KC_MENU_ROW, KC_MENU_COL) == KC_APP) {
             dynamic_keymap_set_keycode(WIN_B, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[WIN_FN][0]);
             dynamic_keymap_set_keycode(WIN_FN, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[WIN_B][0]);
+            VAL_OUT_blink_time  = timer_read32();
+            VAL_OUT_blink_cnt   = 6;
+            VAL_OUT_LEDINDEX    = 84;
+            VAL_OUT_blink_color = (RGB){0, 0, 100};
         } else {
             dynamic_keymap_set_keycode(WIN_B, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[WIN_B][0]);
             dynamic_keymap_set_keycode(WIN_FN, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[WIN_FN][0]);
+            VAL_OUT_blink_time  = timer_read32();
+            VAL_OUT_blink_cnt   = 6;
+            VAL_OUT_LEDINDEX    = 84;
+            VAL_OUT_blink_color = (RGB){100, 100, 100};
         }
     } else if (get_highest_layer(default_layer_state) == MAC_B) {
         if (dynamic_keymap_get_keycode(MAC_B, KC_MENU_ROW, KC_MENU_COL) == KC_APP) {
             dynamic_keymap_set_keycode(MAC_B, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[MAC_FN][0]);
             dynamic_keymap_set_keycode(MAC_FN, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[MAC_B][0]);
+            VAL_OUT_blink_time  = timer_read32();
+            VAL_OUT_blink_cnt   = 6;
+            VAL_OUT_LEDINDEX    = 84;
+            VAL_OUT_blink_color = (RGB){0, 0, 100};
         } else {
             dynamic_keymap_set_keycode(MAC_B, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[MAC_B][0]);
             dynamic_keymap_set_keycode(MAC_FN, KC_MENU_ROW, KC_MENU_COL, FN_MENU_table[MAC_FN][0]);
+            VAL_OUT_blink_time  = timer_read32();
+            VAL_OUT_blink_cnt   = 6;
+            VAL_OUT_LEDINDEX    = 84;
+            VAL_OUT_blink_color = (RGB){100, 100, 100};
         }
     }
-    VAL_OUT_blink_time  = timer_read32();
-    VAL_OUT_blink_cnt   = 6;
-    VAL_OUT_LEDINDEX    = 84;
-    VAL_OUT_blink_color = (RGB){100, 100, 100};
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
@@ -270,6 +282,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
         }
             return false; // Skip all further processing of this key
+
+        case KC_RGUI: {
+            if (keymap_config.no_gui) {
+                return false;
+            }
+            break;
+        }
 
         case KC_DICT: {
             if (record->event.pressed) {

@@ -47,6 +47,8 @@ static uint8_t bled_leds[] = {100, 101};
 static uint8_t sled_leds[] = {102, 103, 104, 105, 106};
 #define SLED_LED_NUM (sizeof(sled_leds) / sizeof(sled_leds[0]))
 
+void bled_charging_indicate(void);
+
 void bled_task(void) {
     switch (dev_info.bled_mode) {
         case BLED_MODE_FLOW: {
@@ -281,6 +283,11 @@ void sled_task(void) {
                     rgb_matrix_set_color(sled_leds[i], rgb.r, rgb.g, rgb.b);
                 }
             }
+            break;
+        }
+
+        case SLED_MODE_CHARGE: {
+            bled_charging_indicate();
             break;
         }
 
