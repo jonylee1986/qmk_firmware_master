@@ -19,6 +19,7 @@
 // clang-format off
 #ifdef RGB_MATRIX_ENABLE
 const snled27351_led_t PROGMEM g_snled27351_leds[SNLED27351_LED_COUNT] = {
+
 /* Refer to IS31 manual for these locations
  *   driver
  *   |   R location
@@ -109,12 +110,13 @@ const snled27351_led_t PROGMEM g_snled27351_leds[SNLED27351_LED_COUNT] = {
 #endif
 
 // clang-format on
+
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     if (!process_record_user(keycode, record)) {
         return false;
     }
     switch (keycode) {
-        case QK_RGB_MATRIX_TOGGLE:
+        case RGB_TOG:
             if (record->event.pressed) {
                 switch (rgb_matrix_get_flags()) {
                     case LED_FLAG_ALL: {
@@ -138,8 +140,8 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 }
 
 bool rgb_matrix_indicators_kb(void) {
-    if (!rgb_matrix_indicators_user()) {
-        return false;
+    if (!rgb_matrix_get_flags()) {
+        rgb_matrix_set_color_all(0, 0, 0);
     }
 
     // caps lock red
@@ -152,10 +154,10 @@ bool rgb_matrix_indicators_kb(void) {
     // GUI lock white
     if (keymap_config.no_gui) {
         rgb_matrix_set_color(61, 100, 100, 100);
-    } else {
-        if (!rgb_matrix_get_flags()) {
-            rgb_matrix_set_color(61, 0, 0, 0);
-        }
+    }
+
+    if (!rgb_matrix_indicators_user()) {
+        return false;
     }
 
     return true;

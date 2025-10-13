@@ -1,0 +1,83 @@
+{
+  "name": "FC220TP",
+  "vendorId": "0xFFFE",
+  "productId": "0x00A0",
+  "keycodes": ["qmk_lighting"],
+  "menus": [
+    {
+      "label": "Lighting",
+      "content": [
+        {
+          "label": "Backlight",
+          "content": [
+            {
+              "label": "Brightness",
+              "type": "range",
+              "options": [0, 200],
+              "content": ["id_qmk_rgb_matrix_brightness", 3, 1]
+            },
+            {
+              "label": "Effect",
+              "type": "dropdown",
+              "content": ["id_qmk_rgb_matrix_effect", 3, 2],
+              "options": [
+                ["SOLID_COLOR", 1],
+                ["BREATHING", 2],
+                ["CYCLE_ALL", 3],
+                ["CYCLE_LEFT_RIGHT", 4],
+                ["CYCLE_UP_DOWN", 5],
+                ["CYCLE_PINWHEEL", 6],
+                ["DUAL_BEACON", 7],
+                ["RAINDROPS", 8],
+                ["TYPING_HEATMAP", 9],
+                ["SOLID_REACTIVE_SIMPLE", 10],
+                ["SOLID_REACTIVE", 11],
+                ["MATRIX_MULTISPLASH", 12]
+              ]
+            },
+            {
+              "showIf": "{id_qmk_rgb_matrix_effect} != 0 && {id_qmk_rgb_matrix_effect} != 1",
+              "label": "Effect Speed",
+              "type": "range",
+              "options": [0, 255],
+              "content": ["id_qmk_rgb_matrix_effect_speed", 3, 3]
+            },
+            {
+              "showIf": "{id_qmk_rgb_matrix_effect} != 0",
+              "label": "Color",
+              "type": "color",
+              "content": ["id_qmk_rgb_matrix_color", 3, 4]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "matrix": {"rows": 6, "cols": 4},
+  "customKeycodes": [
+    {"name": "BT_1", "title": "BT_HOST1", "shortName": "BT_1"},
+    {"name": "BT_2", "title": "BT_HOST2", "shortName": "BT_2"},
+    {"name": "BT_3", "title": "BT_HOST3", "shortName": "BT_3"},
+    {"name": "2.4G", "title": "2.4G", "shortName": "2.4G"},
+    {"name": "USB", "title": "USB", "shortName": "USB"},
+    {"name": "Batt. Check", "title": "Query the voltage of battery", "shortName": "Batt.Check"},
+    {"name": "Mac Mode", "title": "Switch os between windows and ios", "shortName": "Mac Mode"},
+    {"name": "IND_ Color", "title": "Change the color of LED indicator", "shortName": "IND_Color"},
+    {"name": "IND_ Bright", "title": "Increase the brightness level of LED indicator", "shortName": "IND_Bright"},
+    {"name": "ECO MODE", "title": "Toggle the ON/OFF state of LED indicator", "shortName": "ECO_MODE"},
+    {"name": "Reset_ All", "title": "Reset the PCB setting", "shortName": "Reset_All"},
+    {"name": "Reset_ Keymap", "title": "Reset the keyboard resetting", "shortName": "Reset_Keymap"},
+    {"name": "Reset_ BT", "title": "Reset the Bluetooth setting", "shortName": "Reset_BT"},
+    {"name": "=", "title": "Key equal for windows", "shortName": "="}
+  ],
+  "layouts": {
+    "keymap": [
+      ["0,0", "0,1", "0,2", "0,3"],
+      [{"y": 0.25}, "1,0", "1,1", "1,2", "1,3"],
+      ["2,0", "2,1", "2,2", "2,3"],
+      ["3,0", "3,1", "3,2", "3,3"],
+      ["4,0", "4,1", "4,2", {"h": 2}, "4,3"],
+      [{"w": 2}, "5,1", "5,2"]
+    ]
+  }
+}

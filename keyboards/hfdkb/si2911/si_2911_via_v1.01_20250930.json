@@ -1,0 +1,329 @@
+{
+    "name": "YUNZII YZ99 Keyboard",
+    "vendorId": "0xFFFE",
+    "productId": "0x00AA",
+    "keycodes": ["qmk_lighting"],
+    "menus": [
+      {
+        "label": "Lighting",
+        "content": [
+          {
+            "label": "Backlight",
+            "content": [
+              {
+                "label": "Brightness",
+                "type": "range",
+                "options": [0, 200],
+                "content": ["id_qmk_rgb_matrix_brightness", 3, 1]
+              },
+              {
+                "label": "Effect",
+                "type": "dropdown",
+                "content": ["id_qmk_rgb_matrix_effect", 3, 2],
+                "options": [
+                  ["All Off", 0],
+                  ["SOLID_COLOR", 1],
+                  ["GRADIENT_UP_DOWN", 2],
+                  ["BREATHING", 3],
+                  ["BAND_PINWHEEL_SAT", 4],
+                  ["BAND_SPIRAL_SAT", 5],
+                  ["CYCLE_ALL", 6],
+                  ["CYCLE_LEFT_RIGHT", 7],
+                  ["RAINBOW_MOVING_CHEVRON", 8],
+                  ["CYCLE_OUT_IN", 9],
+                  ["CYCLE_OUT_IN_DUAL", 10],
+                  ["CYCLE_PINWHEEL", 11],
+                  ["DUAL_BEACON", 12],
+                  ["RAINBOW_PINWHEELS", 13],
+                  ["HUE_WAVE", 14],
+                  ["TYPING_HEATMAP", 15],
+                  ["SOLID_REACTIVE_SIMPLE", 16],
+                  ["SOLID_REACTIVE_WIDE", 17],
+                  ["SOLID_REACTIVE_CROSS", 18],
+                  ["SOLID_REACTIVE_NEXUS", 19],
+                  ["MULTISPLASH", 20]
+                ]
+              },
+              {
+                "showIf": "{id_qmk_rgb_matrix_effect} != 0 && {id_qmk_rgb_matrix_effect} != 1",
+                "label": "Effect Speed",
+                "type": "range",
+                "options": [0, 255],
+                "content": ["id_qmk_rgb_matrix_effect_speed", 3, 3]
+              },
+              {
+                "showIf": "{id_qmk_rgb_matrix_effect} != 0",
+                "label": "Color",
+                "type": "color",
+                "content": ["id_qmk_rgb_matrix_color", 3, 4]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "matrix": { "rows": 6, "cols": 19 },
+    "customKeycodes":[
+        {"name": "BT_1","title":"BT_HOST1","shortName":"BT_1"},
+        {"name": "BT_2","title":"BT_HOST2","shortName":"BT_2"},
+        {"name": "BT_3","title":"BT_HOST3","shortName":"BT_3"},
+        {"name": "2_4G","title":"2_4G","shortName":"2_4G"},
+        {"name": "USB","title":"USB","shortName":"USB"},
+        {"name": "Batt. Check","title":"Query the voltage of battery","shortName":"Batt.Check"},
+        {"name": "BLED _MOD","title":"Switch the mode of usb light","shortName":"BLED_MOD"},
+        {"name": "BLED _HUI","title":"Adjust the color of usb light","shortName":"BLED_HUI"},
+        {"name": "BLED _VAI","title":"Adjust the brightness of usb light","shortName":"BLED_VAI"},
+        {"name": "BLED _SPI","title":"Adjust the speed of usb light","shortName":"BLED_SPI"},
+        {"name": "SLED _MOD","title":"Switch the mode of side light","shortName":"SLED_MOD"},
+        {"name": "SLED _HUI","title":"Adjust the color of side light","shortName":"SLED_HUI"},
+        {"name": "SLED _VAI","title":"Adjust the brightness of side light","shortName":"SLED_VAI"},
+        {"name": "SLED _SPI","title":"Adjust the speed of side light","shortName":"SLED_SPI"},
+        {"name": "RGB _TEST","title":"RGB test mode","shortName":"RGB_TEST"},
+        {"name": "WIN _TSK","title":"Turn back to desktop in windows","shortName":"WIN_TSK"}
+    ],
+    "layouts": {
+      "keymap":[
+        [
+          {
+            "c": "#777777"
+          },
+          "0,0",
+          {
+            "x": 1,
+            "c": "#cccccc"
+          },
+          "0,2",
+          "0,3",
+          "0,4",
+          "0,5",
+          {
+            "c": "#aaaaaa",
+            "x": 0.5
+          },
+          "0,6",
+          "0,7",
+          "0,8",
+          "0,9",
+          {
+            "c": "#cccccc",
+            "x": 0.5
+          },
+          "0,10",
+          "0,11",
+          "0,12",
+          "0,13",
+          {
+            "c": "#aaaaaa",
+            "x": 0.25
+          },
+          "0,14",
+          {
+            "x": 0.25
+          },
+          "0,15",
+          "0,16",
+          "0,17",
+          {
+            "c": "#cccccc"
+          },
+          "3,18\n\n\n\n\n\n\n\n\ne0"
+        ],
+        [
+          {
+            "y": 0.5
+          },
+          "1,0",
+          "1,1",
+          "1,2",
+          "1,3",
+          "1,4",
+          "1,5",
+          "1,6",
+          "1,7",
+          "1,8",
+          "1,9",
+          "1,10",
+          "1,11",
+          "1,12",
+          {
+            "c": "#aaaaaa",
+            "w": 2
+          },
+          "1,13",
+          {
+            "x": 0.25
+          },
+          "1,14",
+          {
+            "x": 0.25
+          },
+          "1,15",
+          "1,16",
+          "1,17",
+          "1,18"
+        ],
+        [
+          {
+            "w": 1.5
+          },
+          "2,0",
+          {
+            "c": "#cccccc"
+          },
+          "2,1",
+          "2,2",
+          "2,3",
+          "2,4",
+          "2,5",
+          "2,6",
+          "2,7",
+          "2,8",
+          "2,9",
+          "2,10",
+          "2,11",
+          "2,12",
+          {
+            "w": 1.5
+          },
+          "2,13",
+          {
+            "c": "#aaaaaa",
+            "x": 0.25
+          },
+          "1,14",
+          {
+            "c": "#cccccc",
+            "x": 0.25
+          },
+          "2,15",
+          "2,16",
+          "2,17",
+          {
+            "c": "#aaaaaa",
+            "h": 2
+          },
+          "2,18"
+        ],
+        [
+          {
+            "w": 1.75
+          },
+          "3,0",
+          {
+            "c": "#cccccc"
+          },
+          "3,1",
+          "3,2",
+          "3,3",
+          "3,4",
+          "3,5",
+          "3,6",
+          "3,7",
+          "3,8",
+          "3,9",
+          "3,10",
+          "3,11",
+          {
+            "c": "#aaaaaa",
+            "w": 2.25
+          },
+          "3,13",
+          {
+            "c": "#aaaaaa",
+            "x": 0.25
+          },
+          "3,14",
+          {
+            "c": "#cccccc",
+            "x": 0.25
+          },
+          "3,15",
+          "3,16",
+          "3,17"
+        ],
+        [
+          {
+            "c": "#aaaaaa",
+            "w": 2.25
+          },
+          "4,0",
+          {
+            "c": "#cccccc"
+          },
+          "4,1",
+          "4,2",
+          "4,3",
+          "4,4",
+          "4,5",
+          "4,6",
+          "4,7",
+          "4,8",
+          "4,9",
+          "4,10",
+          {
+            "c": "#aaaaaa",
+            "w": 1.75
+          },
+          "4,13",
+          {
+            "c": "#777777"
+          },
+          "4,14",
+          {
+            "c": "#cccccc",
+            "x": 1.5
+          },
+          "4,15",
+          "4,16",
+          "4,17",
+          {
+            "c": "#aaaaaa",
+            "h": 2
+          },
+          "4,18"
+        ],
+        [
+          {
+            "w": 1.25
+          },
+          "5,0",
+          {
+            "w": 1.25
+          },
+          "5,1",
+          {
+            "w": 1.25
+          },
+          "5,2",
+          {
+            "c": "#777777",
+            "w": 6.25
+          },
+          "5,5",
+          {
+            "c": "#aaaaaa",
+            "w": 1.25
+          },
+          "5,11",
+          {
+            "w": 1.25
+          },
+          "5,12",
+          {
+            "c": "#777777",
+            "x": 0.5
+          },
+          "5,13",
+          "5,14",
+          "5,15",
+          {
+            "c": "#cccccc",
+            "x": 0.5,
+            "w": 2
+          },
+          "5,16",
+          "5,17"
+        ]
+      ]
+    }
+  }
