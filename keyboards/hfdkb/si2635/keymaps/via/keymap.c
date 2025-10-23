@@ -126,7 +126,47 @@ static uint32_t mode_long_pressed_time = 0;
 static uint32_t caps_blink_time        = 0;
 static uint8_t  caps_blink_cnt         = 0;
 
+bool process_rgb_matrix_user(uint16_t keycode, keyrecord_t *record) {
+    if (record->event.pressed) {
+        switch (keycode) {
+            // case RGB_TOG:
+            //     rgb_matrix_toggle();
+            //     return false;
+            case RGB_MOD:
+                rgb_matrix_step();
+                return false;
+            case RGB_HUI:
+                rgb_matrix_increase_hue();
+                return false;
+            case RGB_HUD:
+                rgb_matrix_decrease_hue();
+                return false;
+            case RGB_SAI:
+                rgb_matrix_increase_sat();
+                return false;
+            case RGB_SAD:
+                rgb_matrix_decrease_sat();
+                return false;
+            case RGB_VAI:
+                rgb_matrix_increase_val();
+                return false;
+            case RGB_VAD:
+                rgb_matrix_decrease_val();
+            case RGB_SPI:
+                rgb_matrix_increase_speed();
+                return false;
+            case RGB_SPD:
+                rgb_matrix_decrease_speed();
+                return false;
+        }
+    }
+
+    return true;
+}
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if (!process_rgb_matrix_user(keycode, record)) return false;
+    
 #ifdef MULTIMODE_ENABLE
     if (!bt_process_record(keycode, record)) {
         return false;

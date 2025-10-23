@@ -462,6 +462,7 @@ void bt_init(void) {
         usbStop(&USB_DRIVER);
     }
 
+    // writePinLow(A14);
     setPinOutput(A14);
     if (dev_info.devs == DEVS_USB) {
         writePinLow(A14);
@@ -1265,18 +1266,42 @@ static void handle_layer_indication(void) {
 
 static void handle_charging_indication(void) {
     // Debounced, hysteretic "first full" detector
-    // static uint8_t  prev_pvol               = 0;
     static bool     first_reach_full        = false; // drives the blink once per cycle
     static uint32_t full_candidate_since    = 0;
     static bool     full_latched_this_cycle = false;
 
-    uint8_t pv      = bts_info.bt_info.pvol;
-    bool    plugged = (get_battery_charge_state() != BATTERY_STATE_UNPLUGGED);
+    // Check for indication triggers
+    static bool should_indicate = false;
+
+    // New state tracking for user's requirements
+    static bool                   cable_plugged_session   = false;    // tracks cable plug-in this session
+    static bool                   charged_full_indicated  = false;    // prevents multiple indications
+    static bool                   wireless_full_indicated = false;    // tracks wireless full indication
+    static uint8_t                last_dev_mode           = DEVS_USB; // for detecting mode switches
+    static battery_charge_state_t last_charge_state       = BATTERY_STATE_UNPLUGGED;
+
+    uint8_t                pv                   = bts_info.bt_info.pvol;
+    bool                   plugged              = (get_battery_charge_state() != BATTERY_STATE_UNPLUGGED);
+    battery_charge_state_t current_charge_state = get_battery_charge_state();
+
+    // Detect cable plug-in event
+    if ((current_charge_state != BATTERY_STATE_UNPLUGGED) && (last_charge_state == BATTERY_STATE_UNPLUGGED)) {
+        cable_plugged_session  = true;
+        charged_full_indicated = false; // reset for new session
+    }
+    last_charge_state = current_charge_state;
+
+    // Detect mode switch from wired to wireless
+    bool mode_switched_to_wireless = false;
+    if (last_dev_mode == DEVS_USB && dev_info.devs != DEVS_USB && dev_info.devs >= DEVS_HOST1 && dev_info.devs <= DEVS_2_4G) {
+        mode_switched_to_wireless = true;
+    }
+    last_dev_mode = dev_info.devs;
 
     if (dev_info.devs != DEVS_USB) {
         // Detect and debounce first reach to FULL_PVOL_THRESHOLD
         if (!full_latched_this_cycle) {
-            if (pv >= FULL_PVOL_THRESHOLD && plugged) {
+            if ((pv >= FULL_PVOL_THRESHOLD) && plugged) {
                 if (full_candidate_since == 0) {
                     full_candidate_since = timer_read32();
                 } else if (timer_elapsed32(full_candidate_since) >= FULL_DEBOUNCE_MS) {
@@ -1289,60 +1314,79 @@ static void handle_charging_indication(void) {
             }
         } else {
             // Re-arm for next cycle only after dropping below hysteresis or unplugging
-            if (pv <= FULL_HYSTERESIS_PVOL || !plugged) {
+            if ((pv <= FULL_HYSTERESIS_PVOL) || !plugged) {
                 full_latched_this_cycle = false;
                 // Don't force first_reach_full here; it'll be set when we debounce next time
             }
         }
+    } else {
+        first_reach_full = false;
     }
 
-    if (!readPin(BT_CABLE_PIN)) {
-        if (!readPin(BT_CHARGE_PIN)) {
-            charge_complete_warning.entry_full_time = timer_read32();
-        } else {
-            if ((timer_elapsed32(charge_complete_warning.entry_full_time) > 2000) || first_reach_full) {
-                // 充满状态
-                if (!is_in_full_power_state) {
-                    is_in_full_power_state = true;
-                    if (!charge_complete_warning.triggered) {
-                        charge_complete_warning.triggered   = true;
-                        charge_complete_warning.blink_count = 0;
-                        charge_complete_warning.blink_time  = timer_read32();
-                        charge_complete_warning.blink_state = false;
-                        charge_complete_warning.completed   = false;
+    // Scenario 1: Cable plugged in first time AND charged full
+    if (cable_plugged_session && (current_charge_state == BATTERY_STATE_CHARGED_FULL) && !charged_full_indicated) {
+        should_indicate         = true;
+        charged_full_indicated  = true;
+        wireless_full_indicated = true; // prevent wireless indication
+    }
+    // Scenario 2: Battery reaches 100% while mode switch to wireless
+    if (!wireless_full_indicated && (dev_info.devs != DEVS_USB)) {
+        if (first_reach_full && mode_switched_to_wireless && cable_plugged_session) {
+            should_indicate         = true;
+            wireless_full_indicated = true;
+            charged_full_indicated  = true; // prevent cable indication
+        }
+    }
+    // Scenario 3: Battery reaches 100% first time with cable plugged in
+    if (first_reach_full && cable_plugged_session && !charged_full_indicated) {
+        should_indicate        = true;
+        charged_full_indicated = true;
+    }
+
+    // Track charge state timing window for steady full detection
+    if (get_battery_charge_state() == BATTERY_STATE_CHARGING) {
+        charge_complete_warning.entry_full_time = timer_read32();
+    }
+
+    if (should_indicate) {
+        if (timer_elapsed32(charge_complete_warning.entry_full_time) > 2000) {
+            if (!is_in_full_power_state) {
+                is_in_full_power_state = true;
+                if (!charge_complete_warning.triggered) {
+                    charge_complete_warning.triggered   = true;
+                    charge_complete_warning.blink_count = 0;
+                    charge_complete_warning.blink_time  = timer_read32();
+                    charge_complete_warning.blink_state = false;
+                    charge_complete_warning.completed   = false;
+                }
+            }
+
+            if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 5) {
+                if (timer_elapsed32(charge_complete_warning.blink_time) >= 1000) {
+                    charge_complete_warning.blink_time  = timer_read32();
+                    charge_complete_warning.blink_state = !charge_complete_warning.blink_state;
+
+                    if (charge_complete_warning.blink_state) {
+                        charge_complete_warning.blink_count++;
+                        if (charge_complete_warning.blink_count >= 5) {
+                            charge_complete_warning.completed   = true;
+                            charge_complete_warning.blink_state = false;
+                        }
                     }
                 }
 
-                // 只有在未完成闪烁且闪烁次数未达到5次时才显示充电指示
-                if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 6) {
-                    if (timer_elapsed32(charge_complete_warning.blink_time) >= 1000) {
-                        charge_complete_warning.blink_time  = timer_read32();
-                        charge_complete_warning.blink_state = !charge_complete_warning.blink_state;
-
-                        if (charge_complete_warning.blink_state) {
-                            charge_complete_warning.blink_count++;
-                            if (charge_complete_warning.blink_count >= 6) {
-                                charge_complete_warning.completed   = true;
-                                charge_complete_warning.blink_state = false;
-                            }
-                        }
+                if (charge_complete_warning.blink_state) {
+                    for (uint8_t i = 104; i <= 106; i++) {
+                        rgb_matrix_set_color(i, 0, 100, 0);
                     }
-
-                    // 显示充电完成闪烁
-                    if (charge_complete_warning.blink_state) {
-                        for (uint8_t i = 104; i <= 106; i++) {
-                            rgb_matrix_set_color(i, 0, 100, 0);
-                        }
-                    } else {
-                        for (uint8_t i = 104; i <= 106; i++) {
-                            rgb_matrix_set_color(i, 0, 0, 0);
-                        }
+                } else {
+                    for (uint8_t i = 104; i <= 106; i++) {
+                        rgb_matrix_set_color(i, 0, 0, 0);
                     }
                 }
             }
         }
     } else {
-        // 充电线未接入，重置充电状态
         if (is_in_full_power_state) {
             is_in_full_power_state = false;
             memset(&charge_complete_warning, 0, sizeof(charge_complete_warning_t));

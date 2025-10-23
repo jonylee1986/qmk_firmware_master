@@ -167,7 +167,8 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     }
 
     switch (keycode) {
-        case QK_UNDERGLOW_TOGGLE:
+        case RGB_TOG:
+        case QK_RGB_MATRIX_TOGGLE:
             if (record->event.pressed) {
                 switch (rgb_matrix_get_flags()) {
                     case LED_FLAG_ALL: {
@@ -214,28 +215,19 @@ void matrix_scan_kb(void) {
 
     if (dev_info.devs == DEVS_USB) {
         if (USB_DRIVER.state != USB_ACTIVE || USB_DRIVER.state == USB_SUSPENDED) {
-            // USB挂起状态
             if (!usb_suspend_timer) {
-                // 开始计时
                 usb_suspend_timer = timer_read32();
-                dprintf("USB suspended, starting 10s timer\n");
             } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
-                // 挂起超过10秒，关闭背光
-                dprintf("USB suspended for 10s, turning off lights\n");
                 if (!usb_suspend) {
-                    // 如果之前没有进入挂起状态，执行挂起操作
                     usb_suspend = true;
                     led_deconfig_all();
                 }
                 usb_suspend_timer = 0;
             }
         } else {
-            // USB活跃状态，重置计时器
             if (usb_suspend_timer) {
-                dprintf("USB resumed, canceling suspend timer\n");
                 usb_suspend_timer = 0;
                 if (usb_suspend) {
-                    // 如果之前处于挂起状态，恢复背光
                     usb_suspend = false;
                     led_config_all();
                 }

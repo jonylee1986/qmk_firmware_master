@@ -17,9 +17,9 @@
 #pragma once
 
 #ifdef MULTIMODE_ENABLE
-#    define MM_BT_HOST1_NAME "AULA-F75 5.0 KB"
-#    define MM_BT_HOST2_NAME "AULA-F75 5.0 KB"
-#    define MM_BT_HOST3_NAME "AULA-F75 5.0 KB"
+#    define MM_BT_HOST1_NAME "F75PROMAX BT5.0"
+#    define MM_BT_HOST2_NAME "F75PROMAX BT5.0"
+#    define MM_BT_HOST3_NAME "F75PROMAX BT5.0"
 
 // Indicate index of mm device
 #    define MM_BLINK_HOST1_INDEX 14

@@ -1,6 +1,6 @@
 {
     "manufacturer": "hfd",
-    "keyboard_name": "AULA-F75",
+    "keyboard_name": "Epomaker x Aula F75 PRO MAX",
     "maintainer": "jonylee@hfd",
     "url": "https://github.com/jonylee1986",
     "processor": "WB32FQ95",
@@ -8,7 +8,7 @@
     "usb": {
         "vid": "0xFFFE",
         "pid": "0x00A9",
-        "device_version": "1.0.4",
+        "device_version": "1.0.5",
         "suspend_wakeup_delay": 1000
     },
     "features": {
