@@ -44,11 +44,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [WIN_FN] = LAYOUT_100_ansi(
         EE_CLR,            KC_BRID,  KC_BRIU,  WIN_TSK,  KC_MYCM, KC_MAIL, KC_WHOM, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE,  KC_VOLD,  KC_VOLU,  _______,  KC_PSCR, KC_SCRL,  _______,  _______,
-        _______, BT_HOST1, BT_HOST2, BT_HOST3, BT_2_4G,  _______, _______, _______, _______, _______, _______, _______,  _______,  RGB_TOG,  _______,  _______, _______,  _______,  _______,
-        RGB_TEST,_______,  _______,  _______,  _______,  _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,  _______,  RGB_MOD,  _______,  _______, _______,  _______,  _______,
-        _______, _______,  _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______,            RGB_HUI,  _______,  _______, _______,  _______,
-        BLED_MOD,          BLED_HUI, _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, SLED_HUI, SLED_MOD, RGB_VAI,            _______, _______,  _______,  _______,
-        BLED_SPI,GU_TOGG,  BLED_VAI,                              SLED_SPI,                           SLED_VAI,_______,  RGB_SPD,  RGB_VAD,  RGB_SPI,  _______,           _______),
+        _______, BT_HOST1, BT_HOST2, BT_HOST3, BT_2_4G,  _______, _______, _______, _______, _______, _______, _______,  _______,  RM_TOGG,  _______,  _______, _______,  _______,  _______,
+        RGB_TEST,_______,  _______,  _______,  _______,  _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,  _______,  RM_NEXT,  _______,  _______, _______,  _______,  _______,
+        _______, _______,  _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______,            RM_HUEU,  _______,  _______, _______,  _______,
+        BLED_MOD,          BLED_HUI, _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, SLED_HUI, SLED_MOD, RM_VALU,            _______, _______,  _______,  _______,
+        BLED_SPI,GU_TOGG,  BLED_VAI,                              SLED_SPI,                           SLED_VAI,_______,  RM_SPDD,  RM_VALD,  RM_SPDU,  _______,           _______),
 
     [MAC_BASE] = LAYOUT_100_ansi(
         KC_ESC,            KC_BRID,  KC_BRIU,  MAC_TSK,  MAC_SEH, KC_F5,   KC_F6,   KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE,  KC_VOLD,  KC_VOLU,  KC_DEL,   KC_HOME, KC_END,   KC_PAUS,  KC_MUTE,
@@ -60,11 +60,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [MAC_FN] = LAYOUT_100_ansi(
         EE_CLR,            KC_F1,    KC_F2,    KC_F3,    KC_F4,    KC_F5,  KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,   KC_F11,   KC_F12,   _______,  KC_PSCR, KC_SCRL,  _______,  _______,
-        _______, BT_HOST1, BT_HOST2, BT_HOST3, BT_2_4G,  _______, _______, _______, _______, _______, _______, _______,  _______,  RGB_TOG,  _______,  _______, _______,  _______,  _______,
-        RGB_TEST,_______,  _______,  _______,  _______,  _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,  _______,  RGB_MOD,  _______,  _______, _______,  _______,  _______,
-        _______, _______,  _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______,            RGB_HUI,  _______,  _______, _______,  _______,
-        BLED_MOD,          BLED_HUI, _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, SLED_HUI, SLED_MOD, RGB_VAI,            _______, _______,  _______,  _______,
-        BLED_SPI,_______,  BLED_VAI,                              SLED_SPI,                           SLED_VAI,_______,  RGB_SPD,  RGB_VAD,  RGB_SPI,  _______,           _______),
+        _______, BT_HOST1, BT_HOST2, BT_HOST3, BT_2_4G,  _______, _______, _______, _______, _______, _______, _______,  _______,  RM_TOGG,  _______,  _______, _______,  _______,  _______,
+        RGB_TEST,_______,  _______,  _______,  _______,  _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,  _______,  RM_NEXT,  _______,  _______, _______,  _______,  _______,
+        _______, _______,  _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______,            RM_HUEU,  _______,  _______, _______,  _______,
+        BLED_MOD,          BLED_HUI, _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, SLED_HUI, SLED_MOD, RM_VALU,            _______, _______,  _______,  _______,
+        BLED_SPI,_______,  BLED_VAI,                              SLED_SPI,                           SLED_VAI,_______,  RM_SPDD,  RM_VALD,  RM_SPDU,  _______,           _______),
 };
 
 #if defined(ENCODER_MAP_ENABLE)
@@ -95,7 +95,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case BLED_MOD: {
             if (record->event.pressed) {
                 if (keycode == SLED_MOD) {
-                    if (dev_info.sled_mode == SLED_MODE_CHARGE) {
+                    if (dev_info.sled_mode == SLED_MODE_VOL) {
+                        dev_info.sled_mode = SLED_MODE_FLOW;
+                    } else if (dev_info.sled_mode == SLED_MODE_CHARGE) {
                         dev_info.sled_mode = SLED_MODE_FLOW;
                     } else {
                         dev_info.sled_mode = (dev_info.sled_mode + 1) % SLED_MODE_COUNT;
@@ -204,6 +206,7 @@ void keyboard_post_init_user(void) {
         eeconfig_update_keymap(&keymap_config);
     }
     bled_init();
+    dev_info.sled_mode = 7;
 }
 
 void eeconfig_init_user(void) {

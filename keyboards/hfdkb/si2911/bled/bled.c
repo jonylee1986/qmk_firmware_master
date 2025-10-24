@@ -47,8 +47,6 @@ static uint8_t bled_leds[] = {100, 101};
 static uint8_t sled_leds[] = {102, 103, 104, 105, 106};
 #define SLED_LED_NUM (sizeof(sled_leds) / sizeof(sled_leds[0]))
 
-void bled_charging_indicate(void);
-
 void bled_task(void) {
     switch (dev_info.bled_mode) {
         case BLED_MODE_FLOW: {
@@ -291,6 +289,11 @@ void sled_task(void) {
             break;
         }
 
+        case SLED_MODE_VOL: {
+            bled_vol_indicate();
+            break;
+        }
+
         default:
             break;
     }
@@ -331,6 +334,40 @@ void bled_charged_indicate(void) {
     }
 }
 
+void bled_vol_indicate(void) {
+    uint8_t query_index[] = {102, 103, 104, 105, 106};
+    uint8_t pvol          = bts_info.bt_info.pvol;
+    uint8_t led_count     = 0;
+    RGB     color;
+
+    if (pvol <= 20) {
+        led_count = 1;
+    } else if (pvol <= 40) {
+        led_count = 2;
+    } else if (pvol <= 60) {
+        led_count = 3;
+    } else if (pvol <= 80) {
+        led_count = 4;
+    } else {
+        led_count = 5;
+    }
+
+    for (uint8_t i = 0; i < (sizeof(query_index) / sizeof(query_index[0])); i++) {
+        rgb_matrix_set_color(query_index[i], RGB_OFF);
+    }
+
+    if (pvol <= 20) {
+        color = (RGB){100, 0, 0}; // 红色
+    } else {
+        color = (RGB){0, 100, 0}; // 绿色
+    }
+
+    // 点亮LED
+    for (uint8_t i = 0; i < led_count; i++) {
+        rgb_matrix_set_color(query_index[i], color.r, color.g, color.b);
+    }
+}
+
 void bled_init(void) {
     dev_info.raw  = eeconfig_read_user();
     bled_info.raw = eeconfig_read_kb();
@@ -338,6 +375,7 @@ void bled_init(void) {
 
 void bled_eeconfig_init(void) {
     dev_info.sled_mode = SLED_MODE_FLOW;
+    // dev_info.sled_mode = 7;
 
     dev_info.bled_mode  = BLED_MODE_SOLID;
     dev_info.bled_color = COLOR_ORIANGE;

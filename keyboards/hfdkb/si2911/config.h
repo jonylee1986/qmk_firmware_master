@@ -17,9 +17,9 @@
 #pragma once
 
 #ifdef MULTIMODE_ENABLE
-#    define MM_BT_HOST1_NAME "YUNZII YZ99 BT$"
-#    define MM_BT_HOST2_NAME "YUNZII YZ99 BT$"
-#    define MM_BT_HOST3_NAME "YUNZII YZ99 BT$"
+#    define MM_BT_HOST1_NAME "YUNZII B98 PRO BT"
+#    define MM_BT_HOST2_NAME "YUNZII B98 PRO BT"
+#    define MM_BT_HOST3_NAME "YUNZII B98 PRO BT"
 
 // Indicate index of mm device
 #    define MM_BLINK_HOST1_INDEX 18

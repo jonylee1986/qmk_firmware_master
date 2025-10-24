@@ -36,6 +36,7 @@ typedef enum {
     SLED_MODE_SOLID,
     SLED_MODE_COUNT,
     SLED_MODE_CHARGE,
+    SLED_MODE_VOL,
     // SLED_MODE_CYCLE1,
     // SLED_MODE_CYCLE2,
 } sled_mode_t;
@@ -71,5 +72,6 @@ void bled_init(void);
 void bled_eeconfig_init(void);
 void bled_charging_indicate(void);
 void bled_charged_indicate(void);
+void bled_vol_indicate(void);
 
 #endif // BLED_H

@@ -1,6 +1,6 @@
 {
     "manufacturer": "hfd",
-    "keyboard_name": "YUNZII YZ99 Keyboard",
+    "keyboard_name": "YUNZII B98 PRO Keyboard",
     "maintainer": "jonylee@hfd",
     "url": "https://github.com/jonylee1986",
     "processor": "WB32FQ95",
@@ -8,7 +8,7 @@
     "usb": {
         "vid": "0xFFFE",
         "pid": "0x00AA",
-        "device_version": "1.0.5",
+        "device_version": "1.0.7",
         "suspend_wakeup_delay": 1000
     },
     "features": {

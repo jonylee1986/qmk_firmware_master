@@ -1,5 +1,5 @@
 {
-    "name": "YUNZII YZ99 Keyboard",
+    "name": "YUNZII B98 PRO Keyboard",
     "vendorId": "0xFFFE",
     "productId": "0x00AA",
     "keycodes": ["qmk_lighting"],

@@ -60,6 +60,8 @@ extern bts_info_t bts_info;
 
 extern bool backlight_sleep_flag;
 
+extern bool query_vol_flag;
+
 void bt_housekeeping_task(void);
 void led_config_all(void);
 void led_deconfig_all(void);
