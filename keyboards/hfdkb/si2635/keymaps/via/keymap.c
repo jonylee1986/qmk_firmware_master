@@ -49,15 +49,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_LCTL, KC_LWIN,  KC_LALT,                               KC_SPC,                             MO(1),   KC_RCTL,  KC_LEFT,  KC_DOWN,  KC_RGHT),
 
     [WIN_FN] = LAYOUT_80_ansi(
-        EE_CLR,  KC_WHOM,  KC_MAIL,  KC_TASK,  KC_FLXP,  RGB_VAD, RGB_VAI, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,  KC_VOLU,            _______,
+        EE_CLR,  KC_WHOM,  KC_MAIL,  KC_TASK,  KC_FLXP,  RM_VALD, RM_VALU, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,  KC_VOLU,            _______,
         BT_2_4G, BT_HOST1, BT_HOST2, BT_HOST3, _______,  _______, _______, _______, _______, _______, _______, _______,  _______,  _______,  KC_INS,
-        RGB_HUI, KEY_AND,  _______,  KEY_MAC,  _______,  _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,  _______,  RGB_MOD,  _______,
+        RM_HUEU, KEY_AND,  _______,  KEY_MAC,  _______,  _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,  _______,  RM_NEXT,  _______,
         _______, _______,  _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______,            _______,  _______,
-        BLED_MOD,           BLED_HUI,  _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RGB_VAI,  KC_HOME,
-        BLED_SPI, GU_TOGG,  BLED_VAI,                               _______,                            _______, _______,  RGB_SPD,  RGB_VAD,  RGB_SPI),
+        BLED_MOD,          BLED_HUI, _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RM_VALU,  KC_HOME,
+        BLED_SPI, GU_TOGG, BLED_VAI,                              _______,                            _______, _______,  RM_SPDD,  RM_VALD,  RM_SPDU),
 
     [AND_BASE] = LAYOUT_80_ansi(
-        KC_ESC,  KC_BRID,  KC_BRIU,  KC_TASK,  AN_HOME,  RGB_VAD, RGB_VAI, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,  KC_VOLU,            WORK_MOD,
+        KC_ESC,  KC_BRID,  KC_BRIU,  KC_TASK,  AN_HOME,  RM_VALD, RM_VALU, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,  KC_VOLU,            WORK_MOD,
         KC_GRV,  KC_1,     KC_2,     KC_3,     KC_4,     KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS,  KC_EQL,   KC_BSPC,  KC_DEL,
         KC_TAB,  KC_Q,     KC_W,     KC_E,     KC_R,     KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC,  KC_RBRC,  KC_BSLS,  KC_PGUP,
         KC_CAPS, KC_A,     KC_S,     KC_D,     KC_F,     KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,            KC_ENT,   KC_PGDN,
@@ -67,13 +67,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [AND_FN] = LAYOUT_80_ansi(
         EE_CLR,  KC_F1,    KC_F2,    KC_F3,    KC_F4,    KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,   KC_F12,             _______,
         BT_2_4G, BT_HOST1, BT_HOST2, BT_HOST3, _______,  _______, _______, _______, _______, _______, _______, _______,  _______,  _______,  _______,
-        RGB_HUI, _______,  KEY_WIN,  KEY_MAC,  _______,  _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,  _______,  RGB_MOD,  _______,
+        RM_HUEU, _______,  KEY_WIN,  KEY_MAC,  _______,  _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,  _______,  RM_NEXT,  _______,
         _______, _______,  _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______,            _______,  _______,
-        BLED_MOD,           BLED_HUI,  _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RGB_VAI,  KC_HOME,
-        BLED_SPI, _______,  BLED_VAI,                               _______,                            _______, _______,  RGB_SPD,  RGB_VAD,  RGB_SPI),
+        BLED_MOD,          BLED_HUI, _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RM_VALU,  KC_HOME,
+        BLED_SPI, _______, BLED_VAI,                              _______,                            _______, _______,  RM_SPDD,  RM_VALD,  RM_SPDU),
 
     [MAC_BASE] = LAYOUT_80_ansi(
-        KC_ESC,  KC_BRID,  KC_BRIU,  MAC_TSK,  KC_MCTL,  RGB_VAD, RGB_VAI, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,  KC_VOLU,            WORK_MOD,
+        KC_ESC,  KC_BRID,  KC_BRIU,  MAC_TSK,  KC_MCTL,  RM_VALD, RM_VALU, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,  KC_VOLU,            WORK_MOD,
         KC_GRV,  KC_1,     KC_2,     KC_3,     KC_4,     KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS,  KC_EQL,   KC_BSPC,  KC_DEL,
         KC_TAB,  KC_Q,     KC_W,     KC_E,     KC_R,     KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC,  KC_RBRC,  KC_BSLS,  KC_PGUP,
         KC_CAPS, KC_A,     KC_S,     KC_D,     KC_F,     KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,            KC_ENT,   KC_PGDN,
@@ -83,10 +83,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [MAC_FN] = LAYOUT_80_ansi(
         EE_CLR,  KC_F1,    KC_F2,    KC_F3,    KC_F4,    KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,   KC_F12,             _______,
         BT_2_4G, BT_HOST1, BT_HOST2, BT_HOST3, BT_2_4G,  _______, _______, _______, _______, _______, _______, _______,  _______,  _______,  _______,
-        RGB_HUI, KEY_AND,  KEY_WIN,  _______,  _______,  _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,  _______,  RGB_MOD,  _______,
+        RM_HUEU, KEY_AND,  KEY_WIN,  _______,  _______,  _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,  _______,  RM_NEXT,  _______,
         _______, _______,  _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______,            _______,  _______,
-        BLED_MOD,           BLED_HUI,  _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RGB_VAI,  KC_HOME,
-        BLED_SPI, _______,  BLED_VAI,                               _______,                            _______, _______,  RGB_SPD,  RGB_VAD,  RGB_SPI),
+        BLED_MOD,          BLED_HUI, _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RM_VALU,  KC_HOME,
+        BLED_SPI, _______, BLED_VAI,                              _______,                            _______, _______,  RM_SPDD,  RM_VALD,  RM_SPDU),
 };
 
 #if defined(ENCODER_MAP_ENABLE)
@@ -126,47 +126,47 @@ static uint32_t mode_long_pressed_time = 0;
 static uint32_t caps_blink_time        = 0;
 static uint8_t  caps_blink_cnt         = 0;
 
-bool process_rgb_matrix_user(uint16_t keycode, keyrecord_t *record) {
-    if (record->event.pressed) {
-        switch (keycode) {
-            // case RGB_TOG:
-            //     rgb_matrix_toggle();
-            //     return false;
-            case RGB_MOD:
-                rgb_matrix_step();
-                return false;
-            case RGB_HUI:
-                rgb_matrix_increase_hue();
-                return false;
-            case RGB_HUD:
-                rgb_matrix_decrease_hue();
-                return false;
-            case RGB_SAI:
-                rgb_matrix_increase_sat();
-                return false;
-            case RGB_SAD:
-                rgb_matrix_decrease_sat();
-                return false;
-            case RGB_VAI:
-                rgb_matrix_increase_val();
-                return false;
-            case RGB_VAD:
-                rgb_matrix_decrease_val();
-            case RGB_SPI:
-                rgb_matrix_increase_speed();
-                return false;
-            case RGB_SPD:
-                rgb_matrix_decrease_speed();
-                return false;
-        }
-    }
+// bool process_rgb_matrix_user(uint16_t keycode, keyrecord_t *record) {
+//     if (record->event.pressed) {
+//         switch (keycode) {
+//             // case RGB_TOG:
+//             //     rgb_matrix_toggle();
+//             //     return false;
+//             case RGB_MOD:
+//                 rgb_matrix_step();
+//                 return false;
+//             case RGB_HUI:
+//                 rgb_matrix_increase_hue();
+//                 return false;
+//             case RGB_HUD:
+//                 rgb_matrix_decrease_hue();
+//                 return false;
+//             case RGB_SAI:
+//                 rgb_matrix_increase_sat();
+//                 return false;
+//             case RGB_SAD:
+//                 rgb_matrix_decrease_sat();
+//                 return false;
+//             case RGB_VAI:
+//                 rgb_matrix_increase_val();
+//                 return false;
+//             case RGB_VAD:
+//                 rgb_matrix_decrease_val();
+//             case RGB_SPI:
+//                 rgb_matrix_increase_speed();
+//                 return false;
+//             case RGB_SPD:
+//                 rgb_matrix_decrease_speed();
+//                 return false;
+//         }
+//     }
 
-    return true;
-}
+//     return true;
+// }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    if (!process_rgb_matrix_user(keycode, record)) return false;
-    
+    // if (!process_rgb_matrix_user(keycode, record)) return false;
+
 #ifdef MULTIMODE_ENABLE
     if (!bt_process_record(keycode, record)) {
         return false;
@@ -209,7 +209,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             break;
 
-        case RGB_VAI:
+        case RM_VALU:
             if (record->event.pressed) {
                 if (rgb_matrix_get_val() >= (RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP)) {
                     caps_blink_cnt  = 6;
@@ -217,7 +217,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 }
             }
             break;
-        case RGB_VAD:
+        case RM_VALD:
             if (record->event.pressed) {
                 if (rgb_matrix_get_val() <= RGB_MATRIX_VAL_STEP) {
                     caps_blink_cnt  = 6;
@@ -225,7 +225,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 }
             }
             break;
-        case RGB_SPI:
+        case RM_SPDU:
             if (record->event.pressed) {
                 if (rgb_matrix_get_speed() >= (UINT8_MAX - RGB_MATRIX_SPD_STEP)) {
                     caps_blink_cnt  = 6;
@@ -233,7 +233,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 }
             }
             break;
-        case RGB_SPD:
+        case RM_SPDD:
             if (record->event.pressed) {
                 if (rgb_matrix_get_speed() <= RGB_MATRIX_SPD_STEP) {
                     caps_blink_cnt  = 6;
@@ -477,8 +477,8 @@ void housekeeping_task_user(void) {
             mode = MODE_GAMING;
             for (int layer = 0; layer < DYNAMIC_KEYMAP_LAYER_COUNT; layer += 2) {
                 //     if (dynamic_keymap_get_encoder(layer, 0, true) != RGB_VAI || dynamic_keymap_get_encoder(layer, 0, false) != RGB_VAD) {
-                dynamic_keymap_set_encoder(layer, 0, true, RGB_VAI);
-                dynamic_keymap_set_encoder(layer, 0, false, RGB_VAD);
+                dynamic_keymap_set_encoder(layer, 0, true, RM_VALU);
+                dynamic_keymap_set_encoder(layer, 0, false, RM_VALD);
                 //     }
                 //     if (dynamic_keymap_get_keycode(layer, MODE_ROW, MODE_COLUMN) != RGB_MOD) {
                 //         dynamic_keymap_set_keycode(layer, MODE_ROW, MODE_COLUMN, RGB_MOD);

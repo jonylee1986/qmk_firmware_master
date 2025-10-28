@@ -178,6 +178,8 @@ uint8_t query_index[] = BAT_LEVEL_DISPLAY_INDEX;
 
 mode_t mode = MODE_WORKING;
 
+static uint16_t bt_tap_time;
+
 // USB related
 static uint32_t USB_switch_time = 0;
 
@@ -771,6 +773,252 @@ static bool bt_process_record_other(uint16_t keycode, keyrecord_t *record) {
                 }
             }
         } break;
+
+            {
+                case TO(0): { // WIN_BASE
+                    if (record->event.pressed) {
+                        set_single_persistent_default_layer(0);
+                    }
+                } break;
+                case TO(2): { // MAC_BASE
+                    if (record->event.pressed) {
+                        set_single_persistent_default_layer(2);
+                        keymap_config.no_gui = 0;
+                        eeconfig_update_keymap(&keymap_config);
+                    }
+                } break;
+                case QK_GRAVE_ESCAPE:
+                    if (dev_info.devs) {
+                        if (record->event.pressed) {
+                            if ((get_mods() & MOD_MASK_SG)) {
+                                bts_process_keys(KC_GRAVE, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                            } else {
+                                bts_process_keys(KC_ESCAPE, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                            }
+                        } else {
+                            bts_process_keys(KC_GRAVE, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                            bts_process_keys(KC_ESCAPE, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                        }
+                    }
+                    return true; // Skip all further processing of this key
+                case LM(1, MOD_LCTL):
+                case LM(2, MOD_LCTL):
+                case LM(3, MOD_LCTL):
+                    if (dev_info.devs) {
+                        bts_process_keys(KC_LCTL, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                    }
+                    return true;
+                case LM(1, MOD_LSFT):
+                case LM(2, MOD_LSFT):
+                case LM(3, MOD_LSFT):
+                    if (dev_info.devs) {
+                        bts_process_keys(KC_LSFT, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                    }
+                    return true;
+                case LM(1, MOD_LALT):
+                case LM(2, MOD_LALT):
+                case LM(3, MOD_LALT):
+                    if (dev_info.devs) {
+                        bts_process_keys(KC_LALT, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                    }
+                    return true;
+                case LM(1, MOD_LGUI):
+                case LM(2, MOD_LGUI):
+                case LM(3, MOD_LGUI):
+                    if (dev_info.devs) {
+                        bts_process_keys(KC_LGUI, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                    }
+                    return true;
+                case LM(1, MOD_RCTL):
+                case LM(2, MOD_RCTL):
+                case LM(3, MOD_RCTL):
+                    if (dev_info.devs) {
+                        bts_process_keys(KC_RCTL, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                    }
+                    return true;
+                case LM(1, MOD_RSFT):
+                case LM(2, MOD_RSFT):
+                case LM(3, MOD_RSFT):
+                    if (dev_info.devs) {
+                        bts_process_keys(KC_RSFT, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                    }
+                    return true;
+                case LM(1, MOD_RALT):
+                case LM(2, MOD_RALT):
+                case LM(3, MOD_RALT):
+                    if (dev_info.devs) {
+                        bts_process_keys(KC_RALT, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                    }
+                    return true;
+                case LM(1, MOD_RGUI):
+                case LM(2, MOD_RGUI):
+                case LM(3, MOD_RGUI):
+                    if (dev_info.devs) {
+                        bts_process_keys(KC_RGUI, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                    }
+                    return true;
+                // case LT(1, KC_SPC):
+                // case LT(2, KC_SPC):
+                // case LT(3, KC_SPC):
+                //     if (dev_info.devs) {
+                //         if (record->tap.count && record->event.pressed) {
+                //             bts_process_keys(KC_SPC, 1, dev_info.devs, keymap_config.no_gui);
+                //             bts_task(dev_info.devs);
+                //             for (uint16_t i = TAP_CODE_DELAY; i > 0; i--) {
+                //                 wait_ms(1);
+                //             }
+                //             bts_process_keys(KC_SPC, 0, dev_info.devs, keymap_config.no_gui);
+                //             bts_task(dev_info.devs);
+                //             return false;
+                //         }
+                //     }
+                //     return true;
+                case SC_LCPO:
+                    if (dev_info.devs) {
+                        bts_process_keys(KC_LCTL, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                        if (record->event.pressed) {
+                            bt_tap_time = timer_read();
+                        } else {
+                            if (timer_elapsed(bt_tap_time) <= 100) {
+                                bts_process_keys(KC_LSFT, 1, dev_info.devs, keymap_config.no_gui);
+                                bts_process_keys(KC_9, 1, dev_info.devs, keymap_config.no_gui);
+                                bts_task(dev_info.devs);
+                                // for (uint16_t i = TAP_CODE_DELAY; i > 0; i--) {
+                                //     wait_ms(1);
+                                // }
+                                bts_process_keys(KC_LSFT, 0, dev_info.devs, keymap_config.no_gui);
+                                bts_process_keys(KC_9, 0, dev_info.devs, keymap_config.no_gui);
+                                bts_task(dev_info.devs);
+                            }
+                        }
+                        return false;
+                    }
+                    return true;
+                case SC_LSPO:
+                    if (dev_info.devs) {
+                        bts_process_keys(KC_LSFT, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                        if (record->event.pressed) {
+                            bt_tap_time = timer_read();
+                        } else {
+                            if (timer_elapsed(bt_tap_time) <= 100) {
+                                bts_process_keys(KC_LSFT, 1, dev_info.devs, keymap_config.no_gui);
+                                bts_process_keys(KC_9, 1, dev_info.devs, keymap_config.no_gui);
+                                bts_task(dev_info.devs);
+                                // for (uint16_t i = TAP_CODE_DELAY; i > 0; i--) {
+                                //     wait_ms(1);
+                                // }
+                                bts_process_keys(KC_LSFT, 0, dev_info.devs, keymap_config.no_gui);
+                                bts_process_keys(KC_9, 0, dev_info.devs, keymap_config.no_gui);
+                                bts_task(dev_info.devs);
+                            }
+                        }
+                        return false;
+                    }
+                    return true;
+                case SC_LAPO:
+                    if (dev_info.devs) {
+                        bts_process_keys(KC_LALT, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                        if (record->event.pressed) {
+                            bt_tap_time = timer_read();
+                        } else {
+                            if (timer_elapsed(bt_tap_time) <= 100) {
+                                bts_process_keys(KC_LSFT, 1, dev_info.devs, keymap_config.no_gui);
+                                bts_process_keys(KC_9, 1, dev_info.devs, keymap_config.no_gui);
+                                bts_task(dev_info.devs);
+                                // for (uint16_t i = TAP_CODE_DELAY; i > 0; i--) {
+                                //     wait_ms(1);
+                                // }
+                                bts_process_keys(KC_LSFT, 0, dev_info.devs, keymap_config.no_gui);
+                                bts_process_keys(KC_9, 0, dev_info.devs, keymap_config.no_gui);
+                                bts_task(dev_info.devs);
+                            }
+                        }
+                        return false;
+                    }
+                    return true;
+                case SC_RCPC:
+                    if (dev_info.devs) {
+                        bts_process_keys(KC_RCTL, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                        if (record->event.pressed) {
+                            bt_tap_time = timer_read();
+                        } else {
+                            if (timer_elapsed(bt_tap_time) <= 100) {
+                                bts_process_keys(KC_RSFT, 1, dev_info.devs, keymap_config.no_gui);
+                                bts_process_keys(KC_0, 1, dev_info.devs, keymap_config.no_gui);
+                                bts_task(dev_info.devs);
+                                // for (uint16_t i = TAP_CODE_DELAY; i > 0; i--) {
+                                //     wait_ms(1);
+                                // }
+                                bts_process_keys(KC_RSFT, 0, dev_info.devs, keymap_config.no_gui);
+                                bts_process_keys(KC_0, 0, dev_info.devs, keymap_config.no_gui);
+                                bts_task(dev_info.devs);
+                            }
+                        }
+                        return false;
+                    }
+                    return true;
+                case SC_RSPC:
+                    if (dev_info.devs) {
+                        bts_process_keys(KC_RSFT, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                        if (record->event.pressed) {
+                            bt_tap_time = timer_read();
+                        } else {
+                            if (timer_elapsed(bt_tap_time) <= 100) {
+                                bts_process_keys(KC_RSFT, 1, dev_info.devs, keymap_config.no_gui);
+                                bts_process_keys(KC_0, 1, dev_info.devs, keymap_config.no_gui);
+                                bts_task(dev_info.devs);
+                                // for (uint16_t i = TAP_CODE_DELAY; i > 0; i--) {
+                                //     wait_ms(1);
+                                // }
+                                bts_process_keys(KC_RSFT, 0, dev_info.devs, keymap_config.no_gui);
+                                bts_process_keys(KC_0, 0, dev_info.devs, keymap_config.no_gui);
+                                bts_task(dev_info.devs);
+                            }
+                        }
+                        return false;
+                    }
+                    return true;
+                case SC_RAPC:
+                    if (dev_info.devs) {
+                        bts_process_keys(KC_RALT, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                        if (record->event.pressed) {
+                            bt_tap_time = timer_read();
+                        } else {
+                            if (timer_elapsed(bt_tap_time) <= 100) {
+                                bts_process_keys(KC_RSFT, 1, dev_info.devs, keymap_config.no_gui);
+                                bts_process_keys(KC_0, 1, dev_info.devs, keymap_config.no_gui);
+                                bts_task(dev_info.devs);
+                                // for (uint16_t i = TAP_CODE_DELAY; i > 0; i--) {
+                                //     wait_ms(1);
+                                // }
+                                bts_process_keys(KC_RSFT, 0, dev_info.devs, keymap_config.no_gui);
+                                bts_process_keys(KC_0, 0, dev_info.devs, keymap_config.no_gui);
+                                bts_task(dev_info.devs);
+                            }
+                        }
+                        return false;
+                    }
+                    return true;
+                case SC_SENT:
+                    if (dev_info.devs) {
+                        bts_process_keys(KC_RSFT, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                        if (record->event.pressed) {
+                            bt_tap_time = timer_read();
+                        } else {
+                            if (timer_elapsed(bt_tap_time) <= 100) {
+                                bts_process_keys(KC_ENT, 1, dev_info.devs, keymap_config.no_gui);
+                                bts_task(dev_info.devs);
+                                // for (uint16_t i = TAP_CODE_DELAY; i > 0; i--) {
+                                //     wait_ms(1);
+                                // }
+                                bts_process_keys(KC_ENT, 0, dev_info.devs, keymap_config.no_gui);
+                                bts_task(dev_info.devs);
+                            }
+                        }
+                        return false;
+                    }
+                    return true;
+            }
 
         default:
             return true;
