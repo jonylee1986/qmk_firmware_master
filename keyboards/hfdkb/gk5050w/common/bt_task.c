@@ -310,7 +310,8 @@ void bt_task(void) {
 
 uint32_t pressed_time = 0;
 bool     rgb_status_save;
-bool     process_record_bt(uint16_t keycode, keyrecord_t *record) {
+
+bool process_record_bt(uint16_t keycode, keyrecord_t *record) {
     bool retval = true;
     // clang-format off
     if (record->event.pressed) {
@@ -732,10 +733,10 @@ static void bt_scan_mode(void) {
 static uint32_t key_press_time;
 static uint32_t close_rgb_time;
 static bool     bak_rgb_toggle;
+static bool     led_inited;
+static bool     sober         = true;
+static bool     kb_sleep_flag = false;
 
-static bool sober         = true;
-static bool kb_sleep_flag = false;
-extern bool led_inited;
 extern void led_config_all(void);
 extern void led_deconfig_all(void);
 
@@ -751,9 +752,27 @@ static const uint8_t rgb_index_color_table[][3] = {
     {RGB_WHITE}, {RGB_RED}, {RGB_BLUE}, {RGB_YELLOW}, {RGB_GREEN},
 };
 
-void led_config_all() {}
+void led_config_all(void) {
+    if (!led_inited) {
+        led_inited = true;
+#ifdef RGB_MATRIX_SDB_PIN
+        setPinOutputPushPull(RGB_MATRIX_SDB_PIN);
+        writePinHigh(RGB_MATRIX_SDB_PIN);
+#endif
+        LCD_command_update(LCD_WEAKUP);
+    }
+}
 
-void led_deconfig_all() {}
+void led_deconfig_all(void) {
+    if (led_inited) {
+        led_inited = false;
+#ifdef RGB_MATRIX_SDB_PIN
+        setPinOutputPushPull(RGB_MATRIX_SDB_PIN);
+        writePinLow(RGB_MATRIX_SDB_PIN);
+#endif
+        LCD_command_update(LCD_SLEEP);
+    }
+}
 
 static void close_rgb(void) {
     if (!key_press_time) {
@@ -761,22 +780,22 @@ static void close_rgb(void) {
         return;
     }
     /*************************************************************************************/
-    if (timer_elapsed32(pressed_time) >= ((5 * 60 - 40) * 1000)) { // 超时，关闭灯光
+    if (timer_elapsed32(pressed_time) >= (3 * 60 * 1000)) {
         rgb_matrix_disable_noeeprom();
         LCD_command_update(LCD_LIGHT_SLEEP);
         extern bool LCD_DONT_SEND;
         LCD_DONT_SEND = 1;
     } else {
-        rgb_status_save = rgb_matrix_config.enable; // 记录超时前状态
+        rgb_status_save = rgb_matrix_config.enable;
     }
     /*************************************************************************************/
     if (sober) {
-        if (kb_sleep_flag || (timer_elapsed32(key_press_time) >= ((30 * 60 - 40) * 1000))) { // 30 minutes
+        if (kb_sleep_flag || (timer_elapsed32(key_press_time) >= (30 * 60 * 1000))) { // 30 minutes
             bak_rgb_toggle = rgb_matrix_config.enable;
             sober          = false;
             close_rgb_time = timer_read32();
             rgb_matrix_disable_noeeprom();
-            // writePinLow(RGB_DRIVER_SDB_PIN);
+            writePinLow(RGB_MATRIX_SDB_PIN);
             LCD_command_update(LCD_SLEEP);
             extern bool LCD_DONT_SEND;
             LCD_DONT_SEND = 1;
