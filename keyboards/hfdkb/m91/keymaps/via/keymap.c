@@ -240,29 +240,29 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (!process_rgb_matrix_user(keycode, record)) return false;
 
     switch (keycode) {
-            // case RM_VALD: {
-            //     if (record->event.pressed) {
-            //         rgb_matrix_config.hsv.v = rgb_matrix_get_val() - RGB_MATRIX_VAL_STEP;
-            //         if (rgb_matrix_get_val() <= 40) rgb_matrix_config.hsv.v = 40;
-            //     }
-            // }
-            //     return false;
-            // case RM_SPDD: {
-            //     if (record->event.pressed) {
-            //         rgb_matrix_config.speed = rgb_matrix_get_speed() - RGB_MATRIX_SPD_STEP;
-            //         eeconfig_update_rgb_matrix(&rgb_matrix_config);
-            //         if (rgb_matrix_get_speed() <= 51) rgb_matrix_config.speed = 51;
-            //     }
-            // }
-            //     return false;
-            // case RM_SATD: {
-            //     if (record->event.pressed) {
-            //         rgb_matrix_config.hsv.s = rgb_matrix_get_sat() - RGB_MATRIX_SAT_STEP;
-            //         eeconfig_update_rgb_matrix(&rgb_matrix_config);
-            //         if (rgb_matrix_get_sat() <= 64) rgb_matrix_config.hsv.s = 64;
-            //     }
-            // }
-            // return false;
+        case RGB_VAD: {
+            if (record->event.pressed) {
+                rgb_matrix_config.hsv.v = rgb_matrix_get_val() - RGB_MATRIX_VAL_STEP;
+                if (rgb_matrix_get_val() <= 32) rgb_matrix_config.hsv.v = 32;
+            }
+        }
+            return false;
+        case RGB_SPD: {
+            if (record->event.pressed) {
+                rgb_matrix_config.speed = rgb_matrix_get_speed() - RGB_MATRIX_SPD_STEP;
+                eeconfig_update_rgb_matrix(&rgb_matrix_config);
+                if (rgb_matrix_get_speed() <= 51) rgb_matrix_config.speed = 51;
+            }
+        }
+            return false;
+        case RGB_SAD: {
+            if (record->event.pressed) {
+                rgb_matrix_config.hsv.s = rgb_matrix_get_sat() - RGB_MATRIX_SAT_STEP;
+                eeconfig_update_rgb_matrix(&rgb_matrix_config);
+                if (rgb_matrix_get_sat() <= 64) rgb_matrix_config.hsv.s = 64;
+            }
+        }
+            return false;
 
         case IND_VAL: {
             if (record->event.pressed) {
@@ -285,29 +285,29 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         }
             return false;
 
-            // case RM_HUEU: {
-            //     if (record->event.pressed) {
-            //         dev_info.smd_color_index++;
-            //         if (dev_info.smd_color_index >= sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0])) {
-            //             dev_info.smd_color_index = 0;
-            //         }
-            //         eeconfig_update_user(dev_info.raw);
-            //         rgb_matrix_config.hsv.h = indicator_color_tab[dev_info.smd_color_index][0];
-            //     }
-            // }
-            //     return false;
-            // case RM_HUED: {
-            //     if (record->event.pressed) {
-            //         if (dev_info.smd_color_index == 0) {
-            //             dev_info.smd_color_index = sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0]) - 1;
-            //         } else {
-            //             dev_info.smd_color_index--;
-            //         }
-            //         eeconfig_update_user(dev_info.raw);
-            //         rgb_matrix_config.hsv.h = indicator_color_tab[dev_info.smd_color_index][0];
-            //     }
-            // }
-            //     return false;
+        case RGB_HUI: {
+            if (record->event.pressed) {
+                dev_info.smd_color_index++;
+                if (dev_info.smd_color_index >= sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0])) {
+                    dev_info.smd_color_index = 0;
+                }
+                eeconfig_update_user(dev_info.raw);
+                rgb_matrix_config.hsv.h = indicator_color_tab[dev_info.smd_color_index][0];
+            }
+        }
+            return false;
+        case RGB_HUD: {
+            if (record->event.pressed) {
+                if (dev_info.smd_color_index == 0) {
+                    dev_info.smd_color_index = sizeof(indicator_color_tab) / sizeof(indicator_color_tab[0]) - 1;
+                } else {
+                    dev_info.smd_color_index--;
+                }
+                eeconfig_update_user(dev_info.raw);
+                rgb_matrix_config.hsv.h = indicator_color_tab[dev_info.smd_color_index][0];
+            }
+        }
+            return false;
 
         case KEY_ECO: {
             if (record->event.pressed) {

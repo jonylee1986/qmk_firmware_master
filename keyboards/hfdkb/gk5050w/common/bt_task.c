@@ -14,6 +14,7 @@
 #include "common/bt_task.h"
 #include "command.h"
 #include "usb_main.h"
+#include "../lcd_drv/lcd.h"
 
 #define NUM_LONG_PRESS_KEYS (sizeof(long_pressed_keys) / sizeof(long_pressed_keys_t))
 
@@ -297,9 +298,7 @@ void bt_task(void) {
             usb_device_state_set_leds(keyboard_led_state);
 
 #ifdef RGB_MATRIX_ENABLE
-            if (!dev_info.sleep_off_flag) {
-                close_rgb();
-            }
+            close_rgb();
 #endif
         }
     }
@@ -944,8 +943,7 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
             LCD_command_update(LCD_RESET);
             eeconfig_init();
             eeconfig_update_rgb_matrix_default();
-            dev_info.LCD_PAGE       = 0;
-            dev_info.sleep_off_flag = 0;
+            dev_info.LCD_PAGE = 0;
             eeconfig_update_kb(dev_info.raw);
             LCD_Page_update(dev_info.LCD_PAGE);
             set_single_persistent_default_layer(layer_save);

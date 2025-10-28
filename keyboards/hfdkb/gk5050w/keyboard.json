@@ -14,11 +14,18 @@
     "diode_direction": "ROW2COL",
     "features": {
         "bootmagic": true,
+        "cammand": false,
+        "console": false,
         "extrakey": true,
         "mousekey": true,
         "nkro": true,
         "rgb_matrix": true,
         "encoder": true
+    },
+    "host": {
+        "nkro": {
+            "default": true
+        }
     },
     "matrix_pins": {
         "cols": ["C1", "C2", "C3", "A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "C4", "C5", "B0", "B1"],
@@ -30,6 +37,9 @@
             "driver": "spi_flash",
             "backing_size": 8192
         }
+    },
+    "dynamic_keymap": {
+        "layer_count": 6
     },
     "encoder": {
         "rotary": [

@@ -20,9 +20,6 @@
 
 /* Multimode config */
 #ifdef MULTI_MODE_ENABLE
-#    define NO_USB_STARTUP_CHECK
-#    define ENTRY_STOP_MODE
-
 #    define BT_CABLE_PIN B8
 #    define BT_CHARGE_PIN B9
 
@@ -36,6 +33,8 @@
 #define LED_BT3 26
 #define LED_2G 25
 #define LED_USB 0xFF
+#define LED_CAPS_LOCK 58
+#define LED_WIN_LOCK 81
 
 /* SPI Config for spi flash*/
 #define SPI_DRIVER SPIDQ

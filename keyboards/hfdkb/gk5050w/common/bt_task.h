@@ -13,6 +13,7 @@
 #include "quantum.h"
 #include "common/bts_lib.h"
 #include "../lcd_drv/lcd.h"
+#include "../led/led.h"
 
 enum bt_keycodes {
     BT_HOST1 = QK_KB_0,
@@ -20,12 +21,22 @@ enum bt_keycodes {
     BT_HOST3,
     BT_2_4G,
     BT_VOL,
+    KC_SSHOT,
+    SW_OS1,
+
     LCD_HOME,
     LCD_PAGE,
     LCD_MOD,
     LCD_SW,
-    KC_SSHOT,
-    SW_OS1,
+
+    SLED_MOD,
+    SLED_HUI,
+    SLED_VAI,
+    SLED_VAD,
+    SLED_SPI,
+    SLED_SPD,
+    SLED_TOG,
+
     RGB_TEST,
 };
 
@@ -36,10 +47,10 @@ enum bt_keycodes {
 typedef union {
     uint32_t raw;
     struct {
-        uint8_t devs;
-        uint8_t last_devs;
-        uint8_t LCD_PAGE;
-        bool    sleep_off_flag;
+        uint8_t     devs : 3;
+        uint8_t     last_devs : 3;
+        uint8_t     LCD_PAGE : 2;
+        SLed_info_t SLed_info;
     };
 } dev_info_t;
 
