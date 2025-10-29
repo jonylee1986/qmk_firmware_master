@@ -147,6 +147,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     if (!process_record_user(keycode, record)) {
         return false;
     }
+
     switch (keycode) {
         case QK_RGB_MATRIX_TOGGLE: {
             if (record->event.pressed) {
@@ -178,7 +179,7 @@ bool dip_switch_update_kb(uint8_t index, bool active) {
         return false;
     }
 
-    if (active) {
+    if (!active) {
         set_single_persistent_default_layer(0);
     } else {
         if (keymap_config.no_gui) {

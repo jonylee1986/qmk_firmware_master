@@ -118,23 +118,15 @@ void bled_task(void) {
         }
 
         case BLED_MODE_SOLID: {
-            if (dev_info.bled_color == COLOR_RAINBOW) {
-                // Rainbow
-                for (uint8_t i = 0; i < BLED_LED_NUM; i++) {
-                    HSV hsv = {i * 127, 255, bled_info.bled_val};
-                    RGB rgb = hsv_to_rgb(hsv);
-                    rgb_matrix_set_color(bled_leds[i], rgb.r, rgb.g, rgb.b);
-                }
-            } else {
-                HSV hsv;
-                hsv.h   = hsv_table[dev_info.bled_color - 1][0];
-                hsv.s   = hsv_table[dev_info.bled_color - 1][1];
-                hsv.v   = bled_info.bled_val;
-                RGB rgb = hsv_to_rgb(hsv);
-                for (uint8_t i = 0; i < BLED_LED_NUM; i++) {
-                    rgb_matrix_set_color(bled_leds[i], rgb.r, rgb.g, rgb.b);
-                }
+            HSV hsv;
+            hsv.h   = hsv_table[dev_info.bled_color - 1][0];
+            hsv.s   = hsv_table[dev_info.bled_color - 1][1];
+            hsv.v   = bled_info.bled_val;
+            RGB rgb = hsv_to_rgb(hsv);
+            for (uint8_t i = 0; i < BLED_LED_NUM; i++) {
+                rgb_matrix_set_color(bled_leds[i], rgb.r, rgb.g, rgb.b);
             }
+
             break;
         }
 
@@ -294,6 +286,11 @@ void sled_task(void) {
             break;
         }
 
+        case SLED_MODE_CHARGED: {
+            bled_charged_indicate();
+            break;
+        }
+
         default:
             break;
     }
@@ -326,11 +323,8 @@ void bled_charging_indicate(void) {
 }
 
 void bled_charged_indicate(void) {
-    uint8_t time = scale16by8(g_rgb_timer, qadd8(bled_info.sled_speed / 4, 1));
     for (uint8_t i = 0; i < SLED_LED_NUM; i++) {
-        HSV hsv = {g_led_config.point[i].x - time, 255, bled_info.sled_val};
-        RGB rgb = hsv_to_rgb(hsv);
-        rgb_matrix_set_color(sled_leds[i], rgb.r, rgb.g, rgb.b);
+        rgb_matrix_set_color(sled_leds[i], RGB_GREEN);
     }
 }
 
@@ -362,7 +356,6 @@ void bled_vol_indicate(void) {
         color = (RGB){0, 100, 0}; // 绿色
     }
 
-    // 点亮LED
     for (uint8_t i = 0; i < led_count; i++) {
         rgb_matrix_set_color(query_index[i], color.r, color.g, color.b);
     }
@@ -374,8 +367,7 @@ void bled_init(void) {
 }
 
 void bled_eeconfig_init(void) {
-    dev_info.sled_mode = SLED_MODE_FLOW;
-    // dev_info.sled_mode = 7;
+    dev_info.sled_mode = SLED_MODE_VOL;
 
     dev_info.bled_mode  = BLED_MODE_SOLID;
     dev_info.bled_color = COLOR_ORIANGE;

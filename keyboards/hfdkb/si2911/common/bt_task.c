@@ -135,6 +135,9 @@ static bool kb_sleep_flag  = false;
 
 bool backlight_sleep_flag = false;
 
+uint8_t pre_chrg_sled_mode = SLED_MODE_FLOW;
+uint8_t aft_chrg_sled_mode = SLED_MODE_FLOW;
+
 // static bool long_pressed_flag = false;
 
 // Device indicator config
@@ -753,8 +756,22 @@ static bool bt_process_record_other(uint16_t keycode, keyrecord_t *record) {
         case BT_VOL: {
             if (record->event.pressed) {
                 bts_send_vendor(v_query_vol);
-                query_vol_flag     = true;
-                dev_info.sled_mode = 7;
+                query_vol_flag = true;
+                if (!readPin(MM_CABLE_PIN) && !readPin(MM_CHARGE_PIN)) {
+                    // bled_charging_indicate();
+                    if (dev_info.sled_mode != SLED_MODE_CHARGE) {
+                        pre_chrg_sled_mode = dev_info.sled_mode;
+                    }
+                    dev_info.sled_mode = SLED_MODE_CHARGE;
+                } else if (!readPin(MM_CABLE_PIN) && readPin(MM_CHARGE_PIN)) {
+                    if (dev_info.sled_mode != SLED_MODE_CHARGED) {
+                        aft_chrg_sled_mode = dev_info.sled_mode;
+                    }
+                    dev_info.sled_mode = SLED_MODE_CHARGED;
+                } else {
+                    dev_info.sled_mode = SLED_MODE_VOL;
+                    eeconfig_update_user(dev_info.raw);
+                }
             } else {
                 query_vol_flag = false;
             }
@@ -765,10 +782,6 @@ static bool bt_process_record_other(uint16_t keycode, keyrecord_t *record) {
 
         case RGB_TEST: {
             if (record->event.pressed) {
-                // if (rgb_test_en) {
-                //     rgb_test_en    = false;
-                //     rgb_test_index = 0;
-                // }
                 if (!rgb_test_en) {
                     rgb_test_en = true;
                 } else {
@@ -776,6 +789,15 @@ static bool bt_process_record_other(uint16_t keycode, keyrecord_t *record) {
                 }
             }
         } break;
+
+        case RM_NEXT: {
+            if (!record->event.pressed) {
+                if (rgb_test_en) {
+                    rgb_test_en = false;
+                    return false;
+                }
+            }
+        }
 
         default:
             return true;
@@ -801,6 +823,7 @@ static void bt_long_pressed_keys_cb(uint16_t keycode) {
 
         case EE_CLR: {
             if (!EE_CLR_flag) {
+                rgb_test_en       = false;
                 EE_CLR_flag       = true;
                 EE_CLR_press_time = timer_read32();
                 EE_CLR_press_cnt  = 1;
@@ -1120,44 +1143,48 @@ static void bt_bat_low_level_warning(void) {
 }
 
 static void bt_charging_indication(void) {
-    static uint32_t charging_time      = 0;
-    static uint32_t charged_time       = 0;
-    static bool     charged_indicated  = false;
-    static bool     charging_indicated = false;
-    static uint8_t  prev_sled_mode     = 0;
+    static uint32_t charging_time = 0;
+    static uint32_t charged_time  = 0;
+    static bool     f_charging    = false;
+    static bool     f_charged     = false;
 
     if (!readPin(MM_CABLE_PIN)) {
         if (!readPin(MM_CHARGE_PIN)) {
             // Charging
             charged_time = timer_read32();
             if (timer_elapsed32(charging_time) >= 2000) {
-                if (!charging_indicated) {
-                    charging_indicated = true;
+                if (!f_charging) {
+                    f_charging = true;
                     // bled_charging_indicate();
-                    prev_sled_mode     = dev_info.sled_mode;
-                    dev_info.sled_mode = 6;
+                    if (dev_info.sled_mode != SLED_MODE_CHARGE) {
+                        pre_chrg_sled_mode = dev_info.sled_mode;
+                    }
+                    dev_info.sled_mode = SLED_MODE_CHARGE;
                 }
             }
         } else {
             // Charged full
+            charging_time = timer_read32();
             if (timer_elapsed32(charged_time) >= 2000) {
-                // bled_charged_indicate();
-                if (!charged_indicated) {
-                    charged_indicated  = true;
-                    dev_info.sled_mode = 0;
+                if (!f_charged) {
+                    f_charged = true;
+                    // bled_charged_indicate();
+                    if (dev_info.sled_mode != SLED_MODE_CHARGED) {
+                        aft_chrg_sled_mode = pre_chrg_sled_mode;
+                    }
+                    dev_info.sled_mode = SLED_MODE_CHARGED;
                 }
             }
         }
     } else {
-        // dev_info.sled_mode = prev_sled_mode;
-        // dev_info.sled_mode = 1;
-        if (dev_info.sled_mode == 6) {
-            dev_info.sled_mode = prev_sled_mode;
+        if (f_charging) {
+            f_charging         = false;
+            dev_info.sled_mode = pre_chrg_sled_mode;
         }
-
-        charging_indicated = false;
-        charged_indicated  = false;
-        charging_time      = timer_read32();
+        if (f_charged) {
+            f_charged          = false;
+            dev_info.sled_mode = aft_chrg_sled_mode;
+        }
     }
 }
 
@@ -1299,7 +1326,7 @@ bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
     factory_reset_indicate();
 
     // rgb test
-    if (rgb_test_en) {
+    if (rgb_test_en && rgb_matrix_get_flags()) {
         // if (timer_elapsed32(rgb_test_time) >= 1000) {
         //     rgb_test_time = timer_read32();
         //     rgb_test_index++;
@@ -1311,7 +1338,7 @@ bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
         // for (uint8_t i = led_min; i < led_max; i++) {
         //     rgb_matrix_set_color(i, rgb_test_color_table[rgb_test_index - 1][0], rgb_test_color_table[rgb_test_index - 1][1], rgb_test_color_table[rgb_test_index - 1][2]);
         // }
-        for (uint8_t i = led_min; i < led_max; i++) {
+        for (uint8_t i = 0; i < 100; i++) {
             rgb_matrix_set_color(i, rgb_test_color_table[3][0], rgb_test_color_table[3][1], rgb_test_color_table[3][2]);
         }
     }

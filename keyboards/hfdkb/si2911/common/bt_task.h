@@ -48,10 +48,10 @@ typedef union {
     struct {
         uint8_t devs;
         uint8_t last_devs;
-        uint8_t bled_mode : 3;  // Mode
-        uint8_t bled_color : 5; // Color
-        uint8_t sled_mode : 3;  // Mode
-        uint8_t sled_color : 5; // Color
+        uint8_t bled_color : 4;
+        uint8_t bled_mode : 4;
+        uint8_t sled_color : 4;
+        uint8_t sled_mode : 4;
     };
 } dev_info_t;
 

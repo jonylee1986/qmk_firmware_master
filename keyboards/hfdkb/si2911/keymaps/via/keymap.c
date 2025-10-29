@@ -82,6 +82,8 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 
 // static bool     mode_long_pressed_flag = false;
 // static uint32_t mode_long_pressed_time = 0;
+extern uint8_t pre_chrg_sled_mode;
+extern uint8_t aft_chrg_sled_mode;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 #ifdef MULTIMODE_ENABLE
@@ -95,9 +97,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case BLED_MOD: {
             if (record->event.pressed) {
                 if (keycode == SLED_MOD) {
-                    if (dev_info.sled_mode == SLED_MODE_VOL) {
-                        dev_info.sled_mode = SLED_MODE_FLOW;
-                    } else if (dev_info.sled_mode == SLED_MODE_CHARGE) {
+                    if (dev_info.sled_mode == SLED_MODE_CHARGE) {
+                        dev_info.sled_mode = pre_chrg_sled_mode;
+                    } else if (dev_info.sled_mode == SLED_MODE_CHARGED) {
+                        dev_info.sled_mode = aft_chrg_sled_mode;
+                    } else if (dev_info.sled_mode == SLED_MODE_VOL) {
                         dev_info.sled_mode = SLED_MODE_FLOW;
                     } else {
                         dev_info.sled_mode = (dev_info.sled_mode + 1) % SLED_MODE_COUNT;
@@ -158,7 +162,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 if (keycode == SLED_HUI) {
                     dev_info.sled_color = (dev_info.sled_color == COLOR_WHITE) ? COLOR_RAINBOW : (dev_info.sled_color + 1);
                 } else {
-                    dev_info.bled_color = (dev_info.bled_color == COLOR_WHITE) ? COLOR_RAINBOW : (dev_info.bled_color + 1);
+                    dev_info.bled_color = (dev_info.bled_color == COLOR_WHITE) ? COLOR_RED : (dev_info.bled_color + 1);
                 }
                 eeconfig_update_user(dev_info.raw);
             }
@@ -206,7 +210,7 @@ void keyboard_post_init_user(void) {
         eeconfig_update_keymap(&keymap_config);
     }
     bled_init();
-    dev_info.sled_mode = 7;
+    // dev_info.sled_mode = 7;
 }
 
 void eeconfig_init_user(void) {
