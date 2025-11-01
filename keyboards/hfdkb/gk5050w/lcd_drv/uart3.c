@@ -17,6 +17,7 @@
 #include "uart3.h"
 
 #include "quantum.h"
+#include "../common/bt_task.h"
 
 #if defined(MCU_KINETIS)
 static SerialConfig serialConfig = {SERIAL_DEFAULT_BITRATE};
@@ -60,6 +61,7 @@ uint8_t uart3_read(void) {
 }
 
 void uart3_transmit(const uint8_t *data, uint16_t length) {
+    if (LCD_DONT_SEND) return;
     sdWrite(&SERIAL3_DRIVER, data, length);
 }
 

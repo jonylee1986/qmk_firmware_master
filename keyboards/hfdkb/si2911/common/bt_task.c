@@ -157,7 +157,7 @@ static const uint8_t rgb_test_color_table[][3] = {
     {100, 0, 0},
     {0, 100, 0},
     {0, 0, 100},
-    {50, 50, 50},
+    {90, 100, 100},
 };
 // static uint8_t  rgb_test_index  = 0;
 static bool rgb_test_en = false;

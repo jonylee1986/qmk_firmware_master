@@ -22,7 +22,7 @@ void LCD_IND_update(void) {
         IND_data[1] |= 0x08;
     else
         IND_data[1] &= ~0x08;
-    if ((get_highest_layer(default_layer_state) == 2))
+    if ((get_highest_layer(default_layer_state) == 3))
         IND_data[1] |= 0x10;
     else
         IND_data[1] &= ~0x10;
@@ -83,10 +83,10 @@ void LCD_vol_update(bool vol_inc) {
 }
 
 void LCD_charge_update(void) {
-    #if 0
-    uint8_t charge_data[3];
+    uint8_t charge_data[3] = {0};
+
     charge_data[0] = 0x04;
-    charge_data[1] = bts_info.bt_info.pvol;
+    // charge_data[1] = bts_info.bt_info.pvol;
 
     if (!readPin(BT_CABLE_PIN))
         charge_data[1] |= 0x80;
@@ -94,7 +94,6 @@ void LCD_charge_update(void) {
         charge_data[1] &= ~0x80;
     charge_data[2] = charge_data[0] + charge_data[1];
     uart3_transmit(charge_data, 3);
-#endif
 }
 
 void LCD_command_update(uint8_t LCD_command) {

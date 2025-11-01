@@ -20,11 +20,12 @@
         "mousekey": true,
         "nkro": true,
         "rgb_matrix": true,
-        "encoder": true
+        "encoder": true,
+        "dip_switch": true
     },
     "host": {
-        "nkro": {
-            "default": true
+        "default": {
+            "nkro": true
         }
     },
     "matrix_pins": {
@@ -45,6 +46,9 @@
         "rotary": [
             {"pin_a": "B10", "pin_b": "B11"}
         ]
+    },
+    "dip_switch": {
+        "pins": ["B2"]
     },
     "ws2812": {
         "pin": "C15"

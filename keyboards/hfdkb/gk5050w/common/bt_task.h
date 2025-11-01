@@ -20,14 +20,20 @@ enum bt_keycodes {
     BT_HOST2,
     BT_HOST3,
     BT_2_4G,
+    BT_USB,
     BT_VOL,
-    KC_SSHOT,
     SW_OS1,
 
-    LCD_HOME,
-    LCD_PAGE,
-    LCD_MOD,
-    LCD_SW,
+    KC_TASK,
+    KC_PRJT,
+    KC_SEAR,
+    KC_SNAP,
+    KC_SIRI,
+
+    LCD_TOGG,
+    LCD_ENTER,
+    LCD_LEFT,
+    LCD_RIGHT,
 
     SLED_MOD,
     SLED_HUI,
@@ -56,6 +62,8 @@ typedef union {
 
 extern dev_info_t dev_info;
 extern bts_info_t bts_info;
+
+extern bool LCD_DONT_SEND;
 
 /**
  * @brief bluetooth 初始化函数
@@ -98,8 +106,8 @@ enum _led_ble {
     LED_BLE_CONN,
 };
 
-#define BLE_CONN_TIMEOUT (180 * 1000)
-#define BLE_PAIR_TIMEOUT (180 * 1000)
+#define BLE_CONN_TIMEOUT ((120 + 30) * 1000)
+#define BLE_PAIR_TIMEOUT ((120 + 30) * 1000)
 #define LED_BLE_PAIR_INTVL_MS (200)
 #define LED_BLE_CONN_INTVL_MS (500)
 

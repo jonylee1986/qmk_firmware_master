@@ -238,7 +238,7 @@ bool rgb_matrix_indicators_user(void) {
 }
 
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
-    if (rgb_matrix_get_flags()) {
+    if (!backlight_sleep_flag && rgb_matrix_get_flags()) {
         bled_task();
         sled_task();
     }

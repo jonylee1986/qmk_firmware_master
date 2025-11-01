@@ -23,7 +23,7 @@
 #    define BT_CABLE_PIN B8
 #    define BT_CHARGE_PIN B9
 
-#    define BT_MODE_SW_PIN C13
+// #    define BT_MODE_SW_PIN C13
 #    define RF_MODE_SW_PIN C14
 #endif
 
@@ -32,9 +32,14 @@
 #define LED_BT2 27
 #define LED_BT3 26
 #define LED_2G 25
-#define LED_USB 0xFF
+#define LED_USB 24
 #define LED_CAPS_LOCK 58
 #define LED_WIN_LOCK 81
+
+/* LED Indicator pin */
+#define LED_CHRG_PIN B13
+#define LED_DOWN_PIN A8
+#define LED_UNUSE_PIN B12
 
 /* SPI Config for spi flash*/
 #define SPI_DRIVER SPIDQ
