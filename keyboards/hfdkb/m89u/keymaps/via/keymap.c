@@ -327,8 +327,6 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     }
 #    endif
 
-    // num_lock_indicator();
-
     // All LEDs blink
     if (single_blink_cnt) {
         if (timer_elapsed32(single_blink_time) > 300) {

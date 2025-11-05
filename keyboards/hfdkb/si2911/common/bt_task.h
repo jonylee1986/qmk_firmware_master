@@ -24,6 +24,7 @@ enum multimode_keycodes {
     BT_2_4G,
     BT_USB,
     BT_VOL,
+
     BLED_MOD,
     BLED_HUI,
     BLED_VAI,
@@ -32,6 +33,7 @@ enum multimode_keycodes {
     SLED_HUI,
     SLED_VAI,
     SLED_SPI,
+
     RGB_TEST,
     WIN_TSK,
 };

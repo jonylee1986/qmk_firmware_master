@@ -81,14 +81,10 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 #define MODE_ROW 3
 #define MODE_COLUMN 18
 
-// uint8_t sled_mode_before_charge = SLED_MODE_VOL;
-// uint8_t sled_mode_before_vol    = SLED_MODE_VOL;
 uint8_t sled_mode_before_charge = SLED_MODE_VOL;
 
-// static bool     mode_long_pressed_flag = false;
-// static uint32_t mode_long_pressed_time = 0;
-// extern uint8_t pre_chrg_sled_mode;
-// extern uint8_t aft_chrg_sled_mode;
+extern bool show_charging;
+extern bool show_charged;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 #ifdef MULTIMODE_ENABLE
@@ -102,17 +98,21 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case BLED_MOD: {
             if (record->event.pressed) {
                 if (keycode == SLED_MOD) {
-                    // if (dev_info.sled_mode == SLED_MODE_CHARGE || dev_info.sled_mode == SLED_MODE_CHARGED || dev_info.sled_mode == SLED_MODE_VOL) {
-                    //     if (sled_mode_before_charge == SLED_MODE_VOL) {
-                    //         dev_info.sled_mode = SLED_MODE_FLOW;
-                    //     } else {
-                    //         dev_info.sled_mode = sled_mode_before_charge;
-                    //     }
-                    // } else {
-                    if (readPin(MM_CABLE_PIN)) {
+                    if (show_charging || show_charged) {
+                        if (dev_info.sled_mode == SLED_MODE_VOL) {
+                            dev_info.sled_mode = SLED_MODE_FLOW;
+                        }
+                        show_charging = false;
+                        show_charged  = false;
+                    } else if (dev_info.sled_mode == SLED_MODE_VOL) {
+                        if (sled_mode_before_charge == SLED_MODE_VOL) {
+                            dev_info.sled_mode = SLED_MODE_FLOW;
+                        } else {
+                            dev_info.sled_mode = sled_mode_before_charge;
+                        }
+                    } else {
                         dev_info.sled_mode = (dev_info.sled_mode + 1) % SLED_MODE_COUNT;
                     }
-                    // }
                 } else {
                     dev_info.bled_mode = (dev_info.bled_mode + 1) % BLED_MODE_COUNT;
                 }
@@ -256,7 +256,16 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
                 rgb_matrix_set_color(i, 0, 0, 0);
             }
         }
-        sled_task();
+        // if (!show_charging && !show_charged) {
+        //     sled_task();
+        // }
+        if (show_charging) {
+            bled_charging_indicate();
+        } else if (show_charged) {
+            bled_charged_indicate();
+        } else {
+            sled_task();
+        }
     }
 
 #ifdef MULTIMODE_ENABLE

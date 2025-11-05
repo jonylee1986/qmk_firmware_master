@@ -39,7 +39,7 @@
 /* LED Indicator pin */
 #define LED_CHRG_PIN B13
 #define LED_DOWN_PIN A8
-#define LED_UNUSE_PIN B12
+#define LED_UNUSED_PIN B12
 
 /* SPI Config for spi flash*/
 #define SPI_DRIVER SPIDQ

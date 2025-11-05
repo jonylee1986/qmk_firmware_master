@@ -779,10 +779,11 @@ static void bt_used_pin_init(void) {
 #if defined(LED_CHRG_PIN) && defined(LED_DOWN_PIN)
     setPinOutputPushPull(LED_CHRG_PIN);
     setPinOutputPushPull(LED_DOWN_PIN);
-    setPinInput(LED_UNUSE_PIN);
+    setPinOutputPushPull(LED_UNUSED_PIN);
 
     writePinHigh(LED_CHRG_PIN);
     writePinHigh(LED_DOWN_PIN);
+    writePinHigh(LED_UNUSED_PIN);
 #endif
 }
 
@@ -1037,11 +1038,13 @@ void led_ble(void) {
 }
 
 uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
-    uint8_t         uart_data_read[3] = {0};
-    uint8_t         uart_data_send[3] = {0};
-    static uint32_t query_vol_time    = 0;
-    static uint32_t charg_full_time   = 0;
-    static uint32_t charging_time     = 0;
+    uint8_t uart_data_read[3] = {0};
+    uint8_t uart_data_send[3] = {0};
+
+    static uint32_t query_vol_time       = 0;
+    static uint32_t charg_full_time      = 0;
+    static uint32_t charging_time        = 0;
+    static uint32_t charg_full_hold_time = 0;
     /*************************************************************************************/
     if (EE_CLR_flag) {
         if (timer_elapsed32(EE_CLR_press_time) >= EE_CLR_press_cnt * 300) {
@@ -1111,23 +1114,22 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
 
     if (!readPin(BT_CABLE_PIN)) {
         if (!readPin(BT_CHARGE_PIN)) {
-            // 正在充电
-            if (timer_elapsed32(charging_time) > 2000) {
+            if (timer_elapsed32(charging_time) > 1200) {
                 writePinLow(LED_CHRG_PIN);
                 writePinHigh(LED_DOWN_PIN);
             }
-            charg_full_time = timer_read32();
+            charg_full_time      = timer_read32();
+            charg_full_hold_time = timer_read32();
         } else {
-            // 充满
-            if (timer_elapsed32(charg_full_time) > 2000) {
-                writePinHigh(LED_CHRG_PIN);
-                writePinLow(LED_DOWN_PIN);
+            if (timer_elapsed32(charg_full_time) > 1200) {
+                if (timer_elapsed32(charg_full_hold_time) < 3000) {
+                    writePinHigh(LED_CHRG_PIN);
+                    writePinLow(LED_DOWN_PIN);
+                }
             }
             charging_time = timer_read32();
         }
     } else {
-        charging_time   = timer_read32();
-        charg_full_time = timer_read32();
         writePinHigh(LED_CHRG_PIN);
         writePinHigh(LED_DOWN_PIN);
     }

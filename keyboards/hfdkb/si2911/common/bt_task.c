@@ -182,6 +182,9 @@ mode_t mode = MODE_WORKING;
 // USB related
 static uint32_t USB_switch_time = 0;
 
+bool show_charging = false;
+bool show_charged  = false;
+
 #include "command.h"
 #include "action.h"
 
@@ -758,17 +761,19 @@ static bool bt_process_record_other(uint16_t keycode, keyrecord_t *record) {
                 query_vol_flag = true;
 
                 extern uint8_t sled_mode_before_charge;
-                //     sled_mode_before_charge = dev_info.sled_mode;
-                //     dev_info.sled_mode      = SLED_MODE_CHARGE;
-                // } else if (!readPin(MM_CABLE_PIN) && readPin(MM_CHARGE_PIN)) {
-                //     sled_mode_before_charge = dev_info.sled_mode;
-                //     dev_info.sled_mode      = SLED_MODE_CHARGED;
-                // } else {
-                if (readPin(MM_CABLE_PIN)) {
+
+                if (!readPin(MM_CABLE_PIN) && !readPin(MM_CHARGE_PIN)) {
+                    // sled_mode_before_charge = dev_info.sled_mode;
+                    // dev_info.sled_mode = SLED_MODE_CHARGE;
+                    show_charging = true;
+                } else if (!readPin(MM_CABLE_PIN) && readPin(MM_CHARGE_PIN)) {
+                    // dev_info.sled_mode = SLED_MODE_CHARGED;
+                    show_charged = true;
+                } else {
                     sled_mode_before_charge = dev_info.sled_mode;
                     dev_info.sled_mode      = SLED_MODE_VOL;
+                    eeconfig_update_user(dev_info.raw);
                 }
-                //     eeconfig_update_user(dev_info.raw);
             } else {
                 query_vol_flag = false;
             }
@@ -1120,17 +1125,17 @@ static void usb_indicate(void) {
 // Battery low level warning functions
 // ===========================================
 static void bt_bat_low_level_warning(void) {
-    static bool     Low_power_bink = false;
-    static bool     Low_power      = false;
+    static bool Low_power_bink = false;
+    // static bool     Low_power      = false;
     static uint32_t Low_power_time = 0;
 
-    if (bts_info.bt_info.low_vol && !Low_power) {
-        Low_power = true;
-    } else if ((bts_info.bt_info.pvol > 60) && Low_power) {
-        Low_power = false;
-    }
+    // if (bts_info.bt_info.low_vol && !Low_power) {
+    //     Low_power = true;
+    // } else if ((bts_info.bt_info.pvol > 60) && Low_power) {
+    //     Low_power = false;
+    // }
 
-    if (Low_power) {
+    if (bts_info.bt_info.low_vol) {
         rgb_matrix_set_color_all(RGB_OFF);
         if (timer_elapsed32(Low_power_time) >= 500) {
             Low_power_bink = !Low_power_bink;
@@ -1149,41 +1154,51 @@ static void bt_bat_low_level_warning(void) {
 static void bt_charging_indication(void) {
     static uint32_t charging_time = 0;
     static uint32_t charged_time  = 0;
-    // static bool     f_charging    = false;
-    // static bool     f_charged     = false;
-
-    extern uint8_t sled_mode_before_charge;
+    static bool     f_charging    = false;
+    static bool     f_charged     = false;
 
     if (!readPin(MM_CABLE_PIN)) {
-        // old_sled_mode = dev_info.sled_mode;
         if (!readPin(MM_CHARGE_PIN)) {
-            // Charging
             charged_time = timer_read32();
             if (timer_elapsed32(charging_time) >= 1200) {
-                // if (!f_charging) {
-                //     f_charging = true;
-                //     if (dev_info.sled_mode != SLED_MODE_CHARGE) {
-                //         sled_mode_before_charge = dev_info.sled_mode;
-                //         dev_info.sled_mode      = SLED_MODE_CHARGE;
-                //     }
-                // }
-                bled_charging_indicate();
+                if (!f_charging) {
+                    f_charging    = true;
+                    f_charged     = false;
+                    show_charging = true;
+                    // if (dev_info.sled_mode != SLED_MODE_CHARGE) {
+                    // sled_mode_before_charge = dev_info.sled_mode;
+                    //     dev_info.sled_mode = SLED_MODE_CHARGE;
+                    // }
+                }
+                // bled_charging_indicate();
             }
         } else {
-            // Charged full
             charging_time = timer_read32();
             if (timer_elapsed32(charged_time) >= 1200) {
-                // if (!f_charged) {
-                //     f_charged = true;
-                //     if (dev_info.sled_mode != SLED_MODE_CHARGED) {
-                //         sled_mode_before_charge = dev_info.sled_mode;
-                //         dev_info.sled_mode      = SLED_MODE_CHARGED;
-                //     }
-                // }
-                bled_charged_indicate();
+                if (!f_charged) {
+                    f_charged    = true;
+                    f_charging   = false;
+                    show_charged = true;
+                    // if (dev_info.sled_mode != SLED_MODE_CHARGED) {
+                    // sled_mode_before_charge = dev_info.sled_mode;
+                    // dev_info.sled_mode = SLED_MODE_CHARGED;
+                    // }
+                }
+                // bled_charged_indicate();
             }
         }
+    } else {
+        f_charging    = false;
+        f_charged     = false;
+        show_charging = false;
+        show_charged  = false;
     }
+    // if (show_charging) {
+    //     bled_charging_indicate();
+    // }
+    // if (show_charged) {
+    //     bled_charged_indicate();
+    // }
 }
 
 static void bt_bat_low_level_shutdown(void) {
@@ -1265,7 +1280,9 @@ static void show_current_keyboard_state(void) {
 
 static void factory_reset_indicate(void) {
     if (EE_CLR_flag) {
-        rgb_matrix_set_color_all(0, 0, 0);
+        for (uint8_t i = 0; i < 100; i++) {
+            rgb_matrix_set_color(i, 0, 0, 0);
+        }
         if (timer_elapsed32(EE_CLR_press_time) > 300) {
             EE_CLR_press_time = timer_read32();
             EE_CLR_press_cnt++;
@@ -1287,7 +1304,9 @@ static void factory_reset_indicate(void) {
             }
         }
         if (EE_CLR_press_cnt & 0x1) {
-            rgb_matrix_set_color_all(0x64, 0x64, 0x64);
+            for (uint8_t i = 0; i < 100; i++) {
+                rgb_matrix_set_color(i, 0x64, 0x64, 0x64);
+            }
         }
     }
 }

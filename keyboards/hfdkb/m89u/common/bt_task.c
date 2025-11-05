@@ -1488,9 +1488,8 @@ static void charging_indicate(void) {
         charge_complete_warning.entry_full_time = now;
     }
 
-    if ((get_battery_charge_state() == BATTERY_STATE_CHARGED_FULL) || first_reach_full) {
-        if (timer_elapsed32(charge_complete_warning.entry_full_time) > 2000 || first_reach_full) {
-            // 充满状态
+    if (((get_battery_charge_state() == BATTERY_STATE_CHARGED_FULL) && first_reach_full) || show_chrg_full_wakeup) {
+        if (timer_elapsed32(charge_complete_warning.entry_full_time) > 1200) {
             if (!is_in_full_power_state) {
                 is_in_full_power_state = true;
                 if (!charge_complete_warning.triggered) {
@@ -1503,7 +1502,6 @@ static void charging_indicate(void) {
                 }
             }
 
-            // 只有在未完成闪烁且闪烁次数未达到5次时才显示充电指示
             if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 6) {
                 if (timer_elapsed32(charge_complete_warning.blink_time) >= 1000) {
                     charge_complete_warning.blink_time  = now;
@@ -1521,7 +1519,6 @@ static void charging_indicate(void) {
                     }
                 }
 
-                // 显示充电完成闪烁
                 if (charge_complete_warning.blink_state) {
                     rgb_matrix_set_color(22, 0, 200, 0);
                 } else {
@@ -1530,7 +1527,6 @@ static void charging_indicate(void) {
             }
         }
     } else {
-        // 充电线未接入，重置充电状态
         if (is_in_full_power_state) {
             charge_full            = false;
             is_in_full_power_state = false;
@@ -1543,7 +1539,6 @@ static void charging_indicate(void) {
 
 static void bt_bat_low_level_warning(void) {
     if (bts_info.bt_info.low_vol) {
-        // rgb_matrix_set_color_all(RGB_OFF);
         if (!is_in_low_power_state) {
             is_in_low_power_state = true;
 
