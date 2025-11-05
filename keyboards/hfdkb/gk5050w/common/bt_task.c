@@ -606,6 +606,9 @@ uint8_t  single_blink_cnt;
 uint8_t  single_blink_index;
 uint32_t single_blink_time;
 RGB      single_blink_color = {0};
+uint8_t  all_blink_cnt;
+uint32_t all_blink_time;
+RGB      all_blink_color = {0};
 
 // static uint16_t bt_tap_time;
 
@@ -676,6 +679,21 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
         case EE_CLR: {
         } break;
         case SW_OS1: {
+            if (record->event.pressed) {
+                if (get_highest_layer(default_layer_state) == 0) {
+                    set_single_persistent_default_layer(3);
+                    keymap_config.no_gui = 0;
+                    eeconfig_update_keymap(&keymap_config);
+                    // all_blink_time  = timer_read32();
+                    // all_blink_cnt   = 6;
+                    // all_blink_color = (RGB){100, 100, 100};
+                } else if (get_highest_layer(default_layer_state) == 3) {
+                    set_single_persistent_default_layer(0);
+                    // all_blink_time  = timer_read32();
+                    // all_blink_cnt   = 6;
+                    // all_blink_color = (RGB){100, 100, 100};
+                }
+            }
         } break;
 
         default:
@@ -707,6 +725,7 @@ static void long_pressed_keys_cb(uint16_t keycode) {
                 bt_switch_mode(dev_info.devs, DEVS_2_4G, true);
             }
         } break;
+        case SW_OS1:
         case EE_CLR: {
             if (!EE_CLR_flag) {
                 EE_CLR_flag       = true;
@@ -714,23 +733,23 @@ static void long_pressed_keys_cb(uint16_t keycode) {
                 EE_CLR_press_cnt  = 1;
             }
         } break;
-        case SW_OS1: {
-            if (get_highest_layer(default_layer_state) == 0) {
-                set_single_persistent_default_layer(3);
-                keymap_config.no_gui = 0;
-                eeconfig_update_keymap(&keymap_config);
-                single_blink_time  = timer_read32();
-                single_blink_cnt   = 6;
-                single_blink_index = 66;
-                single_blink_color = (RGB){100, 100, 100};
-            } else if (get_highest_layer(default_layer_state) == 3) {
-                set_single_persistent_default_layer(0);
-                single_blink_time  = timer_read32();
-                single_blink_cnt   = 6;
-                single_blink_index = 66;
-                single_blink_color = (RGB){100, 100, 100};
-            }
-        } break;
+            // case SW_OS1: {
+            // if (get_highest_layer(default_layer_state) == 0) {
+            //     set_single_persistent_default_layer(3);
+            //     keymap_config.no_gui = 0;
+            //     eeconfig_update_keymap(&keymap_config);
+            //     single_blink_time  = timer_read32();
+            //     single_blink_cnt   = 6;
+            //     single_blink_index = 66;
+            //     single_blink_color = (RGB){100, 100, 100};
+            // } else if (get_highest_layer(default_layer_state) == 3) {
+            //     set_single_persistent_default_layer(0);
+            //     single_blink_time  = timer_read32();
+            //     single_blink_cnt   = 6;
+            //     single_blink_index = 66;
+            //     single_blink_color = (RGB){100, 100, 100};
+            // }
+            // } break;
 
         default:
             break;
@@ -833,7 +852,7 @@ static void close_rgb(void) {
         return;
     }
     /*************************************************************************************/
-    if (timer_elapsed32(pressed_time) >= (3 * 60 * 1000)) {
+    if (timer_elapsed32(pressed_time) >= ((3 * 60 - 40) * 1000)) {
         rgb_matrix_disable_noeeprom();
         LCD_command_update(LCD_LIGHT_SLEEP);
         // LCD_DONT_SEND        = true;
@@ -1047,13 +1066,14 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
             }
         }
         if (EE_CLR_press_cnt & 0x1) {
-            if (EE_CLR_press_cnt == 1) {
-                rgb_matrix_set_color_all(100, 0, 0);
-            } else if (EE_CLR_press_cnt == 3) {
-                rgb_matrix_set_color_all(0, 0, 100);
-            } else if (EE_CLR_press_cnt == 5) {
-                rgb_matrix_set_color_all(0, 100, 0);
-            }
+            // if (EE_CLR_press_cnt == 1) {
+            //     rgb_matrix_set_color_all(100, 0, 0);
+            // } else if (EE_CLR_press_cnt == 3) {
+            //     rgb_matrix_set_color_all(0, 0, 100);
+            // } else if (EE_CLR_press_cnt == 5) {
+            //     rgb_matrix_set_color_all(0, 100, 0);
+            // }
+            rgb_matrix_set_color_all(100, 100, 100);
         } else {
             rgb_matrix_set_color_all(0, 0, 0);
         }
@@ -1069,6 +1089,22 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
             rgb_matrix_set_color(single_blink_index, single_blink_color.r, single_blink_color.g, single_blink_color.b);
         } else {
             rgb_matrix_set_color(single_blink_index, 0, 0, 0);
+        }
+    }
+    /*************************************************************************************/
+    if (all_blink_cnt) {
+        if (timer_elapsed32(all_blink_time) > 300) {
+            all_blink_time = timer_read32();
+            all_blink_cnt--;
+        }
+        if (all_blink_cnt % 2) {
+            for (uint8_t i = led_min; i <= 82; i++) {
+                rgb_matrix_set_color(i, all_blink_color.r, all_blink_color.g, all_blink_color.b);
+            }
+        } else {
+            for (uint8_t i = led_min; i <= 82; i++) {
+                rgb_matrix_set_color(i, RGB_OFF);
+            }
         }
     }
     /*************************************************************************************/

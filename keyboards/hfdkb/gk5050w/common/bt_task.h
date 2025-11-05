@@ -106,9 +106,9 @@ enum _led_ble {
     LED_BLE_CONN,
 };
 
-#define BLE_CONN_TIMEOUT ((120 + 30) * 1000)
-#define BLE_PAIR_TIMEOUT ((120 + 30) * 1000)
-#define LED_BLE_PAIR_INTVL_MS (200)
-#define LED_BLE_CONN_INTVL_MS (500)
+#define BLE_CONN_TIMEOUT (1 * 60 * 1000)
+#define BLE_PAIR_TIMEOUT (1 * 60 * 1000)
+#define LED_BLE_PAIR_INTVL_MS (500)
+#define LED_BLE_CONN_INTVL_MS (200)
 
 bool get_kb_sleep_flag(void);

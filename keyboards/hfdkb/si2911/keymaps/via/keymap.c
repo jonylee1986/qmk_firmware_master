@@ -21,6 +21,7 @@
 #include "dynamic_keymap.h"
 #include "bled/bled.h"
 #include "lib/lib8tion/lib8tion.h"
+#include "usb_main.h"
 
 enum _layers {
     WIN_BASE,
@@ -80,10 +81,14 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 #define MODE_ROW 3
 #define MODE_COLUMN 18
 
+// uint8_t sled_mode_before_charge = SLED_MODE_VOL;
+// uint8_t sled_mode_before_vol    = SLED_MODE_VOL;
+uint8_t sled_mode_before_charge = SLED_MODE_VOL;
+
 // static bool     mode_long_pressed_flag = false;
 // static uint32_t mode_long_pressed_time = 0;
-extern uint8_t pre_chrg_sled_mode;
-extern uint8_t aft_chrg_sled_mode;
+// extern uint8_t pre_chrg_sled_mode;
+// extern uint8_t aft_chrg_sled_mode;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 #ifdef MULTIMODE_ENABLE
@@ -97,15 +102,17 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case BLED_MOD: {
             if (record->event.pressed) {
                 if (keycode == SLED_MOD) {
-                    if (dev_info.sled_mode == SLED_MODE_CHARGE) {
-                        dev_info.sled_mode = pre_chrg_sled_mode;
-                    } else if (dev_info.sled_mode == SLED_MODE_CHARGED) {
-                        dev_info.sled_mode = aft_chrg_sled_mode;
-                    } else if (dev_info.sled_mode == SLED_MODE_VOL) {
-                        dev_info.sled_mode = SLED_MODE_FLOW;
-                    } else {
+                    // if (dev_info.sled_mode == SLED_MODE_CHARGE || dev_info.sled_mode == SLED_MODE_CHARGED || dev_info.sled_mode == SLED_MODE_VOL) {
+                    //     if (sled_mode_before_charge == SLED_MODE_VOL) {
+                    //         dev_info.sled_mode = SLED_MODE_FLOW;
+                    //     } else {
+                    //         dev_info.sled_mode = sled_mode_before_charge;
+                    //     }
+                    // } else {
+                    if (readPin(MM_CABLE_PIN)) {
                         dev_info.sled_mode = (dev_info.sled_mode + 1) % SLED_MODE_COUNT;
                     }
+                    // }
                 } else {
                     dev_info.bled_mode = (dev_info.bled_mode + 1) % BLED_MODE_COUNT;
                 }
@@ -208,13 +215,16 @@ void keyboard_post_init_user(void) {
     if (keymap_config.no_gui) {
         keymap_config.no_gui = 0;
         eeconfig_update_keymap(&keymap_config);
+        // sled_mode_before_charge = SLED_MODE_VOL;
     }
     bled_init();
-    // dev_info.sled_mode = 7;
 }
 
 void eeconfig_init_user(void) {
     bled_eeconfig_init();
+    // dev_info.sled_mode      = SLED_MODE_VOL;
+    // sled_mode_before_charge = SLED_MODE_VOL;
+    // eeconfig_update_user(dev_info.raw);
 }
 
 void suspend_power_down_user(void) {
@@ -239,7 +249,13 @@ bool rgb_matrix_indicators_user(void) {
 
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     if (!backlight_sleep_flag && rgb_matrix_get_flags()) {
-        bled_task();
+        if (!readPin(MM_CABLE_PIN)) {
+            bled_task();
+        } else {
+            for (uint8_t i = 100; i < 102; i++) {
+                rgb_matrix_set_color(i, 0, 0, 0);
+            }
+        }
         sled_task();
     }
 
@@ -303,6 +319,39 @@ void housekeeping_task_user(void) {
 void matrix_scan_user(void) {
 #ifdef MULTIMODE_ENABLE
     bt_task();
+#endif
+
+#ifdef USB_SUSPEND_CHECK_ENABLE
+    static uint32_t usb_suspend_timer = 0;
+    static uint32_t usb_suspend       = false;
+
+    if (dev_info.devs == DEVS_USB) {
+        if (USB_DRIVER.state != USB_ACTIVE || USB_DRIVER.state == USB_SUSPENDED) {
+            if (!usb_suspend_timer) {
+                usb_suspend_timer = timer_read32();
+            } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
+                if (!usb_suspend) {
+                    usb_suspend = true;
+                    led_deconfig_all();
+                }
+                usb_suspend_timer = 0;
+            }
+        } else {
+            if (usb_suspend_timer) {
+                usb_suspend_timer = 0;
+                if (usb_suspend) {
+                    usb_suspend = false;
+                    led_config_all();
+                }
+            }
+        }
+    } else {
+        if (usb_suspend) {
+            usb_suspend_timer = 0;
+            usb_suspend       = false;
+            led_config_all();
+        }
+    }
 #endif
 }
 

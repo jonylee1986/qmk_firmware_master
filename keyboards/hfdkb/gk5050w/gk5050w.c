@@ -29,6 +29,8 @@ static RGB      all_blink_color = {0};
 static bool     lcd_toggle      = false;
 static uint8_t  lcd_page        = 0;
 
+#define ALARM_COLOR_WHITE 0x64, 0x64, 0x64
+
 void set_led_state(void);
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
@@ -88,7 +90,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 if (dev_info.SLed_info.brightness >= (RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP)) {
                     dev_info.SLed_info.brightness = RGB_MATRIX_MAXIMUM_BRIGHTNESS;
                     all_blink_cnt                 = 6;
-                    all_blink_color               = (RGB){RGB_WHITE};
+                    all_blink_color               = (RGB){ALARM_COLOR_WHITE};
                     all_blink_time                = timer_read32();
                 } else {
                     dev_info.SLed_info.brightness += RGB_MATRIX_VAL_STEP;
@@ -103,7 +105,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 if (dev_info.SLed_info.brightness <= RGB_MATRIX_VAL_STEP) {
                     dev_info.SLed_info.brightness = 0;
                     all_blink_cnt                 = 6;
-                    all_blink_color               = (RGB){RGB_WHITE};
+                    all_blink_color               = (RGB){ALARM_COLOR_WHITE};
                     all_blink_time                = timer_read32();
                 } else {
                     dev_info.SLed_info.brightness -= RGB_MATRIX_VAL_STEP;
@@ -119,7 +121,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 if (dev_info.SLed_info.speed >= (UINT8_MAX - RGB_MATRIX_SPD_STEP)) {
                     dev_info.SLed_info.speed = UINT8_MAX;
                     all_blink_cnt            = 6;
-                    all_blink_color          = (RGB){RGB_WHITE};
+                    all_blink_color          = (RGB){ALARM_COLOR_WHITE};
                     all_blink_time           = timer_read32();
                 } else {
                     dev_info.SLed_info.speed += RGB_MATRIX_SPD_STEP;
@@ -134,7 +136,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 if (dev_info.SLed_info.speed <= RGB_MATRIX_SPD_STEP) {
                     dev_info.SLed_info.speed = 0;
                     all_blink_cnt            = 6;
-                    all_blink_color          = (RGB){RGB_WHITE};
+                    all_blink_color          = (RGB){ALARM_COLOR_WHITE};
                     all_blink_time           = timer_read32();
                 } else {
                     dev_info.SLed_info.speed -= RGB_MATRIX_SPD_STEP;
@@ -147,7 +149,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 if (rgb_matrix_get_val() >= (RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP)) {
                     all_blink_cnt   = 6;
-                    all_blink_color = (RGB){RGB_WHITE};
+                    all_blink_color = (RGB){ALARM_COLOR_WHITE};
                     all_blink_time  = timer_read32();
                 }
             }
@@ -157,7 +159,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 if (rgb_matrix_get_val() <= RGB_MATRIX_VAL_STEP) {
                     all_blink_cnt   = 6;
-                    all_blink_color = (RGB){RGB_WHITE};
+                    all_blink_color = (RGB){ALARM_COLOR_WHITE};
                     all_blink_time  = timer_read32();
                 }
             }
@@ -167,7 +169,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 if (rgb_matrix_get_speed() >= (UINT8_MAX - RGB_MATRIX_SPD_STEP)) {
                     all_blink_cnt   = 6;
-                    all_blink_color = (RGB){RGB_WHITE};
+                    all_blink_color = (RGB){ALARM_COLOR_WHITE};
                     all_blink_time  = timer_read32();
                 }
             }
@@ -177,7 +179,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 if (rgb_matrix_get_speed() <= RGB_MATRIX_SPD_STEP) {
                     all_blink_cnt   = 6;
-                    all_blink_color = (RGB){RGB_WHITE};
+                    all_blink_color = (RGB){ALARM_COLOR_WHITE};
                     all_blink_time  = timer_read32();
                 }
             }
@@ -332,6 +334,14 @@ void keyboard_post_init_kb(void) {
 
 void housekeeping_task_kb(void) {
     set_led_state();
+
+#ifdef MULTI_MODE_ENABLE
+    extern void housekeeping_task_bt(void);
+    housekeeping_task_bt();
+#endif
+#ifdef CONSOLE_ENABLE
+    debug_enable = true;
+#endif
 }
 
 bool rgb_matrix_indicators_kb(void) {
@@ -374,13 +384,17 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     }
 
     if (all_blink_cnt) {
-        rgb_matrix_set_color_all(0, 0, 0);
+        for (uint8_t i = led_min; i <= 82; i++) {
+            rgb_matrix_set_color(i, 0, 0, 0);
+        }
         if (timer_elapsed32(all_blink_time) > 300) {
             all_blink_time = timer_read32();
             all_blink_cnt--;
         }
         if (all_blink_cnt & 0x1) {
-            rgb_matrix_set_color_all(all_blink_color.r, all_blink_color.g, all_blink_color.b);
+            for (uint8_t i = led_min; i <= 82; i++) {
+                rgb_matrix_set_color(i, all_blink_color.r, all_blink_color.g, all_blink_color.b);
+            }
         }
     }
 
@@ -391,4 +405,21 @@ void eeconfig_init_kb(void) {
     SLed_eeconfig_init();
 
     eeconfig_init_user();
+}
+
+void suspend_power_down_user(void) {
+    // code will run multiple times while keyboard is suspended
+    extern void led_deconfig_all(void);
+    led_deconfig_all();
+    LCD_command_update(LCD_SLEEP);
+    LCD_DONT_SEND = 1;
+}
+
+void suspend_wakeup_init_user(void) {
+    // code will run on keyboard wakeup
+    extern void led_config_all(void);
+    led_config_all();
+    LCD_DONT_SEND = 0;
+    LCD_command_update(LCD_WAKEUP);
+    set_led_state();
 }

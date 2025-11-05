@@ -43,7 +43,6 @@ static void long_pressed_keys_cb(uint16_t keycode);
 static bool bt_process_record_other(uint16_t keycode, keyrecord_t *record);
 static void bt_scan_mode(void);
 static void bt_used_pin_init(void);
-static void bt_bat_low_level_state(void);
 static void execute_factory_reset(void);
 static void factory_reset_indeicate(void);
 static void blink_effects(void);
@@ -190,6 +189,8 @@ static const uint8_t rgb_test_color_table[][3] = {
 static uint8_t  rgb_test_index = 0;
 static bool     rgb_test_en    = false;
 static uint32_t rgb_test_time  = 0;
+
+static bool show_chrg_full_wakeup = false;
 
 // 闪烁效果相关
 static uint8_t  all_blink_cnt;
@@ -1112,16 +1113,6 @@ static void bt_scan_mode(void) {
 }
 
 // ===========================================
-// 低电量管理函数
-// ===========================================
-static void bt_bat_low_level_state(void) {
-    // 进入低电压状态：电量≤5%且未充电
-    if (bts_info.bt_info.low_vol) {
-        rgb_matrix_set_color_all(RGB_OFF);
-    }
-}
-
-// ===========================================
 // RGB控制函数
 // ===========================================
 void led_config_all(void) {
@@ -1182,9 +1173,21 @@ static void close_rgb(void) {
 static void open_rgb(void) {
     key_press_time = timer_read32();
     if (!sober) {
+        if ((dev_info.devs != DEVS_USB) && (bts_info.bt_info.pvol >= FULL_PVOL_THRESHOLD)) {
+            show_chrg_full_wakeup                   = true;
+            charge_complete_warning.entry_full_time = timer_read32();
+        }
+
 #ifdef RGB_DRIVER_SDB_PIN
         writePinHigh(RGB_DRIVER_SDB_PIN);
 #endif
+
+        low_battery_warning.triggered   = true;
+        low_battery_warning.blink_count = 0;
+        low_battery_warning.blink_time  = timer_read32();
+        low_battery_warning.blink_state = false;
+        low_battery_warning.completed   = false;
+
         if (bak_rgb_toggle) {
             extern bool low_vol_offed_sleep;
             kb_sleep_flag       = false;
@@ -1513,6 +1516,7 @@ static void charging_indicate(void) {
                             charge_complete_warning.completed   = true;
                             charge_complete_warning.blink_state = false;
                             first_reach_full                    = false; // allow future cycles
+                            show_chrg_full_wakeup               = false;
                         }
                     }
                 }
@@ -1538,10 +1542,8 @@ static void charging_indicate(void) {
 }
 
 static void bt_bat_low_level_warning(void) {
-    // update_low_voltage_state();
-
-    // 低电量警告（电量≤20%）
-    if (bts_info.bt_info.pvol <= 20) {
+    if (bts_info.bt_info.low_vol) {
+        // rgb_matrix_set_color_all(RGB_OFF);
         if (!is_in_low_power_state) {
             is_in_low_power_state = true;
 
@@ -1575,13 +1577,6 @@ static void bt_bat_low_level_warning(void) {
             } else {
                 rgb_matrix_set_color(22, 0, 0, 0);
             }
-        }
-    }
-
-    if (bts_info.bt_info.pvol > 20) {
-        if (is_in_low_power_state) {
-            is_in_low_power_state = false;
-            memset(&low_battery_warning, 0, sizeof(low_battery_warning_t));
         }
     }
 }
@@ -1676,14 +1671,10 @@ static void bt_bat_level_display(void) {
 // 主RGB指示器函数
 // ===========================================
 bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
-    if (get_battery_charge_state() != BATTERY_STATE_UNPLUGGED) {
-        if (dev_info.devs != DEVS_USB) {
-            // trurn off backlight when the voltage is low
-            bt_bat_low_level_state();
-        }
+    if ((dev_info.devs != DEVS_USB) && readPin(MM_CABLE_PIN)) {
+        bt_bat_low_level_warning();
+        bt_bat_low_level_shutdown();
     }
-
-    bt_bat_query_period();
 
     // 充电状态指示: only call when pvol first reaches 100 in each cycle
     charging_indicate();
@@ -1696,14 +1687,9 @@ bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
         usb_indicate_led();
     } else {
         bt_indicate_led();
-        if (get_battery_charge_state() == BATTERY_STATE_UNPLUGGED) {
-            // 非充电状态下的其他指示
-            bt_bat_low_level_warning();
-            bt_bat_low_level_shutdown();
-        }
     }
 
-    // Show current device state
+    bt_bat_query_period();
     bt_bat_level_display();
 
     // 闪烁效果处理

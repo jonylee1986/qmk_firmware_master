@@ -30,8 +30,10 @@ static void bt_long_pressed_keys_cb(uint16_t keycode);
 static bool bt_process_record_other(uint16_t keycode, keyrecord_t *record);
 static void bt_used_pin_init(void);
 static void bt_scan_mode(void);
+
 // static void bt_blink_effects(void);
 static void bt_charging_indication(void);
+
 static void bt_bat_low_level_warning(void);
 static void bt_bat_low_level_shutdown(void);
 static void bt_bat_query_period(void);
@@ -134,9 +136,6 @@ static bool sober          = true;
 static bool kb_sleep_flag  = false;
 
 bool backlight_sleep_flag = false;
-
-uint8_t pre_chrg_sled_mode = SLED_MODE_FLOW;
-uint8_t aft_chrg_sled_mode = SLED_MODE_FLOW;
 
 // static bool long_pressed_flag = false;
 
@@ -757,21 +756,19 @@ static bool bt_process_record_other(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 bts_send_vendor(v_query_vol);
                 query_vol_flag = true;
-                if (!readPin(MM_CABLE_PIN) && !readPin(MM_CHARGE_PIN)) {
-                    // bled_charging_indicate();
-                    if (dev_info.sled_mode != SLED_MODE_CHARGE) {
-                        pre_chrg_sled_mode = dev_info.sled_mode;
-                    }
-                    dev_info.sled_mode = SLED_MODE_CHARGE;
-                } else if (!readPin(MM_CABLE_PIN) && readPin(MM_CHARGE_PIN)) {
-                    if (dev_info.sled_mode != SLED_MODE_CHARGED) {
-                        aft_chrg_sled_mode = dev_info.sled_mode;
-                    }
-                    dev_info.sled_mode = SLED_MODE_CHARGED;
-                } else {
-                    dev_info.sled_mode = SLED_MODE_VOL;
-                    eeconfig_update_user(dev_info.raw);
+
+                extern uint8_t sled_mode_before_charge;
+                //     sled_mode_before_charge = dev_info.sled_mode;
+                //     dev_info.sled_mode      = SLED_MODE_CHARGE;
+                // } else if (!readPin(MM_CABLE_PIN) && readPin(MM_CHARGE_PIN)) {
+                //     sled_mode_before_charge = dev_info.sled_mode;
+                //     dev_info.sled_mode      = SLED_MODE_CHARGED;
+                // } else {
+                if (readPin(MM_CABLE_PIN)) {
+                    sled_mode_before_charge = dev_info.sled_mode;
+                    dev_info.sled_mode      = SLED_MODE_VOL;
                 }
+                //     eeconfig_update_user(dev_info.raw);
             } else {
                 query_vol_flag = false;
             }
@@ -862,7 +859,7 @@ static void bt_used_pin_init(void) {
     setPinInputHigh(MM_2G4_MODE_PIN);
 #endif
 #if defined(MM_CABLE_PIN) && defined(MM_CHARGE_PIN)
-    setPinInputHigh(MM_CABLE_PIN);
+    setPinInput(MM_CABLE_PIN);
     setPinInput(MM_CHARGE_PIN);
 #endif
 }
@@ -1124,9 +1121,16 @@ static void usb_indicate(void) {
 // ===========================================
 static void bt_bat_low_level_warning(void) {
     static bool     Low_power_bink = false;
+    static bool     Low_power      = false;
     static uint32_t Low_power_time = 0;
 
-    if (bts_info.bt_info.low_vol) {
+    if (bts_info.bt_info.low_vol && !Low_power) {
+        Low_power = true;
+    } else if ((bts_info.bt_info.pvol > 60) && Low_power) {
+        Low_power = false;
+    }
+
+    if (Low_power) {
         rgb_matrix_set_color_all(RGB_OFF);
         if (timer_elapsed32(Low_power_time) >= 500) {
             Low_power_bink = !Low_power_bink;
@@ -1145,45 +1149,39 @@ static void bt_bat_low_level_warning(void) {
 static void bt_charging_indication(void) {
     static uint32_t charging_time = 0;
     static uint32_t charged_time  = 0;
-    static bool     f_charging    = false;
-    static bool     f_charged     = false;
+    // static bool     f_charging    = false;
+    // static bool     f_charged     = false;
+
+    extern uint8_t sled_mode_before_charge;
 
     if (!readPin(MM_CABLE_PIN)) {
+        // old_sled_mode = dev_info.sled_mode;
         if (!readPin(MM_CHARGE_PIN)) {
             // Charging
             charged_time = timer_read32();
-            if (timer_elapsed32(charging_time) >= 2000) {
-                if (!f_charging) {
-                    f_charging = true;
-                    // bled_charging_indicate();
-                    if (dev_info.sled_mode != SLED_MODE_CHARGE) {
-                        pre_chrg_sled_mode = dev_info.sled_mode;
-                    }
-                    dev_info.sled_mode = SLED_MODE_CHARGE;
-                }
+            if (timer_elapsed32(charging_time) >= 1200) {
+                // if (!f_charging) {
+                //     f_charging = true;
+                //     if (dev_info.sled_mode != SLED_MODE_CHARGE) {
+                //         sled_mode_before_charge = dev_info.sled_mode;
+                //         dev_info.sled_mode      = SLED_MODE_CHARGE;
+                //     }
+                // }
+                bled_charging_indicate();
             }
         } else {
             // Charged full
             charging_time = timer_read32();
-            if (timer_elapsed32(charged_time) >= 2000) {
-                if (!f_charged) {
-                    f_charged = true;
-                    // bled_charged_indicate();
-                    if (dev_info.sled_mode != SLED_MODE_CHARGED) {
-                        aft_chrg_sled_mode = pre_chrg_sled_mode;
-                    }
-                    dev_info.sled_mode = SLED_MODE_CHARGED;
-                }
+            if (timer_elapsed32(charged_time) >= 1200) {
+                // if (!f_charged) {
+                //     f_charged = true;
+                //     if (dev_info.sled_mode != SLED_MODE_CHARGED) {
+                //         sled_mode_before_charge = dev_info.sled_mode;
+                //         dev_info.sled_mode      = SLED_MODE_CHARGED;
+                //     }
+                // }
+                bled_charged_indicate();
             }
-        }
-    } else {
-        if (f_charging) {
-            f_charging         = false;
-            dev_info.sled_mode = pre_chrg_sled_mode;
-        }
-        if (f_charged) {
-            f_charged          = false;
-            dev_info.sled_mode = aft_chrg_sled_mode;
         }
     }
 }
@@ -1200,7 +1198,7 @@ static void bt_bat_low_level_shutdown(void) {
 // ===========================================
 static void bt_bat_query_period(void) {
     static uint32_t query_vol_time = 0;
-    if (!backlight_sleep_flag && !bt_init_time && !kb_sleep_flag && (bts_info.bt_info.paired) && timer_elapsed32(query_vol_time) >= 10000) {
+    if (!backlight_sleep_flag && !bt_init_time && !kb_sleep_flag && (bts_info.bt_info.paired) && (timer_elapsed32(query_vol_time) >= 5000)) {
         query_vol_time = timer_read32();
         bts_send_vendor(v_query_vol);
     }
@@ -1289,7 +1287,7 @@ static void factory_reset_indicate(void) {
             }
         }
         if (EE_CLR_press_cnt & 0x1) {
-            rgb_matrix_set_color_all(0xC8, 0xC8, 0xC8);
+            rgb_matrix_set_color_all(0x64, 0x64, 0x64);
         }
     }
 }
@@ -1298,9 +1296,11 @@ static void factory_reset_indicate(void) {
 // Main RGB indicator functions
 // ===========================================
 bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
-    // if (backlight_sleep_flag) {
-    //     rgb_matrix_set_color_all(RGB_OFF);
-    // }
+    if (rgb_test_en && rgb_matrix_get_flags()) {
+        for (uint8_t i = 0; i < 100; i++) {
+            rgb_matrix_set_color(i, rgb_test_color_table[3][0], rgb_test_color_table[3][1], rgb_test_color_table[3][2]);
+        }
+    }
 
     if ((dev_info.devs != DEVS_USB) && (readPin(MM_CABLE_PIN))) {
         bt_bat_low_level_warning();
@@ -1313,10 +1313,8 @@ bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
         usb_indicate();
     } else {
         bt_indicate();
-        if (readPin(MM_CABLE_PIN)) {
-            bt_bat_query_period();
-            bt_bat_low_level_shutdown();
-        }
+        bt_bat_query_period();
+        bt_bat_low_level_shutdown();
     }
 
     // Charging status indicator
@@ -1326,22 +1324,22 @@ bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
     factory_reset_indicate();
 
     // rgb test
-    if (rgb_test_en && rgb_matrix_get_flags()) {
-        // if (timer_elapsed32(rgb_test_time) >= 1000) {
-        //     rgb_test_time = timer_read32();
-        //     rgb_test_index++;
-        //     if (rgb_test_index > 4) {
-        //         rgb_test_index = 1;
-        //     }
-        // }
+    // if (rgb_test_en && rgb_matrix_get_flags()) {
+    // if (timer_elapsed32(rgb_test_time) >= 1000) {
+    //     rgb_test_time = timer_read32();
+    //     rgb_test_index++;
+    //     if (rgb_test_index > 4) {
+    //         rgb_test_index = 1;
+    //     }
+    // }
 
-        // for (uint8_t i = led_min; i < led_max; i++) {
-        //     rgb_matrix_set_color(i, rgb_test_color_table[rgb_test_index - 1][0], rgb_test_color_table[rgb_test_index - 1][1], rgb_test_color_table[rgb_test_index - 1][2]);
-        // }
-        for (uint8_t i = 0; i < 100; i++) {
-            rgb_matrix_set_color(i, rgb_test_color_table[3][0], rgb_test_color_table[3][1], rgb_test_color_table[3][2]);
-        }
-    }
+    // for (uint8_t i = led_min; i < led_max; i++) {
+    //     rgb_matrix_set_color(i, rgb_test_color_table[rgb_test_index - 1][0], rgb_test_color_table[rgb_test_index - 1][1], rgb_test_color_table[rgb_test_index - 1][2]);
+    // }
+    //     for (uint8_t i = 0; i < 100; i++) {
+    //         rgb_matrix_set_color(i, rgb_test_color_table[3][0], rgb_test_color_table[3][1], rgb_test_color_table[3][2]);
+    //     }
+    // }
 
     return true;
 }

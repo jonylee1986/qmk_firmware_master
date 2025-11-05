@@ -301,24 +301,25 @@ void bled_charging_indicate(void) {
     uint8_t led_index = time % 5; // Cycle through 0-4
 
     // Clear all LEDs first
-    for (uint8_t i = led_index; i < SLED_CYCLE_LED_COUNT; i++) {
+    for (uint8_t i = led_index; i < SLED_LED_NUM; i++) {
         rgb_matrix_set_color(sled_leds[i], RGB_OFF);
     }
 
     // Set the color
-    HSV base_hsv;
-    if (dev_info.sled_color == COLOR_RAINBOW) {
-        base_hsv = (HSV){time * 16, 255, bled_info.sled_val};
-    } else {
-        base_hsv.h = hsv_table[dev_info.sled_color - 1][0];
-        base_hsv.s = hsv_table[dev_info.sled_color - 1][1];
-        base_hsv.v = bled_info.sled_val;
-    }
+    // HSV base_hsv;
+    // if (dev_info.sled_color == COLOR_RAINBOW) {
+    //     base_hsv = (HSV){time * 16, 255, bled_info.sled_val};
+    // } else {
+    //     base_hsv.h = hsv_table[dev_info.sled_color - 1][0];
+    //     base_hsv.s = hsv_table[dev_info.sled_color - 1][1];
+    //     base_hsv.v = bled_info.sled_val;
+    // }
 
     // Light up only the current LED in the cycle
-    RGB rgb = hsv_to_rgb(base_hsv);
+    // RGB rgb = hsv_to_rgb(base_hsv);
     for (uint8_t i = 0; i <= led_index; i++) {
-        rgb_matrix_set_color(sled_leds[led_index], rgb.r, rgb.g, rgb.b);
+        // rgb_matrix_set_color(sled_leds[led_index], rgb.r, rgb.g, rgb.b);
+        rgb_matrix_set_color(sled_leds[led_index], 0, 200, 0);
     }
 }
 

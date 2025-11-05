@@ -42,6 +42,8 @@
 #    define MM_BLINK_USB_COLOR RGB_WHITE  // USB color
 
 #    define BAT_LEVEL_DISPLAY_INDEX {102, 103, 104, 105, 106} // Battery level indicator
+
+#    define USB_SUSPEND_CHECK_ENABLE
 #endif
 
 // Win lock indicator

@@ -25,8 +25,7 @@
 
 // Battery full detection tuning
 #define FULL_PVOL_THRESHOLD 100 // consider full at >= this value
-#define FULL_HYSTERESIS_PVOL 96 // must drop to <= this to re-arm next cycle
-#define FULL_DEBOUNCE_MS 1200   // must stay at full for this long to count
+#define FULL_HYSTERESIS_PVOL 95 // must drop to <= this to re-arm next cycle
 
 #ifdef BT_DEBUG_MODE
 #    define BT_DEBUG_INFO(fmt, ...) dprintf(fmt, ##__VA_ARGS__)
@@ -42,7 +41,7 @@ static void long_pressed_keys_cb(uint16_t keycode);
 static bool process_record_other(uint16_t keycode, keyrecord_t *record);
 static void bt_scan_mode(void);
 static void bt_used_pin_init(void);
-static void update_low_voltage_state(void);
+// static void update_low_voltage_state(void);
 static void handle_factory_reset_display(void);
 static void handle_blink_effects(void);
 static void handle_layer_indication(void);
@@ -196,13 +195,13 @@ static uint32_t single_blink_time;
 // 电量查询
 bool query_vol_flag = false;
 
+static bool show_chrg_full_wakeup = false;
+
 // USB相关
 uint32_t USB_switch_time;
 uint8_t  USB_blink_cnt;
 
 uint32_t last_total_time = 0;
-
-static bool is_charging = false;
 
 #include "command.h"
 #include "action.h"
@@ -960,15 +959,6 @@ static void bt_scan_mode(void) {
 }
 
 // ===========================================
-// 低电量管理函数
-// ===========================================
-static void update_low_voltage_state(void) {
-    if (bts_info.bt_info.low_vol) {
-        rgb_matrix_set_color_all(RGB_OFF);
-    }
-}
-
-// ===========================================
 // RGB控制函数
 // ===========================================
 static void close_rgb(void) {
@@ -1008,10 +998,23 @@ static void close_rgb(void) {
 
 static void open_rgb(void) {
     key_press_time = timer_read32();
+
     if (!sober) {
+        if ((dev_info.devs != DEVS_USB) && (bts_info.bt_info.pvol >= FULL_PVOL_THRESHOLD)) {
+            show_chrg_full_wakeup                   = true;
+            charge_complete_warning.entry_full_time = timer_read32();
+        }
+
 #ifdef RGB_DRIVER_SDB_PIN
         writePinHigh(RGB_DRIVER_SDB_PIN);
 #endif
+
+        low_battery_warning.triggered   = true;
+        low_battery_warning.blink_count = 0;
+        low_battery_warning.blink_time  = timer_read32();
+        low_battery_warning.blink_state = false;
+        low_battery_warning.completed   = false;
+
         if (bak_rgb_toggle) {
             extern bool low_vol_offed_sleep;
             kb_sleep_flag       = false;
@@ -1265,46 +1268,21 @@ static void handle_layer_indication(void) {
 }
 
 static void handle_charging_indication(void) {
-    // Debounced, hysteretic "first full" detector
     static bool     first_reach_full        = false; // drives the blink once per cycle
     static uint32_t full_candidate_since    = 0;
     static bool     full_latched_this_cycle = false;
 
-    // Check for indication triggers
-    static bool should_indicate = false;
-
-    // New state tracking for user's requirements
-    static bool                   cable_plugged_session   = false;    // tracks cable plug-in this session
-    static bool                   charged_full_indicated  = false;    // prevents multiple indications
-    static bool                   wireless_full_indicated = false;    // tracks wireless full indication
-    static uint8_t                last_dev_mode           = DEVS_USB; // for detecting mode switches
-    static battery_charge_state_t last_charge_state       = BATTERY_STATE_UNPLUGGED;
-
-    uint8_t                pv                   = bts_info.bt_info.pvol;
-    bool                   plugged              = (get_battery_charge_state() != BATTERY_STATE_UNPLUGGED);
-    battery_charge_state_t current_charge_state = get_battery_charge_state();
-
-    // Detect cable plug-in event
-    if ((current_charge_state != BATTERY_STATE_UNPLUGGED) && (last_charge_state == BATTERY_STATE_UNPLUGGED)) {
-        cable_plugged_session  = true;
-        charged_full_indicated = false; // reset for new session
-    }
-    last_charge_state = current_charge_state;
-
-    // Detect mode switch from wired to wireless
-    bool mode_switched_to_wireless = false;
-    if (last_dev_mode == DEVS_USB && dev_info.devs != DEVS_USB && dev_info.devs >= DEVS_HOST1 && dev_info.devs <= DEVS_2_4G) {
-        mode_switched_to_wireless = true;
-    }
-    last_dev_mode = dev_info.devs;
+    uint8_t  pv      = bts_info.bt_info.pvol;
+    uint32_t now     = timer_read32();
+    bool     plugged = (get_battery_charge_state() != BATTERY_STATE_UNPLUGGED);
 
     if (dev_info.devs != DEVS_USB) {
         // Detect and debounce first reach to FULL_PVOL_THRESHOLD
         if (!full_latched_this_cycle) {
-            if ((pv >= FULL_PVOL_THRESHOLD) && plugged) {
+            if (pv >= FULL_PVOL_THRESHOLD && plugged) {
                 if (full_candidate_since == 0) {
-                    full_candidate_since = timer_read32();
-                } else if (timer_elapsed32(full_candidate_since) >= FULL_DEBOUNCE_MS) {
+                    full_candidate_since = now;
+                } else if (timer_elapsed32(full_candidate_since) >= 1000) {
                     first_reach_full        = true; // trigger this cycle's indication
                     full_latched_this_cycle = true; // prevent re-trigger until hysteresis clears
                     full_candidate_since    = 0;    // reset candidate window
@@ -1314,67 +1292,50 @@ static void handle_charging_indication(void) {
             }
         } else {
             // Re-arm for next cycle only after dropping below hysteresis or unplugging
-            if ((pv <= FULL_HYSTERESIS_PVOL) || !plugged) {
+            if (pv <= FULL_HYSTERESIS_PVOL || !plugged) {
                 full_latched_this_cycle = false;
                 // Don't force first_reach_full here; it'll be set when we debounce next time
             }
         }
-    } else {
-        first_reach_full = false;
-    }
-
-    // Scenario 1: Cable plugged in first time AND charged full
-    if (cable_plugged_session && (current_charge_state == BATTERY_STATE_CHARGED_FULL) && !charged_full_indicated) {
-        should_indicate         = true;
-        charged_full_indicated  = true;
-        wireless_full_indicated = true; // prevent wireless indication
-    }
-    // Scenario 2: Battery reaches 100% while mode switch to wireless
-    if (!wireless_full_indicated && (dev_info.devs != DEVS_USB)) {
-        if (first_reach_full && mode_switched_to_wireless && cable_plugged_session) {
-            should_indicate         = true;
-            wireless_full_indicated = true;
-            charged_full_indicated  = true; // prevent cable indication
-        }
-    }
-    // Scenario 3: Battery reaches 100% first time with cable plugged in
-    if (first_reach_full && cable_plugged_session && !charged_full_indicated) {
-        should_indicate        = true;
-        charged_full_indicated = true;
     }
 
     // Track charge state timing window for steady full detection
     if (get_battery_charge_state() == BATTERY_STATE_CHARGING) {
-        charge_complete_warning.entry_full_time = timer_read32();
+        charge_complete_warning.entry_full_time = now;
     }
 
-    if (should_indicate) {
-        if (timer_elapsed32(charge_complete_warning.entry_full_time) > 2000) {
+    if ((get_battery_charge_state() == BATTERY_STATE_CHARGED_FULL) || first_reach_full) {
+        if (timer_elapsed32(charge_complete_warning.entry_full_time) > 2000 || first_reach_full) {
+            // 充满状态
             if (!is_in_full_power_state) {
                 is_in_full_power_state = true;
                 if (!charge_complete_warning.triggered) {
                     charge_complete_warning.triggered   = true;
                     charge_complete_warning.blink_count = 0;
-                    charge_complete_warning.blink_time  = timer_read32();
+                    charge_complete_warning.blink_time  = now;
                     charge_complete_warning.blink_state = false;
                     charge_complete_warning.completed   = false;
                 }
             }
 
-            if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 5) {
+            // 只有在未完成闪烁且闪烁次数未达到5次时才显示充电指示
+            if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 6) {
                 if (timer_elapsed32(charge_complete_warning.blink_time) >= 1000) {
-                    charge_complete_warning.blink_time  = timer_read32();
+                    charge_complete_warning.blink_time  = now;
                     charge_complete_warning.blink_state = !charge_complete_warning.blink_state;
 
                     if (charge_complete_warning.blink_state) {
                         charge_complete_warning.blink_count++;
-                        if (charge_complete_warning.blink_count >= 5) {
+                        if (charge_complete_warning.blink_count >= 6) {
                             charge_complete_warning.completed   = true;
                             charge_complete_warning.blink_state = false;
+                            first_reach_full                    = false; // allow future cycles
+                            show_chrg_full_wakeup               = false;
                         }
                     }
                 }
 
+                // 显示充电完成闪烁
                 if (charge_complete_warning.blink_state) {
                     for (uint8_t i = 104; i <= 106; i++) {
                         rgb_matrix_set_color(i, 0, 100, 0);
@@ -1387,6 +1348,7 @@ static void handle_charging_indication(void) {
             }
         }
     } else {
+        // 充电线未接入，重置充电状态
         if (is_in_full_power_state) {
             is_in_full_power_state = false;
             memset(&charge_complete_warning, 0, sizeof(charge_complete_warning_t));
@@ -1395,8 +1357,11 @@ static void handle_charging_indication(void) {
 }
 
 static void handle_low_battery_warning(void) {
-    // 低电量警告（电量≤20%）
-    if (bts_info.bt_info.pvol <= 20) {
+    if (bts_info.bt_info.low_vol) {
+        for (uint8_t i = 0; i < 104; i++) {
+            rgb_matrix_set_color_all(RGB_OFF);
+        }
+
         if (!is_in_low_power_state) {
             is_in_low_power_state = true;
 
@@ -1409,7 +1374,6 @@ static void handle_low_battery_warning(void) {
             }
         }
 
-        // 处理闪烁逻辑
         if (!low_battery_warning.completed && !kb_sleep_flag && (indicator_status == 0)) {
             if (timer_elapsed32(low_battery_warning.blink_time) >= 1000) {
                 low_battery_warning.blink_time  = timer_read32();
@@ -1424,7 +1388,6 @@ static void handle_low_battery_warning(void) {
                 }
             }
 
-            // 显示闪烁效果
             if (low_battery_warning.blink_state) {
                 for (uint8_t i = 104; i <= 106; i++) {
                     rgb_matrix_set_color(i, 100, 0, 0);
@@ -1437,12 +1400,13 @@ static void handle_low_battery_warning(void) {
         }
     }
 
-    if (bts_info.bt_info.pvol > 20) {
-        if (is_in_low_power_state) {
-            is_in_low_power_state = false;
-            memset(&low_battery_warning, 0, sizeof(low_battery_warning_t));
-        }
-    }
+    // if (bts_info.bt_info.pvol > 10) {
+    //     if (is_in_low_power_state) {
+    //         bts_info.bt_info.low_vol = false;
+    //         is_in_low_power_state    = false;
+    //         memset(&low_battery_warning, 0, sizeof(low_battery_warning_t));
+    //     }
+    // }
 }
 
 static void handle_low_battery_shutdow(void) {
@@ -1534,15 +1498,9 @@ static void handle_battery_query_display(void) {
 // 主RGB指示器函数
 // ===========================================
 bool bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
-    if (dev_info.devs != DEVS_USB && (get_battery_charge_state() != BATTERY_STATE_UNPLUGGED)) {
-        // trurn off backlight when the voltage is low
-        update_low_voltage_state();
-    }
-
-    // 工厂重置显示（最高优先级）
-    if (factory_reset_status) {
-        handle_factory_reset_display();
-        return false;
+    if ((dev_info.devs != DEVS_USB) && readPin(BT_CABLE_PIN)) {
+        handle_low_battery_warning();
+        handle_low_battery_shutdow();
     }
 
     // 图层指示
@@ -1560,16 +1518,10 @@ bool bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
     handle_battery_query_display();
     handle_charging_indication();
 
-// 充电状态指示
-#if defined(BT_CABLE_PIN) && defined(BT_CHARGE_PIN)
-    is_charging = !readPin(BT_CABLE_PIN);
-#endif
-    if (!is_charging) {
-        // 非充电状态下的其他指示
-        if (dev_info.devs != DEVS_USB) {
-            handle_low_battery_warning();
-            handle_low_battery_shutdow();
-        }
+    // 工厂重置显示（最高优先级）
+    if (factory_reset_status) {
+        handle_factory_reset_display();
+        return false;
     }
 
     // 闪烁效果处理

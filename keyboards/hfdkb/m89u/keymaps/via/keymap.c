@@ -114,7 +114,47 @@ bool            key_eql_pressed       = false;
 static uint32_t key_eql_numlock_timer = 0;
 static uint8_t  host_numlock_state    = 0;
 
+bool process_rgb_matrix_user(uint16_t keycode, keyrecord_t *record) {
+    if (record->event.pressed) {
+        switch (keycode) {
+            // case RGB_TOG:
+            //     rgb_matrix_toggle();
+            //     return false;
+            case RGB_MOD:
+                rgb_matrix_step();
+                return false;
+            case RGB_HUI:
+                rgb_matrix_increase_hue();
+                return false;
+            case RGB_HUD:
+                rgb_matrix_decrease_hue();
+                return false;
+            case RGB_SAI:
+                rgb_matrix_increase_sat();
+                return false;
+            case RGB_SAD:
+                rgb_matrix_decrease_sat();
+                return false;
+            case RGB_VAI:
+                rgb_matrix_increase_val();
+                return false;
+            case RGB_VAD:
+                rgb_matrix_decrease_val();
+            case RGB_SPI:
+                rgb_matrix_increase_speed();
+                return false;
+            case RGB_SPD:
+                rgb_matrix_decrease_speed();
+                return false;
+        }
+    }
+
+    return true;
+}
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if (!process_rgb_matrix_user(keycode, record)) return false;
+
 #ifdef MULTIMODE_ENABLE
     if (!bt_process_record(keycode, record)) {
         return false;
@@ -271,7 +311,7 @@ static void num_lock_indicator(void) {
 }
 
 bool rgb_matrix_indicators_user(void) {
-    if (!rgb_matrix_get_flags()) {
+    if (!rgb_matrix_get_flags() || (dev_info.devs != DEVS_USB && bts_info.bt_info.low_vol && readPin(MM_CABLE_PIN))) {
         rgb_matrix_set_color_all(RGB_OFF);
     }
 
@@ -286,6 +326,8 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         return false;
     }
 #    endif
+
+    // num_lock_indicator();
 
     // All LEDs blink
     if (single_blink_cnt) {

@@ -264,6 +264,18 @@ void housekeeping_task_kb(void) {
 #endif // NKRO_ENABLE
 }
 
+// bool rgb_matrix_indicators_kb(void) {
+//     if (!rgb_matrix_get_flags()) {
+//         rgb_matrix_set_color_all(RGB_OFF);
+//     }
+
+//     if (rgb_matrix_indicators_user() != true) {
+//         return false;
+//     }
+
+//     return true;
+// }
+
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     if (!rgb_matrix_get_flags()) {
         rgb_matrix_set_color_all(0x00, 0x00, 0x00);

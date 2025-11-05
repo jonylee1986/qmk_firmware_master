@@ -8,7 +8,7 @@
     "usb": {
         "vid": "0xFFFE",
         "pid": "0x0024",
-        "device_version": "1.0.0",
+        "device_version": "1.0.2",
         "suspend_wakeup_delay": 1000
     },
     "diode_direction": "ROW2COL",

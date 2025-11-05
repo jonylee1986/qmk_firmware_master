@@ -56,7 +56,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_LCTL, KC_LWIN, KC_LALT,                            KC_SPC,                             KC_RALT, MO(1),   KC_RCTL, KC_LEFT, KC_DOWN, KC_RGHT),
 
     [WIN_F] = LAYOUT_83_ansi( /* FN */
-        EE_CLR,  KC_BRID, KC_BRIU, KC_CALC, KC_MYCM, KC_PRJT, KC_PSCR, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD, KC_VOLU,          _______, _______,
+        EE_CLR,  KC_BRID, KC_BRIU, KC_CALC, KC_MYCM, KC_TASK, KC_PRJT, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD, KC_VOLU,          _______, _______,
         _______, BT_1,    BT_2,    BT_3,    WL_2_4,  BT_USB,  _______, _______, _______, _______, _______, _______, _______, KC_DEL,           RM_HUEU,
         RM_TOGG, _______, _______, _______, _______, _______, _______, _______, _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, RM_NEXT,          _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, KC_INS,           LCD_ENTER,        _______,
