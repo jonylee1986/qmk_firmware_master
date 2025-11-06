@@ -48,9 +48,9 @@ typedef enum {
     COLOR_COUNT,
 } SLed_color_preset_t;
 
-typedef struct {
+typedef struct PACKED {
     bool    toggle : 1;
-    uint8_t mode : 2;
+    uint8_t mode : 3;
     uint8_t color : 4;
     uint8_t brightness;
     uint8_t speed;

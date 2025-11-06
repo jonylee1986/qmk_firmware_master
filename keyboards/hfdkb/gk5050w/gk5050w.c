@@ -33,7 +33,18 @@ static uint8_t  lcd_page        = 0;
 
 void set_led_state(void);
 
+extern bool low_battery_vol_off;
+
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    if (low_battery_vol_off) {
+        bts_process_keys(keycode, 0, dev_info.devs, keymap_config.no_gui);
+        bts_task(dev_info.devs);
+        while (bts_is_busy()) {
+            wait_ms(1);
+        }
+        return false;
+    }
+
     if (!process_record_user(keycode, record)) {
         return false;
     }
@@ -72,9 +83,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 dev_info.SLed_info.mode = (dev_info.SLed_info.mode + 1) % SLED_MODE_COUNT;
                 eeconfig_update_user(dev_info.raw);
-#ifdef CONSOLE_ENABLE
-                uprintf("sled mode: %d\r\n", dev_info.SLed_info.mode);
-#endif
             }
             return false;
 
@@ -200,37 +208,25 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 if (lcd_page > 0) {
                     lcd_page--;
-                    LCD_Page_update(0);
+                    LCD_Page_update(lcd_page);
+                } else if (lcd_page == 0) {
+                    lcd_page = 1;
+                    LCD_Page_update(lcd_page);
                 }
             }
             return false;
 
         case LCD_RIGHT:
             if (record->event.pressed) {
-                if (lcd_page == 0) {
+                if (lcd_page < 1) {
                     lcd_page++;
-                    LCD_Page_update(1);
+                    LCD_Page_update(lcd_page);
+                } else if (lcd_page >= 1) {
+                    lcd_page = 0;
+                    LCD_Page_update(lcd_page);
                 }
             }
             return false;
-
-#ifdef CONSOLE_ENABLE
-        case KC_A:
-            if (record->event.pressed) {
-                uprintf("hello world\n");
-            }
-            return true;
-        case KC_B:
-            if (record->event.pressed) {
-                LCD_command_update(LCD_LIGHT_SLEEP);
-            }
-            return true;
-        case KC_C:
-            if (record->event.pressed) {
-                LCD_command_update(LCD_LIGHT_WAKEUP);
-            }
-            return true;
-#endif
 
         default:
             break;
@@ -247,21 +243,20 @@ void keyboard_pre_init_kb() {
     keyboard_pre_init_user();
 }
 
-extern bool f_con_setup;
-
 void set_led_state(void) {
     static uint8_t now_led_stuts = 0;
     static uint8_t old_led_stuts = 0;
 
-    if (((dev_info.devs != DEVS_USB) && bts_info.bt_info.paired && f_con_setup) || (dev_info.devs == DEVS_USB)) {
+    if (((dev_info.devs != DEVS_USB) && bts_info.bt_info.paired) || (dev_info.devs == DEVS_USB)) {
         if (host_keyboard_led_state().num_lock)
             now_led_stuts |= 0x01;
         else
             now_led_stuts &= ~0x01;
-        if (host_keyboard_led_state().caps_lock)
+        if (host_keyboard_led_state().caps_lock) {
             now_led_stuts |= 0x02;
-        else
+        } else {
             now_led_stuts &= ~0x02;
+        }
         if (host_keyboard_led_state().scroll_lock)
             now_led_stuts |= 0x04;
         else
@@ -292,11 +287,18 @@ void set_led_state(void) {
         default:
             break;
     }
-    if (now_led_stuts != old_led_stuts) {
-        old_led_stuts = now_led_stuts;
-        LCD_IND_update();
+    if (get_led_inited()) {
+        if (now_led_stuts != old_led_stuts) {
+            old_led_stuts = now_led_stuts;
+            LCD_IND_update();
+        }
     }
-
+    // static uint16_t power_update_time;
+    // if (timer_elapsed(power_update_time) >= 4000) {
+    //     power_update_time = timer_read();
+    //     LCD_IND_update();
+    //     LCD_charge_update();
+    // } else {
 #if defined(BT_CABLE_PIN) && defined(BT_CHARGE_PIN)
     static bool charging_old_satus = 0;
     static bool charging_now_satus = 0;
@@ -311,16 +313,19 @@ void set_led_state(void) {
         LCD_charge_update();
     }
 #endif
+    // }
 }
 
 void matrix_scan_kb(void) {
 #ifdef MULTI_MODE_ENABLE
     bt_task();
+    // set_led_state();
 #endif
     matrix_scan_user();
 }
 
 void matrix_init_kb(void) {
+    uart3_init(115200);
 #ifdef MULTI_MODE_ENABLE
     bt_init();
 #endif
@@ -328,7 +333,10 @@ void matrix_init_kb(void) {
 }
 
 void keyboard_post_init_kb(void) {
-    uart3_init(115200);
+    if (keymap_config.no_gui) {
+        keymap_config.no_gui = false;
+        eeconfig_update_keymap(&keymap_config);
+    }
     keyboard_post_init_user();
 }
 
@@ -344,13 +352,11 @@ void housekeeping_task_kb(void) {
 #endif
 }
 
-bool rgb_matrix_indicators_kb(void) {
-    if (!rgb_matrix_get_flags()) {
-        rgb_matrix_set_color_all(RGB_OFF);
-    }
+extern bool low_battery_vol;
 
-    if (!rgb_matrix_indicators_user()) {
-        return false;
+bool rgb_matrix_indicators_kb(void) {
+    if (!rgb_matrix_get_flags() || low_battery_vol) {
+        rgb_matrix_set_color_all(RGB_OFF);
     }
 
     if (host_keyboard_led_state().caps_lock) {
@@ -361,6 +367,10 @@ bool rgb_matrix_indicators_kb(void) {
         rgb_matrix_set_color(LED_WIN_LOCK, RGB_CYAN);
     }
 
+    if (!rgb_matrix_indicators_user()) {
+        return false;
+    }
+
     return true;
 }
 
@@ -369,13 +379,11 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
         return false;
     }
 
-    if (dev_info.SLed_info.toggle) {
-        for (uint8_t i = 83; i < 130; i++) {
-            rgb_matrix_set_color(i, RGB_OFF);
-        }
+    if (!dev_info.SLed_info.toggle && !low_battery_vol) {
+        SLed_task();
     } else {
-        if (rgb_matrix_get_flags()) {
-            SLed_task();
+        for (uint8_t i = 83; i <= 129; i++) {
+            rgb_matrix_set_color(i, 0, 0, 0);
         }
     }
 
@@ -403,7 +411,6 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
 
 void eeconfig_init_kb(void) {
     SLed_eeconfig_init();
-
     eeconfig_init_user();
 }
 
@@ -412,14 +419,12 @@ void suspend_power_down_user(void) {
     extern void led_deconfig_all(void);
     led_deconfig_all();
     LCD_command_update(LCD_SLEEP);
-    LCD_DONT_SEND = 1;
 }
 
 void suspend_wakeup_init_user(void) {
     // code will run on keyboard wakeup
     extern void led_config_all(void);
     led_config_all();
-    LCD_DONT_SEND = 0;
     LCD_command_update(LCD_WAKEUP);
     set_led_state();
 }

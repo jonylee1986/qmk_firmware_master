@@ -373,7 +373,7 @@ void housekeeping_task_user(void) {
 
 void keyboard_post_init_user(void) {
     if (keymap_config.no_gui) {
-        keymap_config.no_gui = 0;
+        keymap_config.no_gui = false;
         eeconfig_update_keymap(&keymap_config);
     }
     keyboard_config.raw = eeconfig_read_user();

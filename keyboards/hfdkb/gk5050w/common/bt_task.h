@@ -52,7 +52,7 @@ enum bt_keycodes {
 
 typedef union {
     uint32_t raw;
-    struct {
+    struct PACKED {
         uint8_t     devs : 3;
         uint8_t     last_devs : 3;
         uint8_t     LCD_PAGE : 2;
@@ -106,9 +106,10 @@ enum _led_ble {
     LED_BLE_CONN,
 };
 
-#define BLE_CONN_TIMEOUT (1 * 60 * 1000)
-#define BLE_PAIR_TIMEOUT (1 * 60 * 1000)
+#define BLE_CONN_TIMEOUT ((1 * 60 - 12) * 1000)
+#define BLE_PAIR_TIMEOUT ((1 * 60 - 12) * 1000)
 #define LED_BLE_PAIR_INTVL_MS (500)
 #define LED_BLE_CONN_INTVL_MS (200)
 
 bool get_kb_sleep_flag(void);
+bool get_led_inited(void);
