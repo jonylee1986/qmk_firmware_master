@@ -44,6 +44,7 @@ enum bt_keycodes {
     SLED_TOG,
 
     RGB_TEST,
+    WL_2_4G,
 };
 
 // #define BT_DEBUG_MODE
@@ -53,10 +54,15 @@ enum bt_keycodes {
 typedef union {
     uint32_t raw;
     struct PACKED {
-        uint8_t     devs : 3;
-        uint8_t     last_devs : 3;
-        uint8_t     LCD_PAGE : 2;
-        SLed_info_t SLed_info;
+        uint8_t devs : 3;
+        uint8_t last_devs : 3;
+        uint8_t LCD_PAGE : 2;
+        // SLed_info_t SLed_info;
+        uint8_t brightness;
+        uint8_t speed;
+        uint8_t color : 4;
+        uint8_t mode : 3;
+        bool    enable : 1;
     };
 } dev_info_t;
 

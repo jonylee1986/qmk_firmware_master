@@ -8,7 +8,7 @@
     "usb": {
         "vid": "0xFFFE",
         "pid": "0x00AA",
-        "device_version": "1.1.0",
+        "device_version": "1.1.2",
         "suspend_wakeup_delay": 1000
     },
     "features": {
@@ -57,10 +57,10 @@
         "driver": "snled27351",
         "react_on_keyup": true,
         "sleep": true,
-        "val_steps": 52,
+        "val_steps": 45,
         "speed_steps": 64,
         "hue_steps": 16,
-        "max_brightness": 208,
+        "max_brightness": 180,
         "default": {
             "speed": 128
         },

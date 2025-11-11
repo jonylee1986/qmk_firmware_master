@@ -59,54 +59,6 @@ void bled_task(void) {
             break;
         }
 
-        case BLED_MODE_CYCLE: {
-            uint8_t time         = scale16by8(g_rgb_timer / 4, qadd8(bled_info.bled_speed / 63, 1));
-            uint8_t cycle_length = BLED_CYCLE_LED_COUNT * 2;
-            uint8_t position     = time % cycle_length;
-
-            // Determine if we're going forward or backward
-            bool    going_forward = position < BLED_CYCLE_LED_COUNT;
-            uint8_t led_pos;
-
-            if (going_forward) {
-                led_pos = position;
-            } else {
-                led_pos = (BLED_CYCLE_LED_COUNT * 2 - 1) - position; // Proper reverse calculation
-            }
-
-            // Clear all LEDs first
-            for (uint8_t i = 0; i < BLED_LED_NUM; i++) {
-                rgb_matrix_set_color(bled_leds[i], RGB_OFF);
-            }
-
-            // Set the marquee group
-            HSV base_hsv;
-            if (dev_info.bled_color == COLOR_RAINBOW) {
-                base_hsv = (HSV){time * 16, 255, bled_info.bled_val};
-            } else {
-                base_hsv.h = hsv_table[dev_info.bled_color - 1][0];
-                base_hsv.s = hsv_table[dev_info.bled_color - 1][1];
-                base_hsv.v = bled_info.bled_val;
-            }
-
-            // Light up the group of LEDs
-            for (uint8_t j = 0; j < BLED_CYCLE_GROUP_SIZE; j++) {
-                int16_t led_index = led_pos - j;
-                if (led_index >= 0 && led_index < BLED_CYCLE_LED_COUNT) {
-                    uint8_t actual_led = bled_leds[led_index];
-
-                    // Create fading effect within the group
-                    uint8_t brightness_scale = 255 - (j * 17); // Fade: 255, 210, 165, 120, 75
-                    HSV     hsv              = base_hsv;
-                    hsv.v                    = scale8(hsv.v, brightness_scale);
-
-                    RGB rgb = hsv_to_rgb(hsv);
-                    rgb_matrix_set_color(actual_led, rgb.r, rgb.g, rgb.b);
-                }
-            }
-            break;
-        }
-
         case BLED_MODE_NEON: {
             uint8_t time = scale16by8(g_rgb_timer, qadd8(bled_info.bled_speed / 8, 1));
             HSV     hsv  = {time, 255, bled_info.bled_val};
@@ -118,6 +70,14 @@ void bled_task(void) {
         }
 
         case BLED_MODE_SOLID: {
+            // if (dev_info.bled_color == COLOR_RAINBOW) {
+            //     // Rainbow solid color
+            //     for (uint8_t i = 0; i < BLED_LED_NUM; i++) {
+            //         HSV hsv = {((i + 1) * 100 + 40), 255, bled_info.bled_val};
+            //         RGB rgb = hsv_to_rgb(hsv);
+            //         rgb_matrix_set_color(bled_leds[i], rgb.r, rgb.g, rgb.b);
+            //     }
+            // } else {
             HSV hsv;
             hsv.h   = hsv_table[dev_info.bled_color - 1][0];
             hsv.s   = hsv_table[dev_info.bled_color - 1][1];
@@ -126,32 +86,33 @@ void bled_task(void) {
             for (uint8_t i = 0; i < BLED_LED_NUM; i++) {
                 rgb_matrix_set_color(bled_leds[i], rgb.r, rgb.g, rgb.b);
             }
+            // }
 
             break;
         }
 
         case BLED_MODE_BREATHING: {
-            if (dev_info.bled_color == COLOR_RAINBOW) {
-                // Rainbow breathing effect
-                uint8_t time       = scale16by8(g_rgb_timer, qadd8(bled_info.bled_speed / 4, 1));
-                uint8_t brightness = scale8(abs8(sin8(time / 2) - 128) * 2, bled_info.bled_val);
-                for (uint8_t i = 0; i < BLED_LED_NUM; i++) {
-                    HSV hsv = {i * 127, 255, brightness};
-                    RGB rgb = hsv_to_rgb(hsv);
-                    rgb_matrix_set_color(bled_leds[i], rgb.r, rgb.g, rgb.b);
-                }
-            } else {
-                HSV hsv;
-                hsv.h              = hsv_table[dev_info.bled_color - 1][0];
-                hsv.s              = hsv_table[dev_info.bled_color - 1][1];
-                uint8_t time       = scale16by8(g_rgb_timer, qadd8(bled_info.bled_speed / 4, 1));
-                uint8_t brightness = scale8(abs8(sin8(time / 2) - 128) * 2, bled_info.bled_val);
-                hsv.v              = brightness;
-                RGB rgb            = hsv_to_rgb(hsv);
-                for (uint8_t i = 0; i < BLED_LED_NUM; i++) {
-                    rgb_matrix_set_color(bled_leds[i], rgb.r, rgb.g, rgb.b);
-                }
+            // if (dev_info.bled_color == COLOR_RAINBOW) {
+            //     // Rainbow breathing effect
+            //     uint8_t time       = scale16by8(g_rgb_timer, qadd8(bled_info.bled_speed / 4, 1));
+            //     uint8_t brightness = scale8(abs8(sin8(time / 2) - 128) * 2, bled_info.bled_val);
+            //     for (uint8_t i = 0; i < BLED_LED_NUM; i++) {
+            //         HSV hsv = {((i + 1) * 100 + 40), 255, brightness};
+            //         RGB rgb = hsv_to_rgb(hsv);
+            //         rgb_matrix_set_color(bled_leds[i], rgb.r, rgb.g, rgb.b);
+            //     }
+            // } else {
+            HSV hsv;
+            hsv.h              = hsv_table[dev_info.bled_color - 1][0];
+            hsv.s              = hsv_table[dev_info.bled_color - 1][1];
+            uint8_t time       = scale16by8(g_rgb_timer, qadd8(bled_info.bled_speed / 4, 1));
+            uint8_t brightness = scale8(abs8(sin8(time / 2) - 128) * 2, bled_info.bled_val);
+            hsv.v              = brightness;
+            RGB rgb            = hsv_to_rgb(hsv);
+            for (uint8_t i = 0; i < BLED_LED_NUM; i++) {
+                rgb_matrix_set_color(bled_leds[i], rgb.r, rgb.g, rgb.b);
             }
+            // }
             break; // Added missing break statement!
         }
 
@@ -367,10 +328,9 @@ void bled_init(void) {
 }
 
 void bled_eeconfig_init(void) {
-    dev_info.sled_mode = SLED_MODE_VOL;
-
-    dev_info.bled_mode  = BLED_MODE_SOLID;
-    dev_info.bled_color = COLOR_ORIANGE;
+    dev_info.sled_mode  = SLED_MODE_VOL;
+    dev_info.bled_mode  = BLED_MODE_FLOW;
+    dev_info.bled_color = COLOR_RED;
     eeconfig_update_user(dev_info.raw);
 
     bled_info.bled_val   = RGB_MATRIX_MAXIMUM_BRIGHTNESS;

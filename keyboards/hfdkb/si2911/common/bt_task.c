@@ -1333,7 +1333,9 @@ bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
     } else {
         bt_indicate();
         bt_bat_query_period();
-        bt_bat_low_level_shutdown();
+        if (readPin(MM_CABLE_PIN)) {
+            bt_bat_low_level_shutdown();
+        }
     }
 
     // Charging status indicator

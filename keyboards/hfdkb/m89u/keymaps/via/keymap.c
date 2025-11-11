@@ -123,26 +123,26 @@ bool process_rgb_matrix_user(uint16_t keycode, keyrecord_t *record) {
             case RGB_MOD:
                 rgb_matrix_step();
                 return false;
-            case RGB_HUI:
-                rgb_matrix_increase_hue();
-                return false;
+            // case RGB_HUI:
+            //     rgb_matrix_increase_hue();
+            //     return false;
             case RGB_HUD:
                 rgb_matrix_decrease_hue();
                 return false;
-            case RGB_SAI:
-                rgb_matrix_increase_sat();
-                return false;
+            // case RGB_SAI:
+            //     rgb_matrix_increase_sat();
+            //     return false;
             case RGB_SAD:
                 rgb_matrix_decrease_sat();
                 return false;
-            case RGB_VAI:
-                rgb_matrix_increase_val();
-                return false;
+            // case RGB_VAI:
+            //     rgb_matrix_increase_val();
+            //     return false;
             case RGB_VAD:
                 rgb_matrix_decrease_val();
-            case RGB_SPI:
-                rgb_matrix_increase_speed();
-                return false;
+            // case RGB_SPI:
+            //     rgb_matrix_increase_speed();
+            //     return false;
             case RGB_SPD:
                 rgb_matrix_decrease_speed();
                 return false;

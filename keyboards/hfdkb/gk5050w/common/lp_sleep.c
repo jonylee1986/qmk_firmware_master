@@ -131,6 +131,8 @@ void _pal_lld_enablepadevent(ioportid_t port, iopadid_t pad, ioeventmode_t mode)
 bool low_vol_offed_sleep;
 
 static void exti_init(void) {
+    static ioline_t exit_pins[] = {B2, B10, B11, RF_MODE_SW_PIN};
+
     if (!low_vol_offed_sleep) {
         for (int col = 0; col < MATRIX_COLS; col++) {
             setPinOutputOpenDrain(col_pins[col]);
@@ -173,10 +175,49 @@ static void exti_init(void) {
                     break;
             }
         }
-#    if defined(RF_MODE_SW_PIN)
-        setPinInputHigh(RF_MODE_SW_PIN);
-        _pal_lld_enablepadevent(PAL_PORT(RF_MODE_SW_PIN), PAL_PAD(RF_MODE_SW_PIN), PAL_EVENT_MODE_BOTH_EDGES);
-        switch (PAL_PAD(RF_MODE_SW_PIN)) {
+        // setPinInputHigh(RF_MODE_SW_PIN);
+        for (int i = 0; i < sizeof(exit_pins) / sizeof(exit_pins[0]); i++) {
+            setPinInputHigh(exit_pins[i]);
+            _pal_lld_enablepadevent(PAL_PORT(exit_pins[i]), PAL_PAD(exit_pins[i]), PAL_EVENT_MODE_BOTH_EDGES);
+            // _pal_lld_enablepadevent(PAL_PORT(B14), PAL_PAD(B14), PAL_EVENT_MODE_BOTH_EDGES);
+            switch (PAL_PAD(exit_pins[i])) {
+                case 0:
+                    nvicEnableVector(EXTI0_IRQn, WB32_IRQ_EXTI0_PRIORITY);
+                    break;
+                case 1:
+                    nvicEnableVector(EXTI1_IRQn, WB32_IRQ_EXTI1_PRIORITY);
+                    break;
+                case 2:
+                    nvicEnableVector(EXTI2_IRQn, WB32_IRQ_EXTI2_PRIORITY);
+                    break;
+                case 3:
+                    nvicEnableVector(EXTI3_IRQn, WB32_IRQ_EXTI3_PRIORITY);
+                    break;
+                case 4:
+                    nvicEnableVector(EXTI4_IRQn, WB32_IRQ_EXTI4_PRIORITY);
+                    break;
+                case 5:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                    nvicEnableVector(EXTI9_5_IRQn, WB32_IRQ_EXTI5_9_PRIORITY);
+                    break;
+                case 10:
+                case 11:
+                case 12:
+                case 13:
+                case 14:
+                case 15:
+                    nvicEnableVector(EXTI15_10_IRQn, WB32_IRQ_EXTI10_15_PRIORITY);
+                    break;
+            }
+        }
+
+        setPinInputHigh(B14);
+        _pal_lld_enablepadevent(PAL_PORT(B14), PAL_PAD(B14), PAL_EVENT_MODE_BOTH_EDGES);
+        // _pal_lld_enablepadevent(PAL_PORT(B14), PAL_PAD(B14), PAL_EVENT_MODE_BOTH_EDGES);
+        switch (PAL_PAD(B14)) {
             case 0:
                 nvicEnableVector(EXTI0_IRQn, WB32_IRQ_EXTI0_PRIORITY);
                 break;
@@ -208,7 +249,6 @@ static void exti_init(void) {
                 nvicEnableVector(EXTI15_10_IRQn, WB32_IRQ_EXTI10_15_PRIORITY);
                 break;
         }
-#    endif
     } else {
         setPinInputHigh(BT_CABLE_PIN);
         _pal_lld_enablepadevent(PAL_PORT(BT_CABLE_PIN), PAL_PAD(BT_CABLE_PIN), PAL_EVENT_MODE_BOTH_EDGES);

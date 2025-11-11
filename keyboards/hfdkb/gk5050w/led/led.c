@@ -29,6 +29,7 @@ const uint8_t hsv_table[COLOR_COUNT][3] = {
     {HSV_BLUE},
     {HSV_PURPLE},
     {HSV_WHITE},
+    {29, 38, 100},
 };
 // clang-format on
 
@@ -36,20 +37,20 @@ const uint8_t hsv_table[COLOR_COUNT][3] = {
 #define SLed_MAX 129
 
 void SLed_task(void) {
-    switch (dev_info.SLed_info.mode) {
-        case SLED_MODE_FLOW: {
-            uint8_t time = scale16by8(g_rgb_timer, qadd8(dev_info.SLed_info.speed / 4, 1));
-            for (uint8_t i = SLed_MIN; i < (SLed_MAX + 1); i++) {
-                HSV hsv = {g_led_config.point[i].x - time, 255, dev_info.SLed_info.brightness};
-                RGB rgb = hsv_to_rgb(hsv);
-                rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
-            }
-            break;
-        }
+    switch (dev_info.mode) {
+            // case SLED_MODE_FLOW: {
+            //     uint8_t time = scale16by8(g_rgb_timer, qadd8(dev_info.speed / 4, 1));
+            //     for (uint8_t i = SLed_MIN; i < (SLed_MAX + 1); i++) {
+            //         HSV hsv = {g_led_config.point[i].x - time, 255, dev_info.brightness};
+            //         RGB rgb = hsv_to_rgb(hsv);
+            //         rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
+            //     }
+            //     break;
+            // }
 
         case SLED_MODE_NEON: {
-            uint8_t time = scale16by8(g_rgb_timer, qadd8(dev_info.SLed_info.speed / 8, 1));
-            HSV     hsv  = {time, 255, dev_info.SLed_info.brightness};
+            uint8_t time = scale16by8(g_rgb_timer, qadd8(dev_info.speed / 8, 1));
+            HSV     hsv  = {time, 255, dev_info.brightness};
             RGB     rgb  = hsv_to_rgb(hsv);
             for (uint8_t i = SLed_MIN; i < (SLed_MAX + 1); i++) {
                 rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
@@ -58,17 +59,17 @@ void SLed_task(void) {
         }
 
         case SLED_MODE_SOLID_RAINBOW: {
-            if (dev_info.SLed_info.color == COLOR_RAINBOW) {
+            if (dev_info.color == COLOR_RAINBOW) {
                 for (uint8_t i = SLed_MIN; i < (SLed_MAX + 1); i++) {
-                    HSV hsv = {i * 5, 255, dev_info.SLed_info.brightness};
+                    HSV hsv = {i * 5, 255, dev_info.brightness};
                     RGB rgb = hsv_to_rgb(hsv);
                     rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
                 }
             } else {
                 HSV hsv;
-                hsv.h   = hsv_table[dev_info.SLed_info.color - 1][0];
-                hsv.s   = hsv_table[dev_info.SLed_info.color - 1][1];
-                hsv.v   = dev_info.SLed_info.brightness;
+                hsv.h   = hsv_table[dev_info.color - 1][0];
+                hsv.s   = hsv_table[dev_info.color - 1][1];
+                hsv.v   = dev_info.brightness;
                 RGB rgb = hsv_to_rgb(hsv);
                 for (uint8_t i = SLed_MIN; i < (SLed_MAX + 1); i++) {
                     rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
@@ -77,9 +78,17 @@ void SLed_task(void) {
             break;
         }
 
-            // case SLED_MODE_SOLID_RED: {
-            //     break;
-            // }
+        case SLED_MODE_SOLID_RED: {
+            HSV hsv;
+            hsv.h   = hsv_table[8][0];
+            hsv.s   = hsv_table[8][1];
+            hsv.v   = dev_info.brightness;
+            RGB rgb = hsv_to_rgb(hsv);
+            for (uint8_t i = SLed_MIN; i < (SLed_MAX + 1); i++) {
+                rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
+            }
+            break;
+        }
 
             // case SLED_MODE_SOLID_ORANGE: {
             //     break;
@@ -122,10 +131,12 @@ void SLed_task(void) {
 
 void SLed_init(void) {}
 
-void SLed_eeconfig_init(void) {
-    dev_info.SLed_info.mode       = SLED_MODE_FLOW;
-    dev_info.SLed_info.brightness = RGB_MATRIX_DEFAULT_VAL;
-    dev_info.SLed_info.speed      = RGB_MATRIX_DEFAULT_SPD;
-    dev_info.SLed_info.toggle     = false;
+void eeconfig_init_user(void) {
+    dev_info.LCD_PAGE   = 0;
+    dev_info.brightness = RGB_MATRIX_DEFAULT_VAL;
+    dev_info.speed      = RGB_MATRIX_DEFAULT_SPD;
+    dev_info.color      = COLOR_RAINBOW;
+    dev_info.mode       = SLED_MODE_SOLID_RED;
+    dev_info.enable     = true;
     eeconfig_update_user(dev_info.raw);
 }

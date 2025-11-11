@@ -54,3 +54,5 @@
 #define RGB_MATRIX_SDB_PIN B7
 
 /* EC11 encoder config */
+
+#define USB_SUSPEND_CHECK_ENABLE

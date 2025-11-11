@@ -21,7 +21,7 @@
 
 typedef enum {
     BLED_MODE_FLOW,
-    BLED_MODE_CYCLE,
+    // BLED_MODE_CYCLE,
     BLED_MODE_NEON,
     BLED_MODE_BREATHING,
     BLED_MODE_SOLID,
@@ -57,7 +57,7 @@ typedef enum {
 
 typedef union {
     uint32_t raw;
-    struct {
+    struct PACKED{
         uint8_t bled_val;   // Brightness
         uint8_t bled_speed; // Speed
         uint8_t sled_val;   // Brightness

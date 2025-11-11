@@ -47,7 +47,7 @@ extern mode_t mode;
 
 typedef union {
     uint32_t raw;
-    struct {
+    struct PACKED{
         uint8_t devs;
         uint8_t last_devs;
         uint8_t bled_color : 4;

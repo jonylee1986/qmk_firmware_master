@@ -22,12 +22,12 @@
 #ifdef MULTI_MODE_ENABLE
 #    include "common/bt_task.h"
 #endif
+#include "usb_main.h"
 
 static uint8_t  all_blink_cnt   = 0;
 static uint32_t all_blink_time  = 0;
 static RGB      all_blink_color = {0};
 static bool     lcd_toggle      = false;
-static uint8_t  lcd_page        = 0;
 
 #define ALARM_COLOR_WHITE 0x64, 0x64, 0x64
 
@@ -35,8 +35,25 @@ void set_led_state(void);
 
 extern bool low_battery_vol_off;
 
+extern void led_config_all(void);
+extern void led_deconfig_all(void);
+
+uint32_t uart_resend_interval = 0;
+uint8_t  uart_resend_times    = 0;
+
+void uart_resend_task(void) {
+    if (uart_resend_times) {
+        if (timer_elapsed32(uart_resend_interval) > 50) {
+            uart_resend_interval = timer_read32();
+            LCD_command_update(LCD_LIGHT_WAKEUP);
+            uart_resend_times--;
+        }
+    }
+}
+
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     if (low_battery_vol_off) {
+        // clear_keyboard();
         bts_process_keys(keycode, 0, dev_info.devs, keymap_config.no_gui);
         bts_task(dev_info.devs);
         while (bts_is_busy()) {
@@ -74,65 +91,65 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
         case SLED_TOG:
             if (record->event.pressed) {
-                dev_info.SLed_info.toggle = !dev_info.SLed_info.toggle;
+                dev_info.enable = !dev_info.enable;
                 eeconfig_update_user(dev_info.raw);
             }
             return false;
 
         case SLED_MOD:
             if (record->event.pressed) {
-                dev_info.SLed_info.mode = (dev_info.SLed_info.mode + 1) % SLED_MODE_COUNT;
+                dev_info.mode = (dev_info.mode + 1) % SLED_MODE_COUNT;
                 eeconfig_update_user(dev_info.raw);
             }
             return false;
 
         case SLED_HUI:
             if (record->event.pressed) {
-                dev_info.SLed_info.color = (dev_info.SLed_info.color == COLOR_WHITE) ? COLOR_RAINBOW : (dev_info.SLed_info.color + 1);
+                dev_info.color = (dev_info.color == COLOR_WHITE) ? COLOR_RAINBOW : (dev_info.color + 1);
                 eeconfig_update_user(dev_info.raw);
             }
             return false;
 
         case SLED_VAI:
             if (record->event.pressed) {
-                if (dev_info.SLed_info.brightness >= (RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP)) {
-                    dev_info.SLed_info.brightness = RGB_MATRIX_MAXIMUM_BRIGHTNESS;
-                    all_blink_cnt                 = 6;
-                    all_blink_color               = (RGB){ALARM_COLOR_WHITE};
-                    all_blink_time                = timer_read32();
+                if (dev_info.brightness >= (RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP)) {
+                    dev_info.brightness = RGB_MATRIX_MAXIMUM_BRIGHTNESS;
+                    all_blink_cnt       = 6;
+                    all_blink_color     = (RGB){ALARM_COLOR_WHITE};
+                    all_blink_time      = timer_read32();
                 } else {
-                    dev_info.SLed_info.brightness += RGB_MATRIX_VAL_STEP;
+                    dev_info.brightness += RGB_MATRIX_VAL_STEP;
                 }
-                // dev_info.SLed_info.brightness = qadd8(dev_info.SLed_info.brightness, RGB_MATRIX_VAL_STEP);
+                // dev_info.brightness = qadd8(dev_info.brightness, RGB_MATRIX_VAL_STEP);
                 eeconfig_update_user(dev_info.raw);
             }
             return false;
 
         case SLED_VAD:
             if (record->event.pressed) {
-                if (dev_info.SLed_info.brightness <= RGB_MATRIX_VAL_STEP) {
-                    dev_info.SLed_info.brightness = 0;
-                    all_blink_cnt                 = 6;
-                    all_blink_color               = (RGB){ALARM_COLOR_WHITE};
-                    all_blink_time                = timer_read32();
+                if (dev_info.brightness <= RGB_MATRIX_VAL_STEP) {
+                    dev_info.brightness = 0;
+                    all_blink_cnt       = 6;
+                    all_blink_color     = (RGB){ALARM_COLOR_WHITE};
+                    all_blink_time      = timer_read32();
                 } else {
-                    dev_info.SLed_info.brightness -= RGB_MATRIX_VAL_STEP;
+                    dev_info.brightness -= RGB_MATRIX_VAL_STEP;
                 }
-                // dev_info.SLed_info.brightness = qsub8(dev_info.SLed_info.brightness, RGB_MATRIX_VAL_STEP);
+                // dev_info.brightness = qsub8(dev_info.brightness, RGB_MATRIX_VAL_STEP);
                 eeconfig_update_user(dev_info.raw);
             }
             return false;
 
         case SLED_SPI:
             if (record->event.pressed) {
-                // dev_info.SLed_info.speed = qadd8(dev_info.SLed_info.speed, RGB_MATRIX_SPD_STEP);
-                if (dev_info.SLed_info.speed >= (UINT8_MAX - RGB_MATRIX_SPD_STEP)) {
-                    dev_info.SLed_info.speed = UINT8_MAX;
-                    all_blink_cnt            = 6;
-                    all_blink_color          = (RGB){ALARM_COLOR_WHITE};
-                    all_blink_time           = timer_read32();
+                // dev_info.speed = qadd8(dev_info.speed, RGB_MATRIX_SPD_STEP);
+                if (dev_info.speed >= (UINT8_MAX - RGB_MATRIX_SPD_STEP)) {
+                    dev_info.speed  = UINT8_MAX;
+                    all_blink_cnt   = 6;
+                    all_blink_color = (RGB){ALARM_COLOR_WHITE};
+                    all_blink_time  = timer_read32();
                 } else {
-                    dev_info.SLed_info.speed += RGB_MATRIX_SPD_STEP;
+                    dev_info.speed += RGB_MATRIX_SPD_STEP;
                 }
                 eeconfig_update_user(dev_info.raw);
             }
@@ -140,14 +157,14 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
         case SLED_SPD:
             if (record->event.pressed) {
-                // dev_info.SLed_info.speed = qsub8(dev_info.SLed_info.speed, RGB_MATRIX_SPD_STEP);
-                if (dev_info.SLed_info.speed <= RGB_MATRIX_SPD_STEP) {
-                    dev_info.SLed_info.speed = 0;
-                    all_blink_cnt            = 6;
-                    all_blink_color          = (RGB){ALARM_COLOR_WHITE};
-                    all_blink_time           = timer_read32();
+                // dev_info.speed = qsub8(dev_info.speed, RGB_MATRIX_SPD_STEP);
+                if (dev_info.speed <= RGB_MATRIX_SPD_STEP) {
+                    dev_info.speed  = 0;
+                    all_blink_cnt   = 6;
+                    all_blink_color = (RGB){ALARM_COLOR_WHITE};
+                    all_blink_time  = timer_read32();
                 } else {
-                    dev_info.SLed_info.speed -= RGB_MATRIX_SPD_STEP;
+                    dev_info.speed -= RGB_MATRIX_SPD_STEP;
                 }
                 eeconfig_update_user(dev_info.raw);
             }
@@ -206,27 +223,39 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
         case LCD_LEFT:
             if (record->event.pressed) {
-                if (lcd_page > 0) {
-                    lcd_page--;
-                    LCD_Page_update(lcd_page);
-                } else if (lcd_page == 0) {
-                    lcd_page = 1;
-                    LCD_Page_update(lcd_page);
+                if (dev_info.LCD_PAGE > 0) {
+                    dev_info.LCD_PAGE--;
+                    LCD_Page_update(dev_info.LCD_PAGE);
+                } else if (dev_info.LCD_PAGE == 0) {
+                    dev_info.LCD_PAGE = 1;
+                    LCD_Page_update(dev_info.LCD_PAGE);
                 }
+                eeconfig_update_user(dev_info.raw);
             }
             return false;
 
         case LCD_RIGHT:
             if (record->event.pressed) {
-                if (lcd_page < 1) {
-                    lcd_page++;
-                    LCD_Page_update(lcd_page);
-                } else if (lcd_page >= 1) {
-                    lcd_page = 0;
-                    LCD_Page_update(lcd_page);
+                if (dev_info.LCD_PAGE < 1) {
+                    dev_info.LCD_PAGE++;
+                    LCD_Page_update(dev_info.LCD_PAGE);
+                } else if (dev_info.LCD_PAGE >= 1) {
+                    dev_info.LCD_PAGE = 0;
+                    LCD_Page_update(dev_info.LCD_PAGE);
                 }
+                eeconfig_update_user(dev_info.raw);
             }
             return false;
+#ifdef CONSOLE_ENABLE
+        case KC_A: {
+            if (record->event.pressed) {
+                // dev_info.raw = eeconfig_read_user();
+                uprintf("dev: %d, last_dev: %d\n", dev_info.devs, dev_info.last_devs);
+                uprintf("bri: %d, spd: %d, col: %d, mod: %d, enb: %d\n", dev_info.brightness, dev_info.speed, dev_info.color, dev_info.mode, dev_info.enable);
+            }
+            return true;
+        }
+#endif
 
         default:
             break;
@@ -240,95 +269,131 @@ void keyboard_pre_init_kb() {
     setPinOutputPushPull(RGB_MATRIX_SDB_PIN);
     writePinHigh(RGB_MATRIX_SDB_PIN);
 #endif
+
+    uart3_init(115200);
+
     keyboard_pre_init_user();
 }
 
 void set_led_state(void) {
     static uint8_t now_led_stuts = 0;
     static uint8_t old_led_stuts = 0;
+    uint8_t        IND_data[3]   = {0};
 
+    if (low_battery_vol_off) {
+        return;
+    }
+
+    IND_data[0] = 0x02;
     if (((dev_info.devs != DEVS_USB) && bts_info.bt_info.paired) || (dev_info.devs == DEVS_USB)) {
-        if (host_keyboard_led_state().num_lock)
+        if (host_keyboard_led_state().num_lock) {
             now_led_stuts |= 0x01;
-        else
+            IND_data[1] |= 0x01;
+        } else {
             now_led_stuts &= ~0x01;
+            IND_data[1] &= ~0x01;
+        }
         if (host_keyboard_led_state().caps_lock) {
             now_led_stuts |= 0x02;
+            IND_data[1] |= 0x02;
         } else {
             now_led_stuts &= ~0x02;
+            IND_data[1] &= ~0x02;
         }
-        if (host_keyboard_led_state().scroll_lock)
+        if (host_keyboard_led_state().scroll_lock) {
             now_led_stuts |= 0x04;
-        else
+            IND_data[1] |= 0x04;
+        } else {
             now_led_stuts &= ~0x04;
-        if (keymap_config.no_gui)
+            IND_data[1] &= ~0x04;
+        }
+        if (keymap_config.no_gui) {
             now_led_stuts |= 0x08;
-        else
+            IND_data[1] |= 0x08;
+        } else {
             now_led_stuts &= ~0x08;
+            IND_data[1] &= ~0x08;
+        }
     }
-    if ((get_highest_layer(default_layer_state) == 3))
+
+    if ((get_highest_layer(default_layer_state) == 3)) {
         now_led_stuts |= 0x10;
-    else
+        IND_data[1] |= 0x10;
+    } else {
         now_led_stuts &= ~0x10;
+        IND_data[1] &= ~0x10;
+    }
+
     now_led_stuts &= ~0xE0;
+    IND_data[1] &= ~0xE0;
     switch (dev_info.devs) {
         case DEVS_HOST1: {
             now_led_stuts |= 0x20;
+            IND_data[1] |= 0x20;
         } break;
         case DEVS_HOST2: {
             now_led_stuts |= 0x40;
+            IND_data[1] |= 0x40;
         } break;
         case DEVS_HOST3: {
             now_led_stuts |= 0x80;
+            IND_data[1] |= 0x80;
         } break;
         case DEVS_2_4G: {
             now_led_stuts |= 0xE0;
+            IND_data[1] |= 0xE0;
         } break;
         default:
             break;
     }
-    if (get_led_inited()) {
-        if (now_led_stuts != old_led_stuts) {
-            old_led_stuts = now_led_stuts;
-            LCD_IND_update();
-        }
+    // if (get_led_inited()) {
+    if (now_led_stuts != old_led_stuts) {
+        old_led_stuts = now_led_stuts;
+        // LCD_IND_update();
+        IND_data[2] = IND_data[0] + IND_data[1];
+        uart3_transmit(IND_data, 3);
     }
-    // static uint16_t power_update_time;
-    // if (timer_elapsed(power_update_time) >= 4000) {
-    //     power_update_time = timer_read();
-    //     LCD_IND_update();
-    //     LCD_charge_update();
-    // } else {
-#if defined(BT_CABLE_PIN) && defined(BT_CHARGE_PIN)
-    static bool charging_old_satus = 0;
-    static bool charging_now_satus = 0;
-
-    if (!readPin(BT_CABLE_PIN)) {
-        charging_now_satus = 1;
-    } else {
-        charging_now_satus = 0;
-    }
-    if (charging_old_satus != charging_now_satus) {
-        charging_old_satus = charging_now_satus;
-        LCD_charge_update();
-    }
-#endif
     // }
+    static uint16_t power_update_time;
+    if (timer_elapsed(power_update_time) >= 4000) {
+        power_update_time = timer_read();
+        LCD_IND_update();
+        LCD_charge_update();
+    } else {
+#if defined(BT_CABLE_PIN)
+        static bool charging_old_satus = 0;
+        static bool charging_now_satus = 0;
+
+        if (!readPin(BT_CABLE_PIN)) {
+            charging_now_satus = 1;
+        } else {
+            charging_now_satus = 0;
+        }
+        if (charging_old_satus != charging_now_satus) {
+            charging_old_satus = charging_now_satus;
+            LCD_charge_update();
+        }
+#endif
+    }
 }
 
 void matrix_scan_kb(void) {
 #ifdef MULTI_MODE_ENABLE
     bt_task();
-    // set_led_state();
 #endif
+
+    // set_led_state();
+
     matrix_scan_user();
 }
 
 void matrix_init_kb(void) {
-    uart3_init(115200);
+    //     uart3_init(115200);
+
 #ifdef MULTI_MODE_ENABLE
     bt_init();
 #endif
+
     matrix_init_user();
 }
 
@@ -349,6 +414,55 @@ void housekeeping_task_kb(void) {
 #endif
 #ifdef CONSOLE_ENABLE
     debug_enable = true;
+#endif
+
+    uart_resend_task();
+
+#ifdef USB_SUSPEND_CHECK_ENABLE
+    static uint32_t usb_suspend_timer = 0;
+    static uint32_t usb_suspend       = false;
+    static bool     bak_rgb_status    = false;
+
+    if (dev_info.devs == DEVS_USB) {
+        if ((USB_DRIVER.state != USB_ACTIVE) || (USB_DRIVER.state == USB_SUSPENDED)) {
+            if (!usb_suspend_timer) {
+                usb_suspend_timer = timer_read32();
+            } else if (timer_elapsed32(usb_suspend_timer) > 8000) {
+                if (!usb_suspend) {
+                    usb_suspend    = true;
+                    bak_rgb_status = rgb_matrix_is_enabled();
+                    rgb_matrix_disable_noeeprom();
+                    led_deconfig_all();
+                    LCD_command_update(LCD_LIGHT_SLEEP);
+                }
+                usb_suspend_timer = 0;
+            }
+        } else {
+            if (usb_suspend_timer) {
+                usb_suspend_timer = 0;
+                if (usb_suspend) {
+                    usb_suspend = false;
+                    led_config_all();
+                    if (bak_rgb_status) {
+                        rgb_matrix_enable_noeeprom();
+                    }
+                    LCD_command_update(LCD_LIGHT_WAKEUP);
+                    LCD_IND_update();
+                }
+            }
+        }
+    } else {
+        usb_suspend_timer = 0;
+        if (usb_suspend) {
+            usb_suspend = false;
+            if (bak_rgb_status) {
+                rgb_matrix_enable_noeeprom();
+            }
+            led_config_all();
+            LCD_command_update(LCD_LIGHT_WAKEUP);
+            LCD_IND_update();
+        }
+    }
 #endif
 }
 
@@ -379,7 +493,8 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
         return false;
     }
 
-    if (!dev_info.SLed_info.toggle && !low_battery_vol) {
+    // if (dev_info.enble) {
+    if (dev_info.enable && !low_battery_vol) {
         SLed_task();
     } else {
         for (uint8_t i = 83; i <= 129; i++) {
@@ -410,7 +525,6 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
 }
 
 void eeconfig_init_kb(void) {
-    SLed_eeconfig_init();
     eeconfig_init_user();
 }
 
@@ -418,13 +532,14 @@ void suspend_power_down_user(void) {
     // code will run multiple times while keyboard is suspended
     extern void led_deconfig_all(void);
     led_deconfig_all();
-    LCD_command_update(LCD_SLEEP);
+    LCD_command_update(LCD_LIGHT_SLEEP);
 }
 
 void suspend_wakeup_init_user(void) {
     // code will run on keyboard wakeup
-    extern void led_config_all(void);
     led_config_all();
-    LCD_command_update(LCD_WAKEUP);
-    set_led_state();
+    uart_resend_times = 3;
+    // LCD_command_update(LCD_LIGHT_WAKEUP);
+    // set_led_state();
+    LCD_IND_update();
 }

@@ -1349,6 +1349,7 @@ static void usb_indicate_led(void) {
 static void execute_factory_reset(void) {
     switch (factory_reset.type) {
         case _FACTORY: // Factory reset
+            bts_send_vendor(v_query_vol_update);
             eeconfig_init();
             keymap_config.nkro = false;
             dip_switch_read(true);

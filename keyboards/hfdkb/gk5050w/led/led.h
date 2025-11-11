@@ -20,10 +20,10 @@
 #include "quantum.h"
 
 typedef enum {
-    SLED_MODE_FLOW,
+    SLED_MODE_SOLID_RED,
+    // SLED_MODE_FLOW,
     SLED_MODE_NEON,
     SLED_MODE_SOLID_RAINBOW,
-    // SLED_MODE_SOLID_RED,
     // SLED_MODE_SOLID_ORANGE,
     // SLED_MODE_SOLID_YELLO,
     // SLED_MODE_SOLID_GREEN,
@@ -48,19 +48,19 @@ typedef enum {
     COLOR_COUNT,
 } SLed_color_preset_t;
 
-typedef struct PACKED {
-    bool    toggle : 1;
-    uint8_t mode : 3;
-    uint8_t color : 4;
-    uint8_t brightness;
-    uint8_t speed;
-} SLed_info_t;
+// typedef struct PACKED {
+//     uint8_t brightness;
+//     uint8_t speed;
+//     uint8_t color : 4;
+//     uint8_t mode : 3;
+//     bool    enable : 1;
+// } SLed_info_t;
 
 // SLed_info_t        SLed_info;
 // extern SLed_info_t SLed_info;
 
 void SLed_task(void);
 void SLed_init(void);
-void SLed_eeconfig_init(void);
+// void SLed_eeconfig_init(void);
 
 #endif // BLED_H
