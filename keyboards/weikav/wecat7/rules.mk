@@ -1,1 +1,1 @@
-include keyboards/linker/wireless/wireless.mk
+include keyboards/weikav/common/wireless/wireless.mk
