@@ -100,6 +100,7 @@ typedef struct {
     uint8_t  blink_count;
     uint32_t blink_time;
     uint32_t entry_full_time;
+    uint32_t entry_done_time;
     bool     blink_state;
     bool     completed;
 } charge_complete_warning_t;
@@ -193,6 +194,8 @@ static uint32_t rgb_test_time  = 0;
 static bool show_chrg_full_wakeup = false;
 
 // 闪烁效果相关
+static uint8_t  query_blink_cnt;
+static uint32_t query_blink_time;
 static uint8_t  all_blink_cnt;
 static uint32_t all_blink_time;
 static RGB      all_blink_color;
@@ -887,9 +890,11 @@ static bool bt_process_record_other(uint16_t keycode, keyrecord_t *record) {
                 //         bts_send_vendor(v_query_vol);
                 //         break;
                 // }
-                query_vol_flag = true;
+                query_blink_time = timer_read32();
+                query_vol_flag   = true;
             } else {
-                query_vol_flag = false;
+                query_blink_cnt = 0;
+                query_vol_flag  = false;
             }
         } break;
 
@@ -1349,7 +1354,7 @@ static void usb_indicate_led(void) {
 static void execute_factory_reset(void) {
     switch (factory_reset.type) {
         case _FACTORY: // Factory reset
-            bts_send_vendor(v_query_vol_update);
+            // bts_send_vendor(v_query_vol_update);
             eeconfig_init();
             keymap_config.nkro = false;
             dip_switch_read(true);
@@ -1413,7 +1418,48 @@ static void factory_reset_indeicate(void) {
 }
 
 static void blink_effects(void) {
-    // 全键闪烁
+    if (query_vol_flag) {
+        if (bts_info.bt_info.pvol >= 95) {
+            for (uint8_t i = 0; i < 22; i++) {
+                rgb_matrix_set_color(i, RGB_OFF);
+            }
+            if (timer_elapsed32(query_blink_time) > 500) {
+                query_blink_time = timer_read32();
+                query_blink_cnt++;
+            }
+            if (query_blink_cnt % 2) {
+                for (uint8_t i = 0; i < 22; i++) {
+                    rgb_matrix_set_color(i, RGB_GREEN);
+                }
+            }
+        } else if (bts_info.bt_info.pvol >= 30 && bts_info.bt_info.pvol < 95) {
+            for (uint8_t i = 0; i < 22; i++) {
+                rgb_matrix_set_color(i, RGB_OFF);
+            }
+            if (timer_elapsed32(query_blink_time) > 500) {
+                query_blink_time = timer_read32();
+                query_blink_cnt++;
+            }
+            if (query_blink_cnt % 2) {
+                for (uint8_t i = 0; i < 22; i++) {
+                    rgb_matrix_set_color(i, RGB_ORANGE);
+                }
+            }
+        } else {
+            for (uint8_t i = 0; i < 22; i++) {
+                rgb_matrix_set_color(i, RGB_OFF);
+            }
+            if (timer_elapsed32(query_blink_time) > 500) {
+                query_blink_time = timer_read32();
+                query_blink_cnt++;
+            }
+            if (query_blink_cnt % 2) {
+                for (uint8_t i = 0; i < 22; i++) {
+                    rgb_matrix_set_color(i, RGB_RED);
+                }
+            }
+        }
+    }
     if (all_blink_cnt) {
         rgb_matrix_set_color_all(0, 0, 0);
         if (timer_elapsed32(all_blink_time) > 500) {
@@ -1453,44 +1499,45 @@ static void charging_indicate(void) {
 
     // Debounced, hysteretic "first full" detector
     // static uint8_t  prev_pvol               = 0;
-    static bool     first_reach_full        = false; // drives the blink once per cycle
-    static uint32_t full_candidate_since    = 0;
-    static bool     full_latched_this_cycle = false;
+    static bool first_reach_full = false; // drives the blink once per cycle
+    // static uint32_t full_candidate_since    = 0;
+    static bool full_latched_this_cycle = false;
 
     uint8_t  pv      = bts_info.bt_info.pvol;
     uint32_t now     = timer_read32();
-    bool     plugged = (get_battery_charge_state() != BATTERY_STATE_UNPLUGGED);
+    bool     plugged = !readPin(MM_CABLE_PIN);
+    bool     done    = !readPin(MM_CHARGE_PIN);
 
     if (dev_info.devs != DEVS_USB) {
         // Detect and debounce first reach to FULL_PVOL_THRESHOLD
         if (!full_latched_this_cycle) {
             if (pv >= FULL_PVOL_THRESHOLD && plugged) {
-                if (full_candidate_since == 0) {
-                    full_candidate_since = now;
-                } else if (timer_elapsed32(full_candidate_since) >= FULL_DEBOUNCE_MS) {
-                    first_reach_full        = true; // trigger this cycle's indication
-                    full_latched_this_cycle = true; // prevent re-trigger until hysteresis clears
-                    full_candidate_since    = 0;    // reset candidate window
-                }
-            } else {
-                full_candidate_since = 0; // reset if we dip below threshold
+                // if (full_candidate_since == 0) {
+                // full_candidate_since = now;
+                // } else if (timer_elapsed32(full_candidate_since) >= FULL_DEBOUNCE_MS) {
+                first_reach_full        = true; // trigger this cycle's indication
+                full_latched_this_cycle = true; // prevent re-trigger until hysteresis clears
+                // full_candidate_since    = 0;    // reset candidate window
+                charge_complete_warning.entry_done_time = now;
             }
+            // }
+            // else {
+            //     full_candidate_since = 0; // reset if we dip below threshold
+            // }
         } else {
-            // Re-arm for next cycle only after dropping below hysteresis or unplugging
-            if (pv <= FULL_HYSTERESIS_PVOL || !plugged) {
+            if ((pv <= FULL_HYSTERESIS_PVOL) || !plugged) {
                 full_latched_this_cycle = false;
-                // Don't force first_reach_full here; it'll be set when we debounce next time
             }
         }
     }
 
     // Track charge state timing window for steady full detection
-    if (get_battery_charge_state() == BATTERY_STATE_CHARGING) {
+    if (plugged) {
         charge_complete_warning.entry_full_time = now;
     }
 
-    if (((get_battery_charge_state() == BATTERY_STATE_CHARGED_FULL) && first_reach_full) || show_chrg_full_wakeup) {
-        if (timer_elapsed32(charge_complete_warning.entry_full_time) > 1200) {
+    if ((plugged && first_reach_full) || show_chrg_full_wakeup) {
+        if (timer_elapsed32(charge_complete_warning.entry_done_time) > 1200) {
             if (!is_in_full_power_state) {
                 is_in_full_power_state = true;
                 if (!charge_complete_warning.triggered) {
@@ -1610,7 +1657,7 @@ static void bt_bat_query_period(void) {
     static uint32_t query_vol_time = 0;
 
     // Check if we should query battery (avoid querying too frequently)
-    if (!bt_init_time && bts_info.bt_info.paired && !kb_sleep_flag && timer_elapsed32(query_vol_time) > 10000) {
+    if (!bt_init_time && bts_info.bt_info.paired && !kb_sleep_flag && timer_elapsed32(query_vol_time) > 4000) {
         query_vol_time = timer_read32();
 
         // Send appropriate query command based on charge state
@@ -1634,6 +1681,7 @@ static void bt_bat_query_period(void) {
 }
 
 static void bt_bat_level_display(void) {
+#if 0
     if (query_vol_flag) {
         // 清空显示区域
         for (uint8_t i = 0; i < 22; i++) {
@@ -1661,6 +1709,7 @@ static void bt_bat_level_display(void) {
             rgb_matrix_set_color(query_index[i], color.r, color.g, color.b);
         }
     }
+#endif
 }
 
 // ===========================================
