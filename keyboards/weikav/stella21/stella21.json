@@ -86,7 +86,7 @@
         ]
       }
     ],
-    "matrix": { "rows": 6, "cols": 4 },
+    "matrix": { "rows": 6, "cols": 17 },
     "customKeycodes":[
         {"name":"BT_HOST1","title":"BT_HOST1","shortName":"BT_HOST1"},
         {"name":"BT_HOST2","title":"BT_HOST2","shortName":"BT_HOST2"},
