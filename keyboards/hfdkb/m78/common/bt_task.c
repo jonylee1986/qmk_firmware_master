@@ -35,7 +35,7 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record);
 static void bt_scan_mode(void);
 static void bt_used_pin_init(void);
 static void handle_blink_effects(void);
-static void handle_charging_indication(void);
+// static void handle_charging_indication(void);
 static void handle_low_battery_warning(void);
 static void handle_low_battery_shutdow(void);
 static void handle_battery_query(void);
@@ -1147,7 +1147,7 @@ static void handle_low_battery_warning(void) {
         Low_power_bink = 0;
     }
 }
-
+#if 0
 static void handle_charging_indication(void) {
     // 充电接入检测
     static uint32_t charging_time = 0;
@@ -1172,7 +1172,7 @@ static void handle_charging_indication(void) {
         }
     }
 }
-
+#endif
 static void handle_low_battery_shutdow(void) {
     extern bool low_vol_offed_sleep;
     if (bts_info.bt_info.low_vol_offed) {
@@ -1277,8 +1277,8 @@ bool bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
 
     handle_battery_query();
     handle_battery_query_display();
-    // 充电状态指示
-    handle_charging_indication();
+
+    // handle_charging_indication();
 
 #if defined(CABLE_PLUG_PIN)
     bool no_cable_plugin = readPin(CABLE_PLUG_PIN);

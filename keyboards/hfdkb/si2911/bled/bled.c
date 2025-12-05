@@ -252,8 +252,32 @@ void sled_task(void) {
             break;
         }
 
+        case SLED_MODE_LOW: {
+            bled_low_indicate();
+            break;
+        }
+
         default:
             break;
+    }
+}
+
+void bled_low_indicate(void) {
+    static uint32_t Low_power_time = 0;
+    static bool     Low_power_bink = false;
+
+    for (uint8_t i = 0; i < SLED_LED_NUM; i++) {
+        rgb_matrix_set_color(sled_leds[i], RGB_OFF);
+    }
+
+    if (timer_elapsed32(Low_power_time) >= 500) {
+        Low_power_bink = !Low_power_bink;
+        Low_power_time = timer_read32();
+    }
+    if (Low_power_bink) {
+        rgb_matrix_set_color(102, RGB_RED);
+    } else {
+        rgb_matrix_set_color(102, RGB_OFF);
     }
 }
 
@@ -284,8 +308,15 @@ void bled_charging_indicate(void) {
 }
 
 void bled_charged_indicate(void) {
+    // for (uint8_t i = 0; i < SLED_LED_NUM; i++) {
+    //     rgb_matrix_set_color(sled_leds[i], RGB_GREEN);
+    // }
+    // dev_info.sled_mode = SLED_MODE_FLOW;
+    uint8_t time = scale16by8(g_rgb_timer, qadd8(bled_info.sled_speed / 4, 1));
     for (uint8_t i = 0; i < SLED_LED_NUM; i++) {
-        rgb_matrix_set_color(sled_leds[i], RGB_GREEN);
+        HSV hsv = {g_led_config.point[i].x - time, 255, bled_info.sled_val};
+        RGB rgb = hsv_to_rgb(hsv);
+        rgb_matrix_set_color(sled_leds[i], rgb.r, rgb.g, rgb.b);
     }
 }
 
@@ -328,7 +359,7 @@ void bled_init(void) {
 }
 
 void bled_eeconfig_init(void) {
-    dev_info.sled_mode  = SLED_MODE_VOL;
+    dev_info.sled_mode  = SLED_MODE_FLOW;
     dev_info.bled_mode  = BLED_MODE_FLOW;
     dev_info.bled_color = COLOR_RED;
     eeconfig_update_user(dev_info.raw);

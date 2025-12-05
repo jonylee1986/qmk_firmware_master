@@ -23,8 +23,7 @@
 #define BT_NUMLOCK_SETTLE_MS 40
 // Battery full detection tuning
 #define FULL_PVOL_THRESHOLD 100 // consider full at >= this value
-#define FULL_HYSTERESIS_PVOL 96 // must drop to <= this to re-arm next cycle
-#define FULL_DEBOUNCE_MS 1200   // must stay at full for this long to count
+// #define FULL_HYSTERESIS_PVOL 90 // must drop to <= this to re-arm next cycle
 
 #ifdef BT_DEBUG_MODE
 #    define BT_DEBUG_INFO(fmt, ...) dprintf(fmt, ##__VA_ARGS__)
@@ -100,7 +99,7 @@ typedef struct {
     uint8_t  blink_count;
     uint32_t blink_time;
     uint32_t entry_full_time;
-    uint32_t entry_done_time;
+    uint32_t entry_chrg_time;
     bool     blink_state;
     bool     completed;
 } charge_complete_warning_t;
@@ -125,7 +124,8 @@ static battery_charge_state_t get_battery_charge_state(void);
 // ===========================================
 // 全局变量
 // ===========================================
-static bool led_inited = false;
+static bool led_inited    = false;
+static bool system_inited = false;
 
 static low_battery_warning_t     low_battery_warning     = {0};
 static charge_complete_warning_t charge_complete_warning = {0};
@@ -134,16 +134,17 @@ static bool is_in_low_power_state  = false;
 static bool is_in_full_power_state = false;
 bool        low_vol_offed_sleep    = false;
 
-uint32_t   bt_init_time = 0;
-dev_info_t dev_info     = {0};
-bts_info_t bts_info     = {
-        .bt_name        = {MM_BT_HOST1_NAME, MM_BT_HOST2_NAME, MM_BT_HOST3_NAME},
-        .uart_init      = uart_init,
-        .uart_read      = uart_read,
-        .uart_transmit  = uart_transmit,
-        .uart_receive   = uart_receive,
-        .uart_available = uart_available,
-        .timer_read32   = timer_read32,
+uint32_t bt_init_time = 0;
+
+dev_info_t dev_info = {0};
+bts_info_t bts_info = {
+    .bt_name        = {MM_BT_HOST1_NAME, MM_BT_HOST2_NAME, MM_BT_HOST3_NAME},
+    .uart_init      = uart_init,
+    .uart_read      = uart_read,
+    .uart_transmit  = uart_transmit,
+    .uart_receive   = uart_receive,
+    .uart_available = uart_available,
+    .timer_read32   = timer_read32,
 };
 
 // clang-format off
@@ -229,27 +230,29 @@ extern bool key_eql_pressed;
 
 __attribute__((weak)) void register_code(uint8_t code) {
     if (dev_info.devs) {
+        if (!system_inited) return;
+        dip_switch_read(true);
         // Handle numpad keys with custom behavior when unsync is enabled (BT mode)
         if (!key_eql_pressed && dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
             if (numpad_keys_pressed_count == 0) {
-                {
-                    uint8_t keyboard_led_state = 0;
-                    led_t  *kb_leds            = (led_t *)&keyboard_led_state;
-                    kb_leds->raw               = bts_info.bt_info.indictor_rgb_s;
-                    usb_device_state_set_leds(keyboard_led_state);
-                    original_num_lock_state = host_keyboard_led_state().num_lock;
-                }
+                uint8_t keyboard_led_state = 0;
+                led_t  *kb_leds            = (led_t *)&keyboard_led_state;
+                kb_leds->raw               = bts_info.bt_info.indictor_rgb_s;
+                // usb_device_state_set_leds(keyboard_led_state);
+                // original_num_lock_state = host_keyboard_led_state().num_lock;
+                original_num_lock_state = kb_leds->num_lock;
+
                 if (dev_info.num_unsync) {
                     if (original_num_lock_state != dev_info.num_unsync) {
                         // Host NumLock is OFF - turn it ON temporarily
                         bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                         bts_task(dev_info.devs);
                         while (bts_is_busy())
-                            wait_ms(1);
+                            wait_ms(20);
                         bts_process_keys(KC_NUM_LOCK, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                         bts_task(dev_info.devs);
                         while (bts_is_busy())
-                            wait_ms(1);
+                            wait_ms(20);
                     }
                 }
             }
@@ -264,7 +267,7 @@ __attribute__((weak)) void register_code(uint8_t code) {
         // Always call bts_task for BT mode
         bts_task(dev_info.devs);
         while (bts_is_busy()) {
-            wait_ms(1);
+            wait_ms(10);
         }
     } else {
         if (code == KC_NO) {
@@ -361,6 +364,7 @@ __attribute__((weak)) void register_code(uint8_t code) {
  */
 __attribute__((weak)) void unregister_code(uint8_t code) {
     if (dev_info.devs) {
+        if (!system_inited) return;
         // Handle numpad keys with custom behavior when unsync is enabled (BT mode)
         if (!key_eql_pressed && dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
             if (dev_info.num_unsync) {
@@ -368,7 +372,7 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
                 bts_process_keys(code, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                 bts_task(dev_info.devs);
                 while (bts_is_busy())
-                    wait_ms(1);
+                    wait_ms(10);
 
                 // Decrement counter and restore state only when last numpad key is released
                 if (numpad_keys_pressed_count > 0) {
@@ -376,15 +380,16 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
                     if (numpad_keys_pressed_count == 0) {
                         // Last numpad key released - restore original NumLock state if needed
                         if (!original_num_lock_state && host_keyboard_led_state().num_lock) {
+                            // if (host_keyboard_led_state().num_lock != dev_info.num_unsync) {
                             // Original was OFF, current is ON, restore to OFF
                             bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                             bts_task(dev_info.devs);
                             while (bts_is_busy())
-                                wait_ms(1);
+                                wait_ms(20);
                             bts_process_keys(KC_NUM_LOCK, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                             bts_task(dev_info.devs);
                             while (bts_is_busy())
-                                wait_ms(1);
+                                wait_ms(20);
                         }
                     }
                 }
@@ -669,6 +674,8 @@ void bt_task(void) {
 bool bt_process_record(uint16_t keycode, keyrecord_t *record) {
     bool retval = true;
 
+    // return false;
+
     if (record->event.pressed) {
         BT_DEBUG_INFO("\n\nkeycode = [0x%x], pressed time: [%d]\n\n", keycode, record->event.time);
         BT_DEBUG_INFO("\n devs     = [%d] \
@@ -686,6 +693,8 @@ bool bt_process_record(uint16_t keycode, keyrecord_t *record) {
     }
 
     retval = bt_process_record_other(keycode, record);
+
+    // return true;
 
     if (dev_info.devs != DEVS_USB) {
         if (retval != false) {
@@ -738,7 +747,6 @@ bool bt_process_record(uint16_t keycode, keyrecord_t *record) {
                         unregister_code(keycode);
                     }
                     retval = false; // We handled the key
-
                 } else {
                     retval = bts_process_keys(keycode, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                 }
@@ -1169,6 +1177,9 @@ static void close_rgb(void) {
 #ifdef ENTRY_STOP_MODE
                 lp_system_sleep();
 #endif
+                // if ((dev_info.devs != DEVS_USB) && (bts_info.bt_info.pvol >= FULL_PVOL_THRESHOLD)) {
+                //     show_chrg_full_wakeup = true;
+                // }
                 open_rgb();
             }
         }
@@ -1178,14 +1189,15 @@ static void close_rgb(void) {
 static void open_rgb(void) {
     key_press_time = timer_read32();
     if (!sober) {
-        if ((dev_info.devs != DEVS_USB) && (bts_info.bt_info.pvol >= FULL_PVOL_THRESHOLD)) {
-            show_chrg_full_wakeup                   = true;
-            charge_complete_warning.entry_full_time = timer_read32();
-        }
-
 #ifdef RGB_DRIVER_SDB_PIN
         writePinHigh(RGB_DRIVER_SDB_PIN);
 #endif
+
+        if (bts_info.bt_info.pvol >= FULL_PVOL_THRESHOLD) {
+            is_in_full_power_state = false;
+            memset(&charge_complete_warning, 0, sizeof(charge_complete_warning_t));
+            show_chrg_full_wakeup = true;
+        }
 
         low_battery_warning.triggered   = true;
         low_battery_warning.blink_count = 0;
@@ -1291,6 +1303,7 @@ static void bt_indicate_led(void) {
                 low_battery_warning.completed   = false;
                 indicator_status                = 0;
             }
+            system_inited = true;
         } break;
 
         case 4: { // 长灭模式
@@ -1418,48 +1431,48 @@ static void factory_reset_indeicate(void) {
 }
 
 static void blink_effects(void) {
-    if (query_vol_flag) {
-        if (bts_info.bt_info.pvol >= 95) {
-            for (uint8_t i = 0; i < 22; i++) {
-                rgb_matrix_set_color(i, RGB_OFF);
-            }
-            if (timer_elapsed32(query_blink_time) > 500) {
-                query_blink_time = timer_read32();
-                query_blink_cnt++;
-            }
-            if (query_blink_cnt % 2) {
-                for (uint8_t i = 0; i < 22; i++) {
-                    rgb_matrix_set_color(i, RGB_GREEN);
-                }
-            }
-        } else if (bts_info.bt_info.pvol >= 30 && bts_info.bt_info.pvol < 95) {
-            for (uint8_t i = 0; i < 22; i++) {
-                rgb_matrix_set_color(i, RGB_OFF);
-            }
-            if (timer_elapsed32(query_blink_time) > 500) {
-                query_blink_time = timer_read32();
-                query_blink_cnt++;
-            }
-            if (query_blink_cnt % 2) {
-                for (uint8_t i = 0; i < 22; i++) {
-                    rgb_matrix_set_color(i, RGB_ORANGE);
-                }
-            }
-        } else {
-            for (uint8_t i = 0; i < 22; i++) {
-                rgb_matrix_set_color(i, RGB_OFF);
-            }
-            if (timer_elapsed32(query_blink_time) > 500) {
-                query_blink_time = timer_read32();
-                query_blink_cnt++;
-            }
-            if (query_blink_cnt % 2) {
-                for (uint8_t i = 0; i < 22; i++) {
-                    rgb_matrix_set_color(i, RGB_RED);
-                }
-            }
-        }
-    }
+    // if (query_vol_flag) {
+    //     if (bts_info.bt_info.pvol >= 95) {
+    //         for (uint8_t i = 0; i < 22; i++) {
+    //             rgb_matrix_set_color(i, RGB_OFF);
+    //         }
+    //         if (timer_elapsed32(query_blink_time) > 500) {
+    //             query_blink_time = timer_read32();
+    //             query_blink_cnt++;
+    //         }
+    //         if (query_blink_cnt % 2) {
+    //             for (uint8_t i = 0; i < 22; i++) {
+    //                 rgb_matrix_set_color(i, RGB_GREEN);
+    //             }
+    //         }
+    //     } else if (bts_info.bt_info.pvol >= 30 && bts_info.bt_info.pvol < 95) {
+    //         for (uint8_t i = 0; i < 22; i++) {
+    //             rgb_matrix_set_color(i, RGB_OFF);
+    //         }
+    //         if (timer_elapsed32(query_blink_time) > 500) {
+    //             query_blink_time = timer_read32();
+    //             query_blink_cnt++;
+    //         }
+    //         if (query_blink_cnt % 2) {
+    //             for (uint8_t i = 0; i < 22; i++) {
+    //                 rgb_matrix_set_color(i, RGB_ORANGE);
+    //             }
+    //         }
+    //     } else {
+    //         for (uint8_t i = 0; i < 22; i++) {
+    //             rgb_matrix_set_color(i, RGB_OFF);
+    //         }
+    //         if (timer_elapsed32(query_blink_time) > 500) {
+    //             query_blink_time = timer_read32();
+    //             query_blink_cnt++;
+    //         }
+    //         if (query_blink_cnt % 2) {
+    //             for (uint8_t i = 0; i < 22; i++) {
+    //                 rgb_matrix_set_color(i, RGB_RED);
+    //             }
+    //         }
+    //     }
+    // }
     if (all_blink_cnt) {
         rgb_matrix_set_color_all(0, 0, 0);
         if (timer_elapsed32(all_blink_time) > 500) {
@@ -1497,81 +1510,121 @@ static void show_device_state(void) {
 static void charging_indicate(void) {
     extern bool charge_full;
 
-    // Debounced, hysteretic "first full" detector
-    // static uint8_t  prev_pvol               = 0;
-    static bool first_reach_full = false; // drives the blink once per cycle
-    // static uint32_t full_candidate_since    = 0;
-    static bool full_latched_this_cycle = false;
+    // static bool first_reach_full = false;
+    // static bool first_reach_full_indicate = false;
+    // static bool full_latched_this_cycle = false;
+    static bool show_chrg_full = false;
 
-    uint8_t  pv      = bts_info.bt_info.pvol;
-    uint32_t now     = timer_read32();
-    bool     plugged = !readPin(MM_CABLE_PIN);
-    bool     done    = !readPin(MM_CHARGE_PIN);
+    // static bool should_indicate = false;
+    // static bool show_chrg_full_wakeup_indicate = false;
 
-    if (dev_info.devs != DEVS_USB) {
-        // Detect and debounce first reach to FULL_PVOL_THRESHOLD
-        if (!full_latched_this_cycle) {
-            if (pv >= FULL_PVOL_THRESHOLD && plugged) {
-                // if (full_candidate_since == 0) {
-                // full_candidate_since = now;
-                // } else if (timer_elapsed32(full_candidate_since) >= FULL_DEBOUNCE_MS) {
-                first_reach_full        = true; // trigger this cycle's indication
-                full_latched_this_cycle = true; // prevent re-trigger until hysteresis clears
-                // full_candidate_since    = 0;    // reset candidate window
-                charge_complete_warning.entry_done_time = now;
-            }
-            // }
-            // else {
-            //     full_candidate_since = 0; // reset if we dip below threshold
-            // }
+    // New state tracking for user's requirements
+    // static bool charged_full_indicated = false; // prevents multiple indications
+    // static bool wireless_full_indicated = false; // tracks wireless full indication
+
+    // uint8_t  pv  = bts_info.bt_info.pvol;
+    // uint32_t now = timer_read32();
+
+    // Detect mode switch from wired to wireless
+    // static bool    mode_switched_to_wireless = false;
+    // static uint8_t last_dev_mode             = DEVS_HOST1; // for detecting mode switches
+    // if ((last_dev_mode == DEVS_USB) && ((dev_info.devs >= DEVS_HOST1) && (dev_info.devs <= DEVS_2_4G)) && (pv >= FULL_PVOL_THRESHOLD)) {
+    //     mode_switched_to_wireless = true;
+    // }
+    // last_dev_mode = dev_info.devs;
+
+    // if (dev_info.devs != DEVS_USB) {
+    // Detect and debounce first reach to FULL_PVOL_THRESHOLD
+    // if (!full_latched_this_cycle) {
+    // if ((pv >= FULL_PVOL_THRESHOLD) && (!readPin(MM_CABLE_PIN))) {
+    // first_reach_full        = true; // trigger this cycle's indication
+    // full_latched_this_cycle = true; // prevent re-trigger until hysteresis clears
+    // }
+    // } else {
+    // if ((pv <= FULL_HYSTERESIS_PVOL) || readPin(MM_CABLE_PIN)) {
+    // first_reach_full        = false;
+    // full_latched_this_cycle = false;
+    // if (first_reach_full_indicate) {
+    //     first_reach_full_indicate = false;
+    // }
+    // }
+    // }
+    // }
+
+    if (!readPin(MM_CABLE_PIN)) {
+        if (!readPin(MM_CHARGE_PIN)) {
+            charge_complete_warning.entry_full_time = timer_read32();
         } else {
-            if ((pv <= FULL_HYSTERESIS_PVOL) || !plugged) {
-                full_latched_this_cycle = false;
+            charge_complete_warning.entry_chrg_time = timer_read32();
+            if (timer_elapsed32(charge_complete_warning.entry_full_time) > 2000) {
+                show_chrg_full = true;
             }
         }
+    } else {
+        show_chrg_full = false;
     }
 
-    // Track charge state timing window for steady full detection
-    if (plugged) {
-        charge_complete_warning.entry_full_time = now;
-    }
+    // Scenario 1: Cable plugged in first time AND charged full
+    // if (show_chrg_full && !first_reach_full_indicate) {
+    //     should_indicate = true;
+    // charged_full_indicated = true;
+    // }
+    // Scenario 2: Battery reaches 100% while mode switch to wireless
+    // if (mode_switched_to_wireless) {
+    //     should_indicate = true;
+    // }
+    // Scenario 3: Battery reaches 100% first time with cable plugged in
+    // if (first_reach_full && !charged_full_indicated) {
+    // if (first_reach_full) {
+    //     should_indicate           = true;
+    //     first_reach_full_indicate = true;
+    // }
 
-    if ((plugged && first_reach_full) || show_chrg_full_wakeup) {
-        if (timer_elapsed32(charge_complete_warning.entry_done_time) > 1200) {
-            if (!is_in_full_power_state) {
-                is_in_full_power_state = true;
-                if (!charge_complete_warning.triggered) {
-                    charge_complete_warning.triggered   = true;
-                    charge_complete_warning.blink_count = 0;
-                    charge_complete_warning.blink_time  = now;
-                    charge_complete_warning.blink_state = false;
-                    charge_complete_warning.completed   = false;
-                    charge_full                         = true;
+    // if (show_chrg_full_wakeup) {
+    //     should_indicate = true;
+    // }
+
+    // if (should_indicate) {
+    // if (first_reach_full || show_chrg_full || show_chrg_full_wakeup) {
+    if (show_chrg_full || show_chrg_full_wakeup) {
+        if (!is_in_full_power_state) {
+            is_in_full_power_state = true;
+            if (!charge_complete_warning.triggered) {
+                charge_complete_warning.triggered   = true;
+                charge_complete_warning.blink_count = 0;
+                charge_complete_warning.blink_time  = timer_read32();
+                charge_complete_warning.blink_state = false;
+                charge_complete_warning.completed   = false;
+                charge_full                         = true;
+            }
+        }
+
+        if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 6) {
+            if (timer_elapsed32(charge_complete_warning.blink_time) >= 1000) {
+                charge_complete_warning.blink_time  = timer_read32();
+                charge_complete_warning.blink_state = !charge_complete_warning.blink_state;
+
+                if (charge_complete_warning.blink_state) {
+                    charge_complete_warning.blink_count++;
+                    if (charge_complete_warning.blink_count >= 6) {
+                        charge_full                         = false;
+                        charge_complete_warning.completed   = true;
+                        charge_complete_warning.blink_state = false;
+
+                        // mode_switched_to_wireless = false;
+                        // first_reach_full_indicate = true;
+
+                        show_chrg_full_wakeup = false;
+
+                        // if (should_indicate) should_indicate = false;
+                    }
                 }
             }
 
-            if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 6) {
-                if (timer_elapsed32(charge_complete_warning.blink_time) >= 1000) {
-                    charge_complete_warning.blink_time  = now;
-                    charge_complete_warning.blink_state = !charge_complete_warning.blink_state;
-
-                    if (charge_complete_warning.blink_state) {
-                        charge_complete_warning.blink_count++;
-                        if (charge_complete_warning.blink_count >= 6) {
-                            charge_full                         = false;
-                            charge_complete_warning.completed   = true;
-                            charge_complete_warning.blink_state = false;
-                            first_reach_full                    = false; // allow future cycles
-                            show_chrg_full_wakeup               = false;
-                        }
-                    }
-                }
-
-                if (charge_complete_warning.blink_state) {
-                    rgb_matrix_set_color(22, 0, 200, 0);
-                } else {
-                    rgb_matrix_set_color(22, 0, 0, 0);
-                }
+            if (charge_complete_warning.blink_state) {
+                rgb_matrix_set_color(22, 0, 200, 0);
+            } else {
+                rgb_matrix_set_color(22, 0, 0, 0);
             }
         }
     } else {
@@ -1581,8 +1634,6 @@ static void charging_indicate(void) {
             memset(&charge_complete_warning, 0, sizeof(charge_complete_warning_t));
         }
     }
-
-    // prev_pvol = pv;
 }
 
 static void bt_bat_low_level_warning(void) {
@@ -1653,7 +1704,6 @@ static battery_charge_state_t get_battery_charge_state(void) {
 }
 
 static void bt_bat_query_period(void) {
-    // 定期查询电量
     static uint32_t query_vol_time = 0;
 
     // Check if we should query battery (avoid querying too frequently)
@@ -1681,7 +1731,6 @@ static void bt_bat_query_period(void) {
 }
 
 static void bt_bat_level_display(void) {
-#if 0
     if (query_vol_flag) {
         // 清空显示区域
         for (uint8_t i = 0; i < 22; i++) {
@@ -1689,27 +1738,26 @@ static void bt_bat_level_display(void) {
         }
 
         // 电量显示LED
-        uint8_t pvol = bts_info.bt_info.pvol;
+        uint8_t pvol = (readPin(MM_CHARGE_PIN) && !readPin(MM_CABLE_PIN)) ? 100 : bts_info.bt_info.pvol;
 
         // 计算LED数量（至少2个，最多10个）
-        uint8_t led_count = (pvol < 30) ? 2 : ((pvol / 10) >= 10 ? 10 : (pvol / 10));
+        // uint8_t led_count = (pvol < 30) ? 2 : ((pvol / 10) >= 10 ? 10 : (pvol / 10));
 
         // 根据电量确定颜色
         RGB color;
         if (pvol < 30) {
             color = (RGB){100, 0, 0}; // 红色
-        } else if (pvol < 60) {
+        } else if (pvol < 95) {
             color = (RGB){100, 50, 0}; // 橙色
         } else {
             color = (RGB){0, 100, 0}; // 绿色
         }
 
         // 点亮LED
-        for (uint8_t i = 0; i < led_count; i++) {
-            rgb_matrix_set_color(query_index[i], color.r, color.g, color.b);
+        for (uint8_t i = 0; i < 22; i++) {
+            rgb_matrix_set_color(i, color.r, color.g, color.b);
         }
     }
-#endif
 }
 
 // ===========================================

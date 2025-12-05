@@ -1,5 +1,5 @@
-EEPROM_DRIVER = wear_leveling
-WEAR_LEVELING_DRIVER = spi_flash
+# EEPROM_DRIVER = wear_leveling
+# WEAR_LEVELING_DRIVER = spi_flash
 
 ifeq ($(strip $(CONSOLE_ENABLE)), yes)
     KEYBOARD_SHARED_EP = no

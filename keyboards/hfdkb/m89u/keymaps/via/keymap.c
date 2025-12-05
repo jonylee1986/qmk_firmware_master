@@ -315,6 +315,12 @@ bool rgb_matrix_indicators_user(void) {
         rgb_matrix_set_color_all(RGB_OFF);
     }
 
+    // if (host_keyboard_led_state().num_lock) {
+    //     rgb_matrix_set_color(10, 200, 200, 200);
+    // } else {
+    //     rgb_matrix_set_color(10, 0, 0, 0);
+    // }
+
     num_lock_indicator();
 
     return true;
@@ -367,7 +373,7 @@ void housekeeping_task_user(void) {
         }
     }
 
-    if (key_eql_numlock_timer && (timer_elapsed32(key_eql_numlock_timer) >= 20)) {
+    if (key_eql_numlock_timer && (timer_elapsed32(key_eql_numlock_timer) >= 30)) {
         unregister_code(KC_LALT);
         unregister_code(KC_P6);
         unregister_code(KC_P1);

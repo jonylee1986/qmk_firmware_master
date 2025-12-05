@@ -81,10 +81,11 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 #define MODE_ROW 3
 #define MODE_COLUMN 18
 
-uint8_t sled_mode_before_charge = SLED_MODE_VOL;
+// uint8_t sled_mode_before_charge = SLED_MODE_VOL;
 
 extern bool show_charging;
 extern bool show_charged;
+extern bool show_low;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 #ifdef MULTIMODE_ENABLE
@@ -98,18 +99,24 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case BLED_MOD: {
             if (record->event.pressed) {
                 if (keycode == SLED_MOD) {
+                    // if (show_charging || show_charged || show_low) {
                     if (show_charging || show_charged) {
-                        if (dev_info.sled_mode == SLED_MODE_VOL) {
-                            dev_info.sled_mode = SLED_MODE_FLOW;
+                        // if (dev_info.sled_mode == SLED_MODE_VOL) {
+                        //     dev_info.sled_mode = SLED_MODE_FLOW;
+                        // }
+                        if (show_charged) {
+                            dev_info.sled_mode = SLED_MODE_CYCLE;
                         }
                         show_charging = false;
                         show_charged  = false;
-                    } else if (dev_info.sled_mode == SLED_MODE_VOL) {
-                        if (sled_mode_before_charge == SLED_MODE_VOL) {
-                            dev_info.sled_mode = SLED_MODE_FLOW;
-                        } else {
-                            dev_info.sled_mode = sled_mode_before_charge;
-                        }
+                        // show_low      = false;
+
+                        // else if (dev_info.sled_mode == SLED_MODE_VOL) {
+                        //     if (sled_mode_before_charge == SLED_MODE_VOL) {
+                        //         dev_info.sled_mode = SLED_MODE_FLOW;
+                        //     } else {
+                        //         dev_info.sled_mode = sled_mode_before_charge;
+                        //     }
                     } else {
                         dev_info.sled_mode = (dev_info.sled_mode + 1) % SLED_MODE_COUNT;
                     }
@@ -205,10 +212,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 }
 
 void keyboard_pre_init_user(void) {
-#ifdef RGB_MATRIX_SHUTDOWN_PIN
-    setPinOutputPushPull(RGB_MATRIX_SHUTDOWN_PIN);
-    writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
-#endif
+    // #ifdef RGB_MATRIX_SHUTDOWN_PIN
+    //     setPinOutputPushPull(RGB_MATRIX_SHUTDOWN_PIN);
+    //     writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
+    // #endif
 }
 
 void keyboard_post_init_user(void) {
@@ -249,13 +256,14 @@ bool rgb_matrix_indicators_user(void) {
 
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     if (!backlight_sleep_flag && rgb_matrix_get_flags()) {
-        if (!readPin(MM_CABLE_PIN)) {
-            bled_task();
-        } else {
-            for (uint8_t i = 100; i < 102; i++) {
-                rgb_matrix_set_color(i, 0, 0, 0);
-            }
-        }
+        // if (!readPin(MM_CABLE_PIN)) {
+        //     bled_task();
+        // } else {
+        //     for (uint8_t i = 100; i < 102; i++) {
+        //         rgb_matrix_set_color(i, 0, 0, 0);
+        //     }
+        // }
+        bled_task();
         // if (!show_charging && !show_charged) {
         //     sled_task();
         // }
@@ -263,6 +271,8 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
             bled_charging_indicate();
         } else if (show_charged) {
             bled_charged_indicate();
+        } else if (show_low) {
+            bled_low_indicate();
         } else {
             sled_task();
         }
@@ -365,6 +375,12 @@ void matrix_scan_user(void) {
 }
 
 void matrix_init_user(void) {
+#ifdef RGB_MATRIX_SHUTDOWN_PIN
+    setPinOutputPushPull(RGB_MATRIX_SHUTDOWN_PIN);
+    writePinLow(RGB_MATRIX_SHUTDOWN_PIN);
+    wait_ms(10);
+    writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
+#endif
 #ifdef MULTIMODE_ENABLE
     bt_init();
     led_config_all();
