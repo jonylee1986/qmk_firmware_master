@@ -1156,7 +1156,7 @@ static void bt_bat_low_level_warning(void) {
         }
         bled_low_indicate();
         if (query_vol_flag) {
-            for (uint8_t i = 102; i <= 103; i++) {
+            for (uint8_t i = 18; i <= 19; i++) {
                 rgb_matrix_set_color(i, RGB_RED);
             }
         }
