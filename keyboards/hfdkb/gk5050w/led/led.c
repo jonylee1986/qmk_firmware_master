@@ -34,7 +34,7 @@ const uint8_t hsv_table[COLOR_COUNT][3] = {
 // clang-format on
 
 #define SLed_MIN 83
-#define SLed_MAX 129
+#define SLed_MAX 130
 
 void SLed_task(void) {
     switch (dev_info.mode) {

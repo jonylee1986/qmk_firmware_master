@@ -83,10 +83,6 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 
 // uint8_t sled_mode_before_charge = SLED_MODE_VOL;
 
-extern bool show_charging;
-extern bool show_charged;
-extern bool show_low;
-
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 #ifdef MULTIMODE_ENABLE
     if (!bt_process_record(keycode, record)) {
@@ -99,27 +95,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case BLED_MOD: {
             if (record->event.pressed) {
                 if (keycode == SLED_MOD) {
-                    // if (show_charging || show_charged || show_low) {
-                    if (show_charging || show_charged) {
-                        // if (dev_info.sled_mode == SLED_MODE_VOL) {
-                        //     dev_info.sled_mode = SLED_MODE_FLOW;
-                        // }
-                        if (show_charged) {
-                            dev_info.sled_mode = SLED_MODE_CYCLE;
-                        }
-                        show_charging = false;
-                        show_charged  = false;
-                        // show_low      = false;
-
-                        // else if (dev_info.sled_mode == SLED_MODE_VOL) {
-                        //     if (sled_mode_before_charge == SLED_MODE_VOL) {
-                        //         dev_info.sled_mode = SLED_MODE_FLOW;
-                        //     } else {
-                        //         dev_info.sled_mode = sled_mode_before_charge;
-                        //     }
-                    } else {
-                        dev_info.sled_mode = (dev_info.sled_mode + 1) % SLED_MODE_COUNT;
-                    }
+                    dev_info.sled_mode = (dev_info.sled_mode + 1) % SLED_MODE_COUNT;
                 } else {
                     dev_info.bled_mode = (dev_info.bled_mode + 1) % BLED_MODE_COUNT;
                 }
@@ -267,15 +243,15 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         // if (!show_charging && !show_charged) {
         //     sled_task();
         // }
-        if (show_charging) {
-            bled_charging_indicate();
-        } else if (show_charged) {
-            bled_charged_indicate();
-        } else if (show_low) {
-            bled_low_indicate();
-        } else {
-            sled_task();
-        }
+        // if (show_charging) {
+        //     bled_charging_indicate();
+        // } else if (show_charged) {
+        //     bled_charged_indicate();
+        // } else if (show_low) {
+        //     bled_low_indicate();
+        // } else {
+        sled_task();
+        // }
     }
 
 #ifdef MULTIMODE_ENABLE

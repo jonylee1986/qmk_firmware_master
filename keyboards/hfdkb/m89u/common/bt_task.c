@@ -218,8 +218,8 @@ uint32_t last_total_time = 0;
 #include "command.h"
 #include "action.h"
 
-static bool    original_num_lock_state   = false; // Track original NumLock state
-static uint8_t numpad_keys_pressed_count = 0;     // Count of currently pressed numpad keys
+static bool original_num_lock_state   = false; // Track original NumLock state
+uint8_t     numpad_keys_pressed_count = 0;     // Count of currently pressed numpad keys
 
 void register_mouse(uint8_t mouse_keycode, bool pressed);
 /** \brief Utilities for actions. (FIXME: Needs better description)
@@ -227,32 +227,42 @@ void register_mouse(uint8_t mouse_keycode, bool pressed);
  * FIXME: Needs documentation.
  */
 extern bool key_eql_pressed;
+// extern bool synchronize_numlock_state;
 
 __attribute__((weak)) void register_code(uint8_t code) {
     if (dev_info.devs) {
         if (!system_inited) return;
-        dip_switch_read(true);
+        // dip_switch_read(true);
         // Handle numpad keys with custom behavior when unsync is enabled (BT mode)
-        if (!key_eql_pressed && dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
+        // Skip async numpad logic for KC_P6 and KC_P1 when KEY_EQL is active (Alt+61 sequence)
+        bool is_key_eql_numpad = key_eql_pressed && (code == KC_P6 || code == KC_P1);
+        if (dev_info.unsync && IS_NUMPAD_KEYCODE(code) && !is_key_eql_numpad) {
+            // if (synchronize_numlock_state) {
+            //     synchronize_numlock_state = false;
+            // }
             if (numpad_keys_pressed_count == 0) {
                 uint8_t keyboard_led_state = 0;
                 led_t  *kb_leds            = (led_t *)&keyboard_led_state;
                 kb_leds->raw               = bts_info.bt_info.indictor_rgb_s;
-                // usb_device_state_set_leds(keyboard_led_state);
-                // original_num_lock_state = host_keyboard_led_state().num_lock;
-                original_num_lock_state = kb_leds->num_lock;
+                original_num_lock_state    = kb_leds->num_lock;
 
                 if (dev_info.num_unsync) {
-                    if (original_num_lock_state != dev_info.num_unsync) {
+                    if (!original_num_lock_state) {
+                        // setPinOutputPushPull(MM_CABLE_PIN);
+                        // writePinLow(MM_CABLE_PIN);
                         // Host NumLock is OFF - turn it ON temporarily
                         bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                         bts_task(dev_info.devs);
                         while (bts_is_busy())
-                            wait_ms(20);
+                            ;
+                        wait_ms(20);
                         bts_process_keys(KC_NUM_LOCK, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                         bts_task(dev_info.devs);
                         while (bts_is_busy())
-                            wait_ms(20);
+                            ;
+                        wait_ms(20);
+                        // kb_leds->raw            = bts_info.bt_info.indictor_rgb_s;
+                        // original_num_lock_state = kb_leds->num_lock;
                     }
                 }
             }
@@ -267,8 +277,8 @@ __attribute__((weak)) void register_code(uint8_t code) {
         // Always call bts_task for BT mode
         bts_task(dev_info.devs);
         while (bts_is_busy()) {
-            wait_ms(10);
         }
+        // wait_ms(10);
     } else {
         if (code == KC_NO) {
             return;
@@ -319,7 +329,8 @@ __attribute__((weak)) void register_code(uint8_t code) {
             }
 
             // Handle numpad keys with custom behavior when unsync is enabled
-            if (!key_eql_pressed && dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
+            bool is_key_eql_numpad = key_eql_pressed && (code == KC_P6 || code == KC_P1);
+            if (!is_key_eql_numpad && dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
                 if (numpad_keys_pressed_count == 0) {
                     // First numpad key pressed: apply NumLock sync logic
                     if (dev_info.num_unsync) {
@@ -366,30 +377,48 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
     if (dev_info.devs) {
         if (!system_inited) return;
         // Handle numpad keys with custom behavior when unsync is enabled (BT mode)
-        if (!key_eql_pressed && dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
+        // Skip async numpad logic for KC_P6 and KC_P1 when KEY_EQL is active (Alt+61 sequence)
+        bool is_key_eql_numpad = key_eql_pressed && (code == KC_P6 || code == KC_P1);
+        if (dev_info.unsync && IS_NUMPAD_KEYCODE(code) && !is_key_eql_numpad) {
             if (dev_info.num_unsync) {
                 // Force numpad to produce numbers (NumLock ON behavior)
                 bts_process_keys(code, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                 bts_task(dev_info.devs);
-                while (bts_is_busy())
-                    wait_ms(10);
+                while (bts_is_busy()) {
+                }
+                wait_ms(10);
 
                 // Decrement counter and restore state only when last numpad key is released
                 if (numpad_keys_pressed_count > 0) {
                     numpad_keys_pressed_count--;
                     if (numpad_keys_pressed_count == 0) {
-                        // Last numpad key released - restore original NumLock state if needed
-                        if (!original_num_lock_state && host_keyboard_led_state().num_lock) {
-                            // if (host_keyboard_led_state().num_lock != dev_info.num_unsync) {
+                        // Wait for BT latency to settle
+                        // wait_ms(100);
+                        // Re-read current LED state
+                        // uint8_t current_led_state = 0;
+                        // led_t  *current_leds      = (led_t *)&current_led_state;
+                        // current_leds->raw         = bts_info.bt_info.indictor_rgb_s;
+                        // uint8_t keyboard_led_state = 0;
+                        // led_t  *kb_leds            = (led_t *)&keyboard_led_state;
+                        // kb_leds->raw               = bts_info.bt_info.indictor_rgb_s;
+                        // original_num_lock_state    = kb_leds->num_lock;
+                        // Only restore if: we toggled it AND it's currently ON
+                        // if (current_leds->num_lock && we_toggled_numlock) {
+                        // if (current_leds->num_lock) {
+                        if (!original_num_lock_state) {
+                            // setPinOutputPushPull(MM_CABLE_PIN);
+                            // writePinHigh(MM_CABLE_PIN);
                             // Original was OFF, current is ON, restore to OFF
                             bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                             bts_task(dev_info.devs);
                             while (bts_is_busy())
-                                wait_ms(20);
+                                ;
+                            wait_ms(20);
                             bts_process_keys(KC_NUM_LOCK, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                             bts_task(dev_info.devs);
                             while (bts_is_busy())
-                                wait_ms(20);
+                                ;
+                            wait_ms(20);
                         }
                     }
                 }
@@ -397,8 +426,8 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
                 bts_process_keys(code, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                 bts_task(dev_info.devs);
                 while (bts_is_busy()) {
-                    wait_ms(1);
                 }
+                // wait_ms(1);
                 if (numpad_keys_pressed_count > 0) {
                     numpad_keys_pressed_count = 0;
                 }
@@ -408,8 +437,8 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
             bts_process_keys(code, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
             bts_task(dev_info.devs);
             while (bts_is_busy()) {
-                wait_ms(1);
             }
+            // wait_ms(1);
         }
     } else {
         if (code == KC_NO) {
@@ -447,7 +476,8 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
 
         } else if (IS_BASIC_KEYCODE(code)) {
             // Handle numpad keys with custom behavior when unsync is enabled
-            if (!key_eql_pressed && dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
+            bool is_key_eql_numpad = key_eql_pressed && (code == KC_P6 || code == KC_P1);
+            if (!is_key_eql_numpad && dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
                 if (dev_info.num_unsync) {
                     // Force numpad to produce numbers (NumLock ON behavior)
                     del_key(code);
@@ -725,18 +755,12 @@ bool bt_process_record(uint16_t keycode, keyrecord_t *record) {
                 }
                 retval = bts_process_keys(QK_MODS_GET_BASIC_KEYCODE(keycode), record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
             } else {
-                if (dev_info.unsync) {
-                    if (keycode == KC_NUM_LOCK) {
-                        if (dev_info.unsync) {
-                            if (record->event.pressed) {
-                                dev_info.num_unsync = !dev_info.num_unsync;
-                                eeconfig_update_user(dev_info.raw);
-                            }
-                            return false;
-                        } else {
-                            return false;
-                        }
+                if ((keycode == KC_NUM_LOCK) && dev_info.unsync) {
+                    if (record->event.pressed) {
+                        dev_info.num_unsync = !dev_info.num_unsync;
+                        eeconfig_update_user(dev_info.raw);
                     }
+                    return false;
                 }
 
                 if (IS_NUMPAD_KEYCODE(keycode)) {

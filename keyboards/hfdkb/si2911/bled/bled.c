@@ -308,15 +308,9 @@ void bled_charging_indicate(void) {
 }
 
 void bled_charged_indicate(void) {
-    // for (uint8_t i = 0; i < SLED_LED_NUM; i++) {
-    //     rgb_matrix_set_color(sled_leds[i], RGB_GREEN);
-    // }
-    // dev_info.sled_mode = SLED_MODE_FLOW;
-    uint8_t time = scale16by8(g_rgb_timer, qadd8(bled_info.sled_speed / 4, 1));
+    // Show solid green to indicate fully charged
     for (uint8_t i = 0; i < SLED_LED_NUM; i++) {
-        HSV hsv = {g_led_config.point[i].x - time, 255, bled_info.sled_val};
-        RGB rgb = hsv_to_rgb(hsv);
-        rgb_matrix_set_color(sled_leds[i], rgb.r, rgb.g, rgb.b);
+        rgb_matrix_set_color(sled_leds[i], RGB_GREEN);
     }
 }
 
