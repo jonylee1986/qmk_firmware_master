@@ -1,17 +1,79 @@
 {
-    "name": "Metafor Air - wire",
+    "name": "pixel 67",
     "vendorId": "0xFFFE",
-    "productId": "0x0024",
-    "matrix": { "rows": 5, "cols": 14 },
+    "productId": "0x00B0",
+    "keycodes": [
+        "qmk_lighting"
+    ],
+    "menus": [
+      {
+        "label": "Lighting",
+        "content": [
+          {
+            "label": "Backlight",
+            "content": [
+              {
+                "label": "Brightness",
+                "type": "range",
+                "options": [0, 200],
+                "content": ["id_qmk_rgb_matrix_brightness", 3, 1]
+              },
+              {
+                "label": "Effect",
+                "type": "dropdown",
+                "content": ["id_qmk_rgb_matrix_effect", 3, 2],
+                "options": [
+                  ["All Off", 0],
+                  ["SOLID_COLOR", 1],
+                  ["GRADIENT_UP_DOWN", 2],
+                  ["BREATHING", 3],
+                  ["BAND_PINWHEEL_SAT", 4],
+                  ["BAND_SPIRAL_SAT", 5],
+                  ["CYCLE_ALL", 6],
+                  ["CYCLE_LEFT_RIGHT", 7],
+                  ["RAINBOW_MOVING_CHEVRON", 8],
+                  ["CYCLE_OUT_IN", 9],
+                  ["CYCLE_OUT_IN_DUAL", 10],
+                  ["CYCLE_PINWHEEL", 11],
+                  ["DUAL_BEACON", 12],
+                  ["RAINBOW_PINWHEELS", 13],
+                  ["HUE_WAVE", 14],
+                  ["TYPING_HEATMAP", 15],
+                  ["SOLID_REACTIVE_SIMPLE", 16],
+                  ["SOLID_REACTIVE_WIDE", 17],
+                  ["SOLID_REACTIVE_CROSS", 18],
+                  ["SOLID_REACTIVE_NEXUS", 19],
+                  ["MULTISPLASH", 20]
+                ]
+              },
+              {
+                "showIf": "{id_qmk_rgb_matrix_effect} != 0 && {id_qmk_rgb_matrix_effect} != 1",
+                "label": "Effect Speed",
+                "type": "range",
+                "options": [0, 255],
+                "content": ["id_qmk_rgb_matrix_effect_speed", 3, 3]
+              },
+              {
+                "showIf": "{id_qmk_rgb_matrix_effect} != 0",
+                "label": "Color",
+                "type": "color",
+                "content": ["id_qmk_rgb_matrix_color", 3, 4]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "matrix": { "rows": 5, "cols": 16 },
     "customKeycodes":[
-        {"name":"BT_HOST1","title":"BT_HOST1","shortName":"BT_HOST1"},
-        {"name":"BT_HOST2","title":"BT_HOST2","shortName":"BT_HOST2"},
-        {"name":"BT_HOST3","title":"BT_HOST3","shortName":"BT_HOST3"},
-        {"name":"BT_2_4G","title":"BT_2_4G","shortName":"BT_2_4G"},
-        {"name":"SW_OS1","title":"SW_OS1","shortName":"SW_OS1"},
-        {"name":"KC_MTCL","title":"KC_MTCL","shortName":"KC_MTCL"},
-        {"name":"KC_DICT","title":"KC_DICT","shortName":"KC_DICT"},
-        {"name":"KC_DNDT","title":"KC_DNDT","shortName":"KC_DNDT"}
+        {"name":"BT_1","title":"Switch to bluetooth host1","shortName":"BT_1"},
+        {"name":"BT_2","title":"Switch to bluetooth host2","shortName":"BT_2"},
+        {"name":"BT_3","title":"Switch to bluetooth host3","shortName":"BT_3"},
+        {"name":"2_4G","title":"Switch to 2_4G","shortName":"2_4G"},
+        {"name":"USB","title":"Switch to USB","shortName":"USB"},
+        {"name":"BAT_VOL","title":"Query battery voltage level","shortName":"BAT_VOL"},
+        {"name":"SW_OS1","title":"Switch OS between Windows and Mac","shortName":"SW_OS1"},
+        {"name":"KEY_FUN","title":"Toggle num keys and function keys","shortName":"KEY_FUN"}
     ],
     "layouts": {
       "keymap":[
@@ -39,11 +101,12 @@
             "w": 2,
             "c": "#AAAAAA"
           },
-          "0,13"
+          "0,14",
+          "0,15"
         ],
         [
           {
-            "w": 2,
+            "w": 1.5,
             "c": "#cccccc"
           },
           "1,0",
@@ -59,13 +122,23 @@
           "1,10",
           "1,11",
           "1,12",
-          "1,13"
+          {
+            "w": 1.5
+          },
+          "1,13",
+          {
+            "c": "#AAAAAA"
+          },
+          "0,15"
         ],
         [
           {
-            "w": 2.25
+            "w": 1.75
           },
           "2,0",
+          {
+            "c": "#cccccc"
+          },
           "2,1",
           "2,2",
           "2,3",
@@ -79,14 +152,17 @@
           "2,11",
           {
             "c": "#777777",
-            "w": 1.75
+            "w": 2.25
           },
-          "2,13"
+          "2,13",
+          {
+            "c": "#AAAAAA"
+          },
+          "2,15"
         ],
         [
           {
-            "c": "#AAAAAA",
-            "w": 2.75
+            "w": 2.25
           },
           "3,0",
           {
@@ -101,32 +177,36 @@
           "3,8",
           "3,9",
           "3,10",
-          {
-              "w": 1.25
-          },
           "3,11",
           {
-            "c": "#777777"
+              "w": 1.75,
+              "c": "#AAAAAA"
           },
           "3,12",
           {
-            "c": "#cccccc"
+            "c": "#777777"
           },
-          "3, 13"
-        ],
-        [
+          "3,13",
           {
             "c": "#AAAAAA"
           },
-          "4,0",
-          "4,1",
-          "4,2",
+          "3, 15"
+        ],
+        [
           {
             "w": 1.25
           },
-          "4,3",
+          "4,0",
           {
-            "w": 5.5,
+            "w": 1.25
+          },
+          "4,1",
+          {
+            "w": 1.25
+          },
+          "4,2",
+          {
+            "w": 6.5,
             "c": "#cccccc"
           },
           "4,6",
@@ -134,14 +214,18 @@
             "w": 1.25,
             "c": "#AAAAAA"
           },
-          "4,9",
           "4,10",
           {
-            "c": "#777777"
+            "w": 1.25
           },
           "4,11",
+          {
+            "c": "#777777",
+            "x": 0.25
+          },
           "4,12",
-          "4,13"
+          "4,13",
+          "4,15"
         ]
       ]
     }

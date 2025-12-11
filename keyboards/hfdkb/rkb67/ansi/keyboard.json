@@ -7,7 +7,7 @@
         "layout": [
             { "flags": 4, "matrix": [0, 15], "x": 224, "y": 0 },
             { "flags": 4, "matrix": [0, 14], "x": 202, "y": 0 },
-            { "flags": 4, "matrix": [0, 13], "x": 202, "y": 0 },
+            // { "flags": 4, "matrix": [0, 13], "x": 202, "y": 0 },
             { "flags": 4, "matrix": [0, 12], "x": 179, "y": 0 },
             { "flags": 4, "matrix": [0, 11], "x": 164, "y": 0 },
             { "flags": 4, "matrix": [0, 10], "x": 149, "y": 0 },
@@ -54,7 +54,7 @@
             { "flags": 1, "matrix": [2, 0],  "x":   2, "y": 32},
 
             { "flags": 1, "matrix": [3, 0],  "x":  10, "y": 48},
-            { "flags": 4, "matrix": [3, 1],  "x":  10, "y": 48},
+            // { "flags": 4, "matrix": [3, 1],  "x":  10, "y": 48},
             { "flags": 4, "matrix": [3, 2],  "x":  34, "y": 48},
             { "flags": 4, "matrix": [3, 3],  "x":  49, "y": 48},
             { "flags": 4, "matrix": [3, 4],  "x":  63, "y": 48},

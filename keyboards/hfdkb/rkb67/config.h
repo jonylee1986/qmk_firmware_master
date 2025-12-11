@@ -29,9 +29,14 @@
 #define EXTERNAL_FLASH_SPI_SLAVE_SELECT_PIN C12
 
 /* Enable CapsLock LED */
-#define CAPS_LOCK_LED_INDEX 44
+#define CAPS_LOCK_LED_INDEX 43
 
 /* Enable GUI Lock LED */
-#define GUI_LOCK_LED_INDEX 66
+#define GUI_LOCK_LED_INDEX 65
+
+/* SLED define */
+#define SLED_START_INDEX 67
+#define SLED_END_INDEX 72
+#define SLED_NUM 6
 
 #define KEY_NUM 8

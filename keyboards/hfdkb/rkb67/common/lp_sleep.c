@@ -186,6 +186,13 @@ static void exti_init(void) {
         pad_enbale_interrupt(PAL_PAD(MM_2G4_MODE_PIN));
 
 #    endif
+        // Enable cable detection for wakeup
+#    ifdef BT_CABLE_PIN
+        setPinInputHigh(BT_CABLE_PIN);
+        waitInputPinDelay();
+        _pal_lld_enablepadevent(PAL_PORT(BT_CABLE_PIN), PAL_PAD(BT_CABLE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
+        pad_enbale_interrupt(PAL_PAD(BT_CABLE_PIN));
+#    endif
     } else {
         setPinInputHigh(BT_CABLE_PIN);
         waitInputPinDelay();

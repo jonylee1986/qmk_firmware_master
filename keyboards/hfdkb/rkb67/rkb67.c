@@ -61,6 +61,12 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
+void keyboard_post_init_kb(void) {
+    if (keymap_config.no_gui) {
+        keymap_config.no_gui = false;
+    }
+}
+
 void matrix_init_kb(void) {
 #ifdef BT_MODE_ENABLE
     bt_init();
@@ -127,11 +133,11 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     }
 
     if (!readPin(BT_CABLE_PIN)) {
-        for (uint8_t i = 68; i < 74; i++) {
+        for (uint8_t i = SLED_START_INDEX; i <= SLED_END_INDEX; i++) {
             rgb_matrix_set_color(i, 100, 100, 100);
         }
     } else {
-        for (uint8_t i = 68; i < 74; i++) {
+        for (uint8_t i = SLED_START_INDEX; i <= SLED_END_INDEX; i++) {
             rgb_matrix_set_color(i, RGB_OFF);
         }
     }

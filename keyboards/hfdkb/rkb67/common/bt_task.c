@@ -391,10 +391,13 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 if (get_highest_layer(default_layer_state) == 0) { // WIN_BASE
                     set_single_persistent_default_layer(3);
-                    single_blink_index = 42;
+                    if (keymap_config.no_gui) {
+                        keymap_config.no_gui = false;
+                    }
+                    single_blink_index = 41;
                 } else if (get_highest_layer(default_layer_state) == 3) { // MAC_BASE
                     set_single_persistent_default_layer(0);
-                    single_blink_index = 43;
+                    single_blink_index = 42;
                 }
                 single_blink_cnt   = 6;
                 single_blink_color = (RGB){RGB_WHITE};
@@ -503,7 +506,7 @@ extern void     led_config_all(void);
 extern void     led_deconfig_all(void);
 static uint32_t sleep_time[3] = {5 * 60 * 1000, 30 * 60 * 1000, 1 * 60 * 60 * 1000};
 
-static const uint8_t rgb_index_table[]          = {16, 14, 13, 12, 255, 255, 15};
+static const uint8_t rgb_index_table[]          = {15, 13, 12, 11, 255, 255, 14};
 static const uint8_t rgb_index_color_table[][3] = {
     {RGB_WHITE}, {RGB_BLUE}, {RGB_BLUE}, {RGB_BLUE}, {RGB_BLACK}, {RGB_BLACK}, {RGB_GREEN},
 };
@@ -562,6 +565,10 @@ static void close_rgb(void) {
 void open_rgb(void) {
     key_press_time = timer_read32();
 
+    if (indicator_status != 0) {
+        last_total_time = 0;
+    }
+
     if (backlight_sleep_flag) {
         backlight_sleep_flag = false;
         led_config_all();
@@ -572,15 +579,18 @@ void open_rgb(void) {
         setPinOutput(RGB_DRIVER_SDB_PIN);
         writePinLow(RGB_DRIVER_SDB_PIN);
 #    endif
+
         if (bak_rgb_toggle) {
             kb_sleep_flag = false;
             extern bool low_vol_offed_sleep;
             low_vol_offed_sleep = false;
             rgb_matrix_enable_noeeprom();
         }
+
         if (!led_inited) {
             led_config_all();
         }
+
         sober = true;
     }
 }
@@ -601,17 +611,19 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
             EE_CLR_press_cnt  = 0;
             EE_CLR_flag       = false;
             eeconfig_init();
-            // eeconfig_update_rgb_matrix_default();
+            if (keymap_config.no_gui) {
+                keymap_config.no_gui = false;
+            }
 
-            if (dev_info.devs != DEVS_USB) last_total_time = 0;
+            if (indicator_status != 0) last_total_time = 0;
         }
 
         if (EE_CLR_press_cnt % 2) {
-            for (uint8_t i = 0; i < 68; i++) {
+            for (uint8_t i = 0; i < (RGB_MATRIX_LED_COUNT - SLED_NUM); i++) {
                 rgb_matrix_set_color(i, 100, 100, 100);
             }
         } else {
-            for (uint8_t i = 0; i < 68; i++) {
+            for (uint8_t i = 0; i < (RGB_MATRIX_LED_COUNT - SLED_NUM); i++) {
                 rgb_matrix_set_color(i, RGB_OFF);
             }
         }
@@ -644,16 +656,17 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
             }
         }
 
-        if (bts_info.bt_info.low_vol && readPin(BT_CABLE_PIN)) {
-            for (uint8_t i = 0; i < 68; i++) {
-                rgb_matrix_set_color(i, RGB_OFF);
+        if (readPin(BT_CABLE_PIN)) {
+            if (bts_info.bt_info.low_vol) {
+                for (uint8_t i = 0; i < (RGB_MATRIX_LED_COUNT - SLED_NUM); i++) {
+                    rgb_matrix_set_color(i, RGB_OFF);
+                }
             }
-        }
-
-        if (bts_info.bt_info.low_vol_offed) {
-            extern bool low_vol_offed_sleep;
-            kb_sleep_flag       = true;
-            low_vol_offed_sleep = true;
+            if (bts_info.bt_info.low_vol_offed) {
+                extern bool low_vol_offed_sleep;
+                kb_sleep_flag       = true;
+                low_vol_offed_sleep = true;
+            }
         }
     }
 

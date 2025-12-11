@@ -36,10 +36,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [WIN_FN] = LAYOUT_ansi_67( /* FN */
         BT_2_4G, BT_HOST1, BT_HOST2, BT_HOST3, _______, _______, _______, _______, _______, _______, _______, _______,    _______, _______, _______,
-        BT_USB,  _______,  _______,  _______,  _______, _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,    _______, _______, _______,
-        _______, _______,  SW_OS1,   _______,  _______, _______, _______, KC_INS,  KC_HOME, KC_PGUP, _______, _______,             _______, _______,
-        _______,           KC_MSEL,  KC_VOLD,  KC_VOLU, KC_MUTE, BT_VOL,  _______, KC_DEL,  KC_END,  KC_PGDN, _______,    _______, _______, _______,
-        KEY_FUN, GU_TOGG,  _______,                              EE_CLR,                             _______, _______,    _______, _______, _______),
+        BT_USB,  _______,  _______,  _______,  _______, _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,    _______, RM_NEXT, _______,
+        _______, _______,  SW_OS1,   _______,  _______, _______, _______, KC_INS,  KC_HOME, KC_PGUP, _______, _______,             RM_TOGG, RM_SATU,
+        _______,           KC_MSEL,  KC_VOLD,  KC_VOLU, KC_MUTE, BT_VOL,  _______, KC_DEL,  KC_END,  KC_PGDN, _______,    RM_HUEU, RM_VALU, RM_SATD,
+        KEY_FUN, GU_TOGG,  _______,                              EE_CLR,                             _______, _______,    RM_SPDD, RM_VALD, RM_SPDU),
 
     [WIN_EX] = LAYOUT_ansi_67( /* FN */
         _______, _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______, _______,    _______, _______, _______,
@@ -57,10 +57,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [MAC_FN] = LAYOUT_ansi_67( /* FN */
         BT_2_4G, BT_HOST1, BT_HOST2, BT_HOST3, _______, _______, _______, _______, _______, _______, _______, _______,    _______, _______, _______,
-        BT_USB,  _______,  _______,  _______,  _______, _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,    _______, _______, _______,
-        _______, SW_OS1,   _______,  _______,  _______, _______, _______, KC_INS,  KC_HOME, KC_PGUP, _______, _______,             _______, _______,
-        _______,           KC_MSEL,  KC_VOLD,  KC_VOLU, KC_MUTE, BT_VOL,  _______, KC_DEL,  KC_END,  KC_PGDN, _______,    _______, _______, _______,
-        KEY_FUN, _______,  _______,                              EE_CLR,                             _______, _______,    _______, _______, _______),
+        BT_USB,  _______,  _______,  _______,  _______, _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,    _______, RM_NEXT, _______,
+        _______, SW_OS1,   _______,  _______,  _______, _______, _______, KC_INS,  KC_HOME, KC_PGUP, _______, _______,             RM_TOGG, _______,
+        _______,           KC_MSEL,  KC_VOLD,  KC_VOLU, KC_MUTE, BT_VOL,  _______, KC_DEL,  KC_END,  KC_PGDN, _______,    RM_HUEU, RM_VALU, _______,
+        KEY_FUN, _______,  _______,                              EE_CLR,                             _______, _______,    RM_SPDD, RM_VALD, RM_SPDU),
 
     [MAC_EX] = LAYOUT_ansi_67( /* FN */
         _______, _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______, _______,    _______, _______, _______,
@@ -98,7 +98,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                         single_blink_color = (RGB){0, 0, 100};
                     }
                     single_blink_cnt   = 6;
-                    single_blink_index = 67;
+                    single_blink_index = 66;
                     single_blink_time  = timer_read32();
                 } else if (get_highest_layer(default_layer_state) == MAC_B) {
                     if (dynamic_keymap_get_keycode(MAC_B, 0, 1) == KC_1) {
@@ -113,7 +113,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                         single_blink_color = (RGB){0, 0, 100};
                     }
                     single_blink_cnt   = 6;
-                    single_blink_index = 67;
+                    single_blink_index = 66;
                     single_blink_time  = timer_read32();
                 }
             }
