@@ -99,7 +99,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     }
                     single_blink_cnt   = 6;
                     single_blink_index = 66;
-                    single_blink_time  = timer_read32();
+                    if (timer_elapsed32(single_blink_time) >= 300) {
+                        single_blink_time = timer_read32();
+                    }
                 } else if (get_highest_layer(default_layer_state) == MAC_B) {
                     if (dynamic_keymap_get_keycode(MAC_B, 0, 1) == KC_1) {
                         for (size_t i = 0; i < 12; i++) {
@@ -110,11 +112,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                         for (size_t i = 0; i < 12; i++) {
                             dynamic_keymap_set_keycode(MAC_B, 0, i + 1, FUN_table[0][i]);
                         }
+                        if (timer_elapsed32(single_blink_time) >= 300) {
+                            single_blink_time = timer_read32();
+                        }
                         single_blink_color = (RGB){0, 0, 100};
                     }
                     single_blink_cnt   = 6;
                     single_blink_index = 66;
-                    single_blink_time  = timer_read32();
+                    if (timer_elapsed32(single_blink_time) >= 300) {
+                        single_blink_time = timer_read32();
+                    }
                 }
             }
             return false;

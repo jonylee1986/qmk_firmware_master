@@ -2,16 +2,18 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include QMK_KEYBOARD_H
-#include "common/bt_task.h"
-#include "usb_main.h"
+#ifdef BT_MODE_ENABLE
+#    include "common/bt_task.h"
+#    include "usb_main.h"
+#endif
 
 bool led_inited = false;
 
 void led_config_all(void) {
     if (!led_inited) {
         // Set our LED pins as output
-        setPinOutput(RGB_DRIVER_SDB_PIN);
-        writePinLow(RGB_DRIVER_SDB_PIN);
+        // setPinOutput(RGB_DRIVER_SDB_PIN);
+        // writePinLow(RGB_DRIVER_SDB_PIN);
         led_inited = true;
     }
 }
@@ -19,8 +21,8 @@ void led_config_all(void) {
 void led_deconfig_all(void) {
     if (led_inited) {
         // Set our LED pins as input
-        setPinOutput(RGB_DRIVER_SDB_PIN);
-        writePinHigh(RGB_DRIVER_SDB_PIN);
+        // setPinOutput(RGB_DRIVER_SDB_PIN);
+        // writePinHigh(RGB_DRIVER_SDB_PIN);
         led_inited = false;
     }
 }
@@ -67,7 +69,23 @@ void keyboard_post_init_kb(void) {
     }
 }
 
+void suspend_power_down_kb(void) {
+#ifdef RGB_DRIVER_SDB_PIN
+    writePinHigh(RGB_DRIVER_SDB_PIN);
+#endif
+}
+
+void suspend_wakeup_init_kb(void) {
+#ifdef RGB_DRIVER_SDB_PIN
+    writePinLow(RGB_DRIVER_SDB_PIN);
+#endif
+}
+
 void matrix_init_kb(void) {
+#ifdef RGB_DRIVER_SDB_PIN
+    setPinOutput(RGB_DRIVER_SDB_PIN);
+    writePinLow(RGB_DRIVER_SDB_PIN);
+#endif
 #ifdef BT_MODE_ENABLE
     bt_init();
     led_config_all();
@@ -92,6 +110,7 @@ void housekeeping_task_kb(void) {
     debug_enable = true;
 #endif
 
+#ifdef USB_SUSPEND_STATE_CHECK
     static uint32_t usb_suspend_timer = 0;
     static uint32_t usb_suspend       = false;
 
@@ -122,11 +141,10 @@ void housekeeping_task_kb(void) {
             led_config_all();
         }
     }
+#endif
 }
 
 #ifdef RGB_MATRIX_ENABLE
-void blink_rgb_advanced(void);
-
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     if (!rgb_matrix_get_flags()) {
         rgb_matrix_set_color_all(RGB_OFF);

@@ -18,6 +18,7 @@
 // #    define BT_MODE_SW_PIN C13
 // #    define RF_MODE_SW_PIN C14
 #    define RGB_DRIVER_SDB_PIN B7
+#    define USB_SUSPEND_STATE_CHECK
 #endif
 
 /* SPI Config for spi flash*/
