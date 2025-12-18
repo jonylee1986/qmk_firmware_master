@@ -1145,7 +1145,7 @@ static void bt_bat_low_level_warning(void) {
 
     if ((bts_info.bt_info.pvol <= 20) && !Low_power) {
         Low_power = true;
-    } else if ((bts_info.bt_info.pvol >= 60) && Low_power) {
+    } else if ((bts_info.bt_info.pvol >= 50) && Low_power) {
         Low_power = false;
     }
     // extern uint8_t sled_mode_before_charge;
@@ -1172,47 +1172,47 @@ static void bt_charging_indication(void) {
     if (!readPin(MM_CABLE_PIN)) {
         if (!readPin(MM_CHARGE_PIN)) {
             charge_complete_warning.entry_full_time = timer_read32();
-            // if (timer_elapsed32(charge_complete_warning.entry_chrg_time) >= 1200) {
-            // show_chrging = true;
-            if (!is_in_charging_state) {
-                is_in_charging_state = true;
-                if (!charge_complete_warning.triggered) {
-                    charge_complete_warning.triggered   = true;
-                    charge_complete_warning.blink_count = 0;
-                    charge_complete_warning.blink_time  = timer_read32();
-                    charge_complete_warning.blink_state = false;
-                    charge_complete_warning.completed   = false;
+            if (timer_elapsed32(charge_complete_warning.entry_chrg_time) >= 1200) {
+                // show_chrging = true;
+                if (!is_in_charging_state) {
+                    is_in_charging_state = true;
+                    if (!charge_complete_warning.triggered) {
+                        charge_complete_warning.triggered   = true;
+                        charge_complete_warning.blink_count = 0;
+                        charge_complete_warning.blink_time  = timer_read32();
+                        charge_complete_warning.blink_state = false;
+                        charge_complete_warning.completed   = false;
+                    }
                 }
-            }
 
-            if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 10) {
-                if (timer_elapsed32(charge_complete_warning.blink_time) >= 1000) {
-                    charge_complete_warning.blink_time  = timer_read32();
-                    charge_complete_warning.blink_state = !charge_complete_warning.blink_state;
+                if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 10) {
+                    if (timer_elapsed32(charge_complete_warning.blink_time) >= 1000) {
+                        charge_complete_warning.blink_time  = timer_read32();
+                        charge_complete_warning.blink_state = !charge_complete_warning.blink_state;
+
+                        if (charge_complete_warning.blink_state) {
+                            charge_complete_warning.blink_count++;
+                            if (charge_complete_warning.blink_count >= 10) {
+                                charge_complete_warning.completed   = true;
+                                charge_complete_warning.blink_state = false;
+                            }
+                        }
+                    }
 
                     if (charge_complete_warning.blink_state) {
-                        charge_complete_warning.blink_count++;
-                        if (charge_complete_warning.blink_count >= 10) {
-                            charge_complete_warning.completed   = true;
-                            charge_complete_warning.blink_state = false;
+                        for (uint8_t i = 102; i <= 106; i++) {
+                            rgb_matrix_set_color(i, RGB_GREEN);
+                        }
+                    } else {
+                        for (uint8_t i = 102; i <= 106; i++) {
+                            rgb_matrix_set_color(i, RGB_OFF);
                         }
                     }
                 }
-
-                if (charge_complete_warning.blink_state) {
-                    for (uint8_t i = 102; i <= 106; i++) {
-                        rgb_matrix_set_color(i, RGB_GREEN);
-                    }
-                } else {
-                    for (uint8_t i = 102; i <= 106; i++) {
-                        rgb_matrix_set_color(i, RGB_OFF);
-                    }
-                }
             }
-            // }
         } else {
-            // charge_complete_warning.entry_chrg_time = timer_read32();
-            if (timer_elapsed32(charge_complete_warning.entry_full_time) >= 1000) {
+            charge_complete_warning.entry_chrg_time = timer_read32();
+            if (timer_elapsed32(charge_complete_warning.entry_full_time) >= 1200) {
                 // show_chrg_full = true;
                 if (!is_in_full_power_state) {
                     is_in_full_power_state = true;
