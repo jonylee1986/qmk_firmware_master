@@ -223,7 +223,7 @@ void bled_init(void) {}
 
 void bled_eeconfig_init(void) {
     dev_info.bled_mode  = BLED_MODE_CYCLE;
-    dev_info.bled_val   = RGB_MATRIX_MAXIMUM_BRIGHTNESS;
+    dev_info.bled_val   = BLED_MAX_BRIGHTNESS;
     dev_info.bled_speed = RGB_MATRIX_DEFAULT_SPD;
     eeconfig_update_user(dev_info.raw);
 }

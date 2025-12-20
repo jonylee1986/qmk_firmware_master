@@ -19,6 +19,9 @@
 
 #include "quantum.h"
 
+#define BLED_MAX_BRIGHTNESS 100
+#define BLED_BRIGHTNESS_STEP 25
+
 typedef enum {
     BLED_MODE_CYCLE,
     BLED_MODE_BREATHING,
