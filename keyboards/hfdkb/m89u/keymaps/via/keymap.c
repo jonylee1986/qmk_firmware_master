@@ -114,7 +114,7 @@ bool            key_eql_pressed       = false;
 static uint32_t key_eql_numlock_timer = 0;
 static uint8_t  host_numlock_state    = 0;
 
-bool synchronize_numlock_state = false;
+// bool synchronize_numlock_state = false;
 
 bool process_rgb_matrix_user(uint16_t keycode, keyrecord_t *record) {
     if (record->event.pressed) {

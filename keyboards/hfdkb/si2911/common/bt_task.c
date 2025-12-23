@@ -41,6 +41,7 @@ static void show_current_keyboard_state(void);
 static void bt_indicate(void);
 static void factory_reset_indicate(void);
 static void usb_indicate(void);
+
 #ifdef RGB_MATRIX_ENABLE
 static void led_off_standby(void);
 static void open_rgb(void);
@@ -1164,24 +1165,29 @@ static void bt_bat_low_level_warning(void) {
 }
 
 static void bt_charging_indication(void) {
-    // static bool show_chrg_full         = false;
-    // static bool show_chrging           = false;
+    static bool show_chrg_full = false;
+
+    // This flag persists until system restart - once charge full is displayed, it won't trigger again
+    static bool charge_full_displayed = false;
+
     static bool is_in_charging_state   = false;
     static bool is_in_full_power_state = false;
 
     if (!readPin(MM_CABLE_PIN)) {
         if (!readPin(MM_CHARGE_PIN)) {
-            charge_complete_warning.entry_full_time = timer_read32();
-            if (timer_elapsed32(charge_complete_warning.entry_chrg_time) >= 1200) {
-                // show_chrging = true;
-                if (!is_in_charging_state) {
-                    is_in_charging_state = true;
-                    if (!charge_complete_warning.triggered) {
-                        charge_complete_warning.triggered   = true;
-                        charge_complete_warning.blink_count = 0;
-                        charge_complete_warning.blink_time  = timer_read32();
-                        charge_complete_warning.blink_state = false;
-                        charge_complete_warning.completed   = false;
+            if (!charge_full_displayed) {
+                charge_complete_warning.entry_full_time = timer_read32();
+                if (timer_elapsed32(charge_complete_warning.entry_chrg_time) >= 1200) {
+                    // show_chrging = true;
+                    if (!is_in_charging_state) {
+                        is_in_charging_state = true;
+                        if (!charge_complete_warning.triggered) {
+                            charge_complete_warning.triggered   = true;
+                            charge_complete_warning.blink_count = 0;
+                            charge_complete_warning.blink_time  = timer_read32();
+                            charge_complete_warning.blink_state = false;
+                            charge_complete_warning.completed   = false;
+                        }
                     }
                 }
 
@@ -1211,35 +1217,45 @@ static void bt_charging_indication(void) {
                 }
             }
         } else {
-            charge_complete_warning.entry_chrg_time = timer_read32();
-            if (timer_elapsed32(charge_complete_warning.entry_full_time) >= 1200) {
-                // show_chrg_full = true;
-                if (!is_in_full_power_state) {
-                    is_in_full_power_state = true;
-                    if (!charge_complete_warning.full_triggered) {
-                        charge_complete_warning.full_triggered = true;
-                        charge_complete_warning.full_time      = timer_read32();
-                    }
-                }
+            // Charge pin indicates full - trigger only if not already displayed
+            // charge_complete_warning.entry_chrg_time = timer_read32();
+            // if (timer_elapsed32(charge_complete_warning.entry_full_time) >= 1200) {
+            //     if (!charge_full_displayed) {
+            //         show_chrg_full        = true;
+            //         charge_full_displayed = true;
+            //     }
+            // }
+        }
 
-                if (!charge_complete_warning.full_completed) {
-                    if (timer_elapsed32(charge_complete_warning.full_time) <= 10000) {
-                        for (uint8_t i = 102; i <= 106; i++) {
-                            rgb_matrix_set_color(i, RGB_GREEN);
-                        }
-                    } else {
-                        charge_complete_warning.full_completed = true;
+        // Check voltage >= 100% while cable connected - trigger only if not already displayed
+        if ((bts_info.bt_info.pvol >= 100) && !charge_full_displayed) {
+            show_chrg_full        = true;
+            charge_full_displayed = true;
+        }
+
+        if (show_chrg_full) {
+            if (!is_in_full_power_state) {
+                is_in_full_power_state = true;
+                if (!charge_complete_warning.full_triggered) {
+                    charge_complete_warning.full_triggered = true;
+                    charge_complete_warning.full_time      = timer_read32();
+                }
+            }
+
+            if (!charge_complete_warning.full_completed) {
+                if (timer_elapsed32(charge_complete_warning.full_time) <= 10000) {
+                    for (uint8_t i = 102; i <= 106; i++) {
+                        rgb_matrix_set_color(i, RGB_GREEN);
                     }
+                } else {
+                    charge_complete_warning.full_completed = true;
+                    show_chrg_full                         = false;
                 }
             }
         }
     } else {
-        // Cable unplugged - immediately reset all state
-        // show_chrging   = false;
-        // show_chrg_full = false;
-        // Clear timing variables to prevent stale timer values on next plug-in
-        // charge_complete_warning.entry_chrg_time = 0;
-        // charge_complete_warning.entry_full_time = 0;
+        // Cable disconnected - reset charging state but NOT charge_full_displayed
+        charge_full_displayed = false;
 
         is_in_charging_state   = false;
         is_in_full_power_state = false;
@@ -1253,70 +1269,6 @@ static void bt_charging_indication(void) {
         charge_complete_warning.blink_time     = 0;
         // charge_complete_warning.full_time      = 0;
     }
-
-    // if (show_chrging) {
-    // if (!is_in_charging_state) {
-    //     is_in_charging_state = true;
-    //     if (!charge_complete_warning.triggered) {
-    //         charge_complete_warning.triggered   = true;
-    //         charge_complete_warning.blink_count = 0;
-    //         charge_complete_warning.blink_time  = timer_read32();
-    //         charge_complete_warning.blink_state = false;
-    //         charge_complete_warning.completed   = false;
-    //     }
-    // }
-
-    // if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 10) {
-    //     if (timer_elapsed32(charge_complete_warning.blink_time) >= 1000) {
-    //         charge_complete_warning.blink_time  = timer_read32();
-    //         charge_complete_warning.blink_state = !charge_complete_warning.blink_state;
-
-    //         if (charge_complete_warning.blink_state) {
-    //             charge_complete_warning.blink_count++;
-    //             if (charge_complete_warning.blink_count >= 10) {
-    //                 charge_complete_warning.completed   = true;
-    //                 charge_complete_warning.blink_state = false;
-    //             }
-    //         }
-    //     }
-
-    //     if (charge_complete_warning.blink_state) {
-    //         for (uint8_t i = 102; i <= 106; i++) {
-    //             rgb_matrix_set_color(i, RGB_GREEN);
-    //         }
-    //     } else {
-    //         for (uint8_t i = 102; i <= 106; i++) {
-    //             rgb_matrix_set_color(i, RGB_OFF);
-    //         }
-    //     }
-    // }
-    // } else {
-    //     is_in_charging_state = false;
-    //     memset(&charge_complete_warning, 0, sizeof(charge_complete_warning_t));
-    // }
-
-    // if (show_chrg_full) {
-    // if (!is_in_full_power_state) {
-    //     is_in_full_power_state = true;
-    //     if (!charge_complete_warning.full_triggered) {
-    //         charge_complete_warning.full_triggered = true;
-    //         charge_complete_warning.full_time      = timer_read32();
-    //     }
-    // }
-
-    // if (!charge_complete_warning.full_completed) {
-    //     if (timer_elapsed32(charge_complete_warning.full_time) <= 10000) {
-    //         for (uint8_t i = 102; i <= 106; i++) {
-    //             rgb_matrix_set_color(i, RGB_GREEN);
-    //         }
-    //     } else {
-    //         charge_complete_warning.full_completed = true;
-    //     }
-    // }
-    // } else {
-    // is_in_full_power_state = false;
-    // memset(&charge_complete_warning, 0, sizeof(charge_complete_warning_t));
-    // }
 }
 
 static void bt_bat_low_level_shutdown(void) {
@@ -1452,9 +1404,6 @@ bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
     if ((dev_info.devs != DEVS_USB) && (readPin(MM_CABLE_PIN))) {
         bt_bat_low_level_warning();
     }
-    // else {
-    //     show_low = false;
-    // }
 
     // Show the current keyboard state
     show_current_keyboard_state();

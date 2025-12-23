@@ -14,8 +14,10 @@ bool led_inited = false;
 void led_config_all(void) {
     if (!led_inited) {
         // Set our LED pins as output
-        // setPinOutput(RGB_DRIVER_SDB_PIN);
-        // writePinLow(RGB_DRIVER_SDB_PIN);
+#ifdef RGB_DRIVER_SDB_PIN
+        setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
+        writePinHigh(RGB_DRIVER_SDB_PIN);
+#endif
         led_inited = true;
     }
 }
@@ -23,8 +25,10 @@ void led_config_all(void) {
 void led_deconfig_all(void) {
     if (led_inited) {
         // Set our LED pins as input
-        // setPinOutput(RGB_DRIVER_SDB_PIN);
-        // writePinHigh(RGB_DRIVER_SDB_PIN);
+#ifdef RGB_DRIVER_SDB_PIN
+        setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
+        writePinLow(RGB_DRIVER_SDB_PIN);
+#endif
         led_inited = false;
     }
 }
@@ -67,20 +71,22 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
 void suspend_power_down_kb(void) {
 #ifdef RGB_DRIVER_SDB_PIN
-    writePinLow(RGB_DRIVER_SDB_PIN);
+    // writePinLow(RGB_DRIVER_SDB_PIN);
 #endif
+    led_deconfig_all();
 }
 
 void suspend_wakeup_init_kb(void) {
 #ifdef RGB_DRIVER_SDB_PIN
-    writePinHigh(RGB_DRIVER_SDB_PIN);
+    // writePinHigh(RGB_DRIVER_SDB_PIN);
 #endif
+    led_config_all();
 }
 
 void matrix_init_kb(void) {
 #ifdef RGB_DRIVER_SDB_PIN
-    setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
-    writePinHigh(RGB_DRIVER_SDB_PIN);
+    // setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
+    // writePinHigh(RGB_DRIVER_SDB_PIN);
 #endif
 
 #ifdef BT_MODE_ENABLE

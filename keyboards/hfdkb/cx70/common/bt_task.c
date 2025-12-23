@@ -547,7 +547,7 @@ static void close_rgb(void) {
             close_rgb_time = timer_read32();
             rgb_matrix_disable_noeeprom();
 #    ifdef RGB_DRIVER_SDB_PIN
-            // setPinOutput(RGB_DRIVER_SDB_PIN);
+            setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
             writePinLow(RGB_DRIVER_SDB_PIN);
 #    endif
         }
@@ -574,8 +574,8 @@ void open_rgb(void) {
 
     if (!sober) {
 #    ifdef RGB_DRIVER_SDB_PIN
-        wait_ms(100);
-        writePinHigh(RGB_DRIVER_SDB_PIN);
+        // wait_ms(100);
+        // writePinHigh(RGB_DRIVER_SDB_PIN);
 #    endif
 
         if (bak_rgb_toggle) {
