@@ -15,7 +15,6 @@
 // #define WAKEUP_RESET
 
 static ioline_t row_pins[MATRIX_ROWS] = MATRIX_ROW_PINS;
-// static ioline_t row_pins[MATRIX_ROWS] = {C6, C7, C8, C9, B14};
 static ioline_t col_pins[MATRIX_COLS] = MATRIX_COL_PINS;
 
 static const uint32_t pre_lp_code[] = {553863175u, 554459777u, 1208378049u, 4026624001u, 688390415u, 554227969u, 3204472833u, 1198571264u, 1073807360u, 1073808388u};
@@ -128,8 +127,6 @@ void _pal_lld_enablepadevent(ioportid_t port, iopadid_t pad, ioeventmode_t mode)
     EXTI->EMR &= ~padmask;
 }
 
-bool low_vol_offed_sleep;
-
 static void pad_enbale_interrupt(ioline_t pin) {
     switch (pin) {
         case 0:
@@ -165,6 +162,8 @@ static void pad_enbale_interrupt(ioline_t pin) {
     }
 }
 
+bool low_vol_offed_sleep;
+
 static void exti_init(void) {
     if (!low_vol_offed_sleep) {
         for (int col = 0; col < MATRIX_COLS; col++) {
@@ -179,20 +178,12 @@ static void exti_init(void) {
             pad_enbale_interrupt(PAL_PAD(row_pins[row]));
         }
 
-#    if defined(BT_MODE_SW_PIN) && defined(RF_MODE_SW_PIN)
-        // static ioline_t exti_pins[] = {BT_MODE_SW_PIN, RF_MODE_SW_PIN};
-        // for (uint8_t i = 0; i < 2; i++) {
-        //     setPinInputHigh(exti_pins[i]);
-        //     waitInputPinDelay();
-        //     _pal_lld_enablepadevent(PAL_PORT(exti_pins[i]), PAL_PAD(exti_pins[i]), PAL_EVENT_MODE_BOTH_EDGES);
-        //     pad_enbale_interrupt(PAL_PAD(exti_pins[i]));
-        // }
-#    endif
     } else {
+#    ifdef BT_CABLE_PIN
         setPinInputHigh(BT_CABLE_PIN);
-        waitInputPinDelay();
         _pal_lld_enablepadevent(PAL_PORT(BT_CABLE_PIN), PAL_PAD(BT_CABLE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
         pad_enbale_interrupt(PAL_PAD(BT_CABLE_PIN));
+#    endif
     }
 }
 

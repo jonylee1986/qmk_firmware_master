@@ -79,8 +79,8 @@ typedef struct {
 } bts_info_t;
 
 void bts_init(bts_info_t *info);
-void bts_task(devs_t dev_state);                                                                   // 需要每1ms调用一次
-bool bts_process_keys(uint16_t keycode, bool pressed, devs_t dev_state, bool no_gui, uint8_t num); // num can only be 7 or 8
+void bts_task(devs_t dev_state); // 需要每1ms调用一次
+bool bts_process_keys(uint16_t keycode, bool pressed, devs_t dev_state, bool no_gui, uint8_t num);
 
 bool    bts_send_fn(bool pressed);
 bool    bts_send_name(devs_t host);

@@ -3,6 +3,7 @@
 
 #include QMK_KEYBOARD_H
 #include "common/bt_task.h"
+#include "common/cw2017.h"
 
 bool led_inited = false;
 
@@ -53,13 +54,13 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 }
             } else {
                 if (record->event.pressed) {
-                    bts_send_system(0x9B);
+                    // bts_send_system(0x9B);
                 } else {
-                    bts_send_system(0x00);
+                    // bts_send_system(0x00);
                 }
             }
             break;
-
+#if 1
         case A(KC_TAB):
             if (dev_info.devs) {
                 bts_process_keys(KC_LALT, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
@@ -111,6 +112,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 bts_process_keys(KC_3, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
             }
             return true; // Skip all further processing of this key
+#endif
     }
 #ifdef BT_MODE_ENABLE
     if (process_record_bt(keycode, record) != true) {
@@ -138,6 +140,18 @@ void matrix_init_kb(void) {
     led_config_all();
 #endif
     matrix_init_user();
+
+    // cw2017_init();
+}
+
+void keyboard_post_init_kb(void) {
+    cw2017_init();
+
+    // Customise these values to desired behaviour
+    // debug_enable = true;
+    // debug_matrix = true;
+    // debug_keyboard=true;
+    // debug_mouse=true;
 }
 
 void matrix_scan_kb(void) {
@@ -156,6 +170,14 @@ void housekeeping_task_kb(void) {
 #ifdef CONSOLE_ENABLE
     debug_enable = true;
 #endif
+
+    // static uint32_t check_cw2017_timer = 0;
+    // if (timer_elapsed32(check_cw2017_timer) > 5000) {
+    //     check_cw2017_timer = timer_read32();
+    //     if (!cw2017_is_present()) {
+    //         dprintf("CW2017: Device not found\n");
+    //     }
+    // }
 }
 
 #ifdef RGB_MATRIX_ENABLE
@@ -171,8 +193,6 @@ void suspend_wakeup_init_kb(void) {
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     rgb_matrix_set_color_all(RGB_BLACK);
 
-    // rgb_matrix_set_color(0, 160, 160, 160);
-
     if (rgb_matrix_indicators_advanced_user(led_min, led_max) != true) {
         return false;
     }
@@ -184,10 +204,10 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
 #    endif
 
     // caps lock red
-    if ((host_keyboard_led_state().caps_lock) && ((bts_info.bt_info.paired) || (dev_info.devs == DEVS_USB))) {
-        RGB_MATRIX_INDICATOR_SET_COLOR(4, 100, 100, 100);
-        RGB_MATRIX_INDICATOR_SET_COLOR(5, 100, 100, 100);
-    }
+    // if ((host_keyboard_led_state().caps_lock) && ((bts_info.bt_info.paired) || (dev_info.devs == DEVS_USB))) {
+    //     RGB_MATRIX_INDICATOR_SET_COLOR(4, 100, 100, 100);
+    //     RGB_MATRIX_INDICATOR_SET_COLOR(5, 100, 100, 100);
+    // }
     // GUI lock red
     // if (keymap_config.no_gui) {
     //     RGB_MATRIX_INDICATOR_SET_COLOR(73, 100, 100, 100);
