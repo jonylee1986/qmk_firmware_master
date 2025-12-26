@@ -3,6 +3,8 @@
 
 #include QMK_KEYBOARD_H
 
+#include "bt_task.h"
+
 // clang-format off
 
 #ifdef RGB_MATRIX_ENABLE
@@ -53,7 +55,8 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     }
 
     switch (keycode) {
-        case QK_UNDERGLOW_TOGGLE:
+        // case QK_UNDERGLOW_TOGGLE:
+        case RGB_TOG:
             if (record->event.pressed) {
                 switch (rgb_matrix_get_flags()) {
                     case LED_FLAG_ALL: {

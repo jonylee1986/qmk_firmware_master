@@ -8,10 +8,11 @@
     "usb": {
         "vid": "0xFFFE",
         "pid": "0x00A0",
-        "device_version": "1.5.0",
+        "device_version": "1.6.1",
         "suspend_wakeup_delay": 1000
     },
     "diode_direction": "ROW2COL",
+    // "debounce": 10,
     "features": {
         "bootmagic": true,
         "command": false,

@@ -31,6 +31,18 @@ enum multimode_keycodes {
     WORK_MOD,
     KC_FLXP,
     MAC_TSK,
+
+    // RGB_TOG,
+    // RGB_MOD,
+    // RGB_HUD,
+    // RGB_HUI,
+    // RGB_SAD,
+    // RGB_SAI,
+    // RGB_VAD,
+    // RGB_VAI,
+    // RGB_SPD,
+    // RGB_SPI,
+
     RGB_TEST,
 };
 
@@ -50,6 +62,7 @@ typedef union {
         uint8_t bled_val;
         uint8_t bled_mode : 3;
         uint8_t bled_color : 4;
+        uint8_t encoder_mode : 1;
     };
 } dev_info_t;
 

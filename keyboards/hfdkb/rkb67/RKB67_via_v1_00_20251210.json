@@ -1,8 +1,10 @@
 {
-    "name": "AULA-F75",
+    "name": "pixel 67",
     "vendorId": "0xFFFE",
-    "productId": "0x00A9",
-    "keycodes": ["qmk_lighting"],
+    "productId": "0x00B0",
+    "keycodes": [
+        "qmk_lighting"
+    ],
     "menus": [
       {
         "label": "Lighting",
@@ -23,8 +25,8 @@
                 "options": [
                   ["All Off", 0],
                   ["SOLID_COLOR", 1],
-                  ["BREATHING", 2],
-                  ["GRADIENT_UP_DOWN", 3],
+                  ["GRADIENT_UP_DOWN", 2],
+                  ["BREATHING", 3],
                   ["BAND_PINWHEEL_SAT", 4],
                   ["BAND_SPIRAL_SAT", 5],
                   ["CYCLE_ALL", 6],
@@ -62,21 +64,16 @@
         ]
       }
     ],
-    "matrix": { "rows": 6, "cols": 16 },
+    "matrix": { "rows": 5, "cols": 16 },
     "customKeycodes":[
-        {"name": "BT_1","title":"BT_HOST1","shortName":"BT_1"},
-        {"name": "BT_2","title":"BT_HOST2","shortName":"BT_2"},
-        {"name": "BT_3","title":"BT_HOST3","shortName":"BT_3"},
-        {"name": "2_4G","title":"2_4G","shortName":"2_4G"},
-        {"name": "USB","title":"USB","shortName":"USB"},
-        {"name": "BT_VOL","title":"Query the voltage of battery","shortName":"BT_VOL"},
-        {"name": "BLED _MOD","title":"Switch the mode of usb light","shortName":"BLED_MOD"},
-        {"name": "BLED _HUI","title":"Adjust the color of usb light","shortName":"BLED_HUI"},
-        {"name": "BLED _VAI","title":"Adjust the brightness of usb light","shortName":"BLED_VAI"},
-        {"name": "BLED _SPI","title":"Adjust the speed of usb light","shortName":"BLED_SPI"},
-        {"name": "WORK _MOD","title":"Switch encoder mode","shortName":"WORK_MOD"},
-        {"name": "KC _FLXP","title":"Open file explore in Windows os","shortName":"KC_FLXP"},
-        {"name": "MAC _TSK","title":"Turn back to desktop in MAC os","shortName":"MAC_TSK"}
+        {"name":"BT_1","title":"Switch to bluetooth host1","shortName":"BT_1"},
+        {"name":"BT_2","title":"Switch to bluetooth host2","shortName":"BT_2"},
+        {"name":"BT_3","title":"Switch to bluetooth host3","shortName":"BT_3"},
+        {"name":"2_4G","title":"Switch to 2_4G","shortName":"2_4G"},
+        {"name":"USB","title":"Switch to USB","shortName":"USB"},
+        {"name":"BAT_VOL","title":"Query battery voltage level","shortName":"BAT_VOL"},
+        {"name":"SW_OS1","title":"Switch OS between Windows and Mac","shortName":"SW_OS1"},
+        {"name":"KEY_FUN","title":"Toggle num keys and function keys","shortName":"KEY_FUN"}
     ],
     "layouts": {
       "keymap":[
@@ -86,37 +83,31 @@
           },
           "0,0",
           {
-            "x": 1,
             "c": "#cccccc"
           },
+          "0,1",
+          "0,2",
           "0,3",
           "0,4",
           "0,5",
           "0,6",
-          {
-            "x": 0.25
-          },
           "0,7",
           "0,8",
           "0,9",
           "0,10",
-          {
-            "x": 0.25
-          },
           "0,11",
           "0,12",
-          "0,13",
-          "0,14",
           {
-            "x": 0.25,
-            "w": 1,
-            "h": 1
+            "w": 2,
+            "c": "#AAAAAA"
           },
-          "1,14\n\n\n\n\n\n\n\n\ne0"
+          "0,14",
+          "0,15"
         ],
         [
           {
-            "y": 0.25
+            "w": 1.5,
+            "c": "#cccccc"
           },
           "1,0",
           "1,1",
@@ -132,15 +123,17 @@
           "1,11",
           "1,12",
           {
-            "c": "#aaaaaa",
-            "w": 2
+            "w": 1.5
           },
           "1,13",
-          "1,15"
+          {
+            "c": "#AAAAAA"
+          },
+          "0,15"
         ],
         [
           {
-            "w": 1.5
+            "w": 1.75
           },
           "2,0",
           {
@@ -157,25 +150,24 @@
           "2,9",
           "2,10",
           "2,11",
-          "2,12",
           {
-            "w": 1.5
+            "c": "#777777",
+            "w": 2.25
           },
           "2,13",
           {
-            "c": "#aaaaaa"
+            "c": "#AAAAAA"
           },
           "2,15"
         ],
         [
           {
-            "w": 1.75
+            "w": 2.25
           },
           "3,0",
           {
             "c": "#cccccc"
           },
-          "3,1",
           "3,2",
           "3,3",
           "3,4",
@@ -187,81 +179,53 @@
           "3,10",
           "3,11",
           {
-            "c": "#aaaaaa",
-            "w": 2.25
+              "w": 1.75,
+              "c": "#AAAAAA"
           },
-          "3,13",
-          {
-            "c": "#aaaaaa"
-          },
-          "3,15"
-        ],
-        [
-          {
-            "w": 2.25
-          },
-          "4,0",
-          {
-            "c": "#cccccc"
-          },
-          "4,1",
-          "4,2",
-          "4,3",
-          "4,4",
-          "4,5",
-          "4,6",
-          "4,7",
-          "4,8",
-          "4,9",
-          "4,10",
-          {
-            "c": "#aaaaaa",
-            "w": 1.75
-          },
-          "4,13",
+          "3,12",
           {
             "c": "#777777"
           },
-          "4,14",
+          "3,13",
           {
-            "c": "#aaaaaa"
+            "c": "#AAAAAA"
           },
-          "4,15"
+          "3, 15"
         ],
         [
           {
             "w": 1.25
           },
-          "5,0",
+          "4,0",
           {
             "w": 1.25
           },
-          "5,1",
+          "4,1",
           {
             "w": 1.25
           },
-          "5,2",
+          "4,2",
           {
-            "c": "#cccccc",
-            "w": 6.25
+            "w": 6.5,
+            "c": "#cccccc"
           },
-          "5,5",
+          "4,6",
           {
-            "c": "#aaaaaa",
+            "w": 1.25,
+            "c": "#AAAAAA"
+          },
+          "4,10",
+          {
             "w": 1.25
           },
-          "5,11",
-          {
-            "w": 1.25
-          },
-          "5,12",
+          "4,11",
           {
             "c": "#777777",
-            "x": 0.5
+            "x": 0.25
           },
-          "5,13",
-          "5,14",
-          "5,15"
+          "4,12",
+          "4,13",
+          "4,15"
         ]
       ]
     }

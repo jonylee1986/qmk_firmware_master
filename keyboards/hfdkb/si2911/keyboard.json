@@ -1,6 +1,6 @@
 {
     "manufacturer": "hfd",
-    "keyboard_name": "YUNZII YZ99 Keyboard",
+    "keyboard_name": "YUNZII B98 PRO Keyboard",
     "maintainer": "jonylee@hfd",
     "url": "https://github.com/jonylee1986",
     "processor": "WB32FQ95",
@@ -8,13 +8,15 @@
     "usb": {
         "vid": "0xFFFE",
         "pid": "0x00AA",
-        "device_version": "1.0.5",
+        "device_version": "1.2.1",
         "suspend_wakeup_delay": 1000
     },
     "features": {
         "bootmagic": true,
+        "command": false,
+        "console": false,
         "extrakey": true,
-        "mousekey": false,
+        "mousekey": true,
         "nkro": true,
         "encoder": true,
         "rgb_matrix": true,
@@ -27,16 +29,15 @@
     },
     "matrix_pins": {
         "cols": ["C1", "C2", "C3", "A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "C4", "C5", "B0", "B1", "B2", "B12", "B13", "A8"],
-        "rows": ["B15", "C6", "C7", "C8", "C9", "B14"]
+        "rows": ["B15", "C6", "C7", "C8", "C9", "B14"],
+        "io_delay": 10
     },
     "diode_direction": "ROW2COL",
     "encoder": {
         "enabled": true,
         "rotary": [
             {
-                "pin_a": "C14",
-                "pin_b": "C13",
-                "resolution": 2
+                "pin_a": "C14", "pin_b": "C13", "resolution": 2
             }
         ]
     },
@@ -57,33 +58,31 @@
         "driver": "snled27351",
         "react_on_keyup": true,
         "sleep": true,
-        "val_steps": 40,
+        "val_steps": 45,
         "speed_steps": 64,
         "hue_steps": 16,
-        "max_brightness": 160,
+        "max_brightness": 180,
         "default": {
+            "val": 135,
             "speed": 128
         },
         "animations": {
             "solid_color": true,
             "breathing": true,
-            "gradient_up_down": true,
-            "band_pinwheel_sat": true,
-            "band_spiral_sat": true,
             "cycle_all": true,
             "cycle_left_right": true,
+            "cycle_up_down": true,
             "rainbow_moving_chevron": true,
             "cycle_out_in": true,
             "cycle_out_in_dual": true,
             "cycle_pinwheel": true,
+            "cycle_spiral": true,
             "dual_beacon": true,
-            "rainbow_pinwheels": true,
-            "hue_wave": true,
+            "rainbow_beacon": true,
+            "raindrops": true,
             "typing_heatmap": true,
             "solid_reactive_simple": true,
-            "solid_reactive_wide": true,
-            "solid_reactive_cross": true,
-            "solid_reactive_nexus": true,
+            "solid_reactive": true,
             "multisplash": true
         },
         "layout": [

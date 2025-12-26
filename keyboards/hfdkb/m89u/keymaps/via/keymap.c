@@ -114,7 +114,49 @@ bool            key_eql_pressed       = false;
 static uint32_t key_eql_numlock_timer = 0;
 static uint8_t  host_numlock_state    = 0;
 
+// bool synchronize_numlock_state = false;
+
+bool process_rgb_matrix_user(uint16_t keycode, keyrecord_t *record) {
+    if (record->event.pressed) {
+        switch (keycode) {
+            // case RGB_TOG:
+            //     rgb_matrix_toggle();
+            //     return false;
+            case RGB_MOD:
+                rgb_matrix_step();
+                return false;
+            // case RGB_HUI:
+            //     rgb_matrix_increase_hue();
+            //     return false;
+            case RGB_HUD:
+                rgb_matrix_decrease_hue();
+                return false;
+            // case RGB_SAI:
+            //     rgb_matrix_increase_sat();
+            //     return false;
+            case RGB_SAD:
+                rgb_matrix_decrease_sat();
+                return false;
+            // case RGB_VAI:
+            //     rgb_matrix_increase_val();
+            //     return false;
+            case RGB_VAD:
+                rgb_matrix_decrease_val();
+            // case RGB_SPI:
+            //     rgb_matrix_increase_speed();
+            //     return false;
+            case RGB_SPD:
+                rgb_matrix_decrease_speed();
+                return false;
+        }
+    }
+
+    return true;
+}
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if (!process_rgb_matrix_user(keycode, record)) return false;
+
 #ifdef MULTIMODE_ENABLE
     if (!bt_process_record(keycode, record)) {
         return false;
@@ -205,14 +247,39 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KEY_EQL: {
             if (get_highest_layer(default_layer_state) == 0) {
                 if (record->event.pressed) {
-                    key_eql_pressed    = true;
+                    key_eql_pressed = true;
+                    // synchronize_numlock_state = false;
                     host_numlock_state = host_keyboard_led_state().num_lock;
+                    // if (dev_info.devs == DEVS_USB) {
                     if (!host_numlock_state) {
                         register_code(KC_NUM_LOCK);
+                        wait_ms(10);
                     }
                     register_code(KC_LALT);
                     register_code(KC_P6);
                     register_code(KC_P1);
+                    // } else {
+                    //     if (!host_numlock_state) {
+                    //         bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, 8);
+                    //         bts_task(dev_info.devs);
+                    //         while (bts_is_busy())
+                    //             ;
+                    //         wait_ms(10);
+                    //     }
+                    //     bts_process_keys(KC_LALT, true, dev_info.devs, keymap_config.no_gui, 8);
+                    //     bts_task(dev_info.devs);
+                    //     while (bts_is_busy())
+                    //         ;
+                    //     bts_process_keys(KC_P6, true, dev_info.devs, keymap_config.no_gui, 8);
+                    //     bts_task(dev_info.devs);
+                    //     while (bts_is_busy())
+                    //         ;
+                    //     bts_process_keys(KC_P1, true, dev_info.devs, keymap_config.no_gui, 8);
+                    //     bts_task(dev_info.devs);
+                    //     while (bts_is_busy())
+                    //         ;
+                    // }
+
                     key_eql_numlock_timer = timer_read32(); // 50ms delay
                 }
             }
@@ -271,9 +338,15 @@ static void num_lock_indicator(void) {
 }
 
 bool rgb_matrix_indicators_user(void) {
-    if (!rgb_matrix_get_flags()) {
+    if (!rgb_matrix_get_flags() || (dev_info.devs != DEVS_USB && bts_info.bt_info.low_vol && readPin(MM_CABLE_PIN))) {
         rgb_matrix_set_color_all(RGB_OFF);
     }
+
+    // if (host_keyboard_led_state().num_lock) {
+    //     rgb_matrix_set_color(10, 200, 200, 200);
+    // } else {
+    //     rgb_matrix_set_color(10, 0, 0, 0);
+    // }
 
     num_lock_indicator();
 
@@ -327,23 +400,75 @@ void housekeeping_task_user(void) {
         }
     }
 
-    if (key_eql_numlock_timer && (timer_elapsed32(key_eql_numlock_timer) >= 20)) {
+    if (key_eql_numlock_timer && (timer_elapsed32(key_eql_numlock_timer) >= 10)) {
+        // if (dev_info.devs == DEVS_USB) {
         unregister_code(KC_LALT);
         unregister_code(KC_P6);
         unregister_code(KC_P1);
+        // } else {
+        //     bts_process_keys(KC_LALT, false, dev_info.devs, keymap_config.no_gui, 8);
+        //     bts_task(dev_info.devs);
+        //     while (bts_is_busy())
+        //         ;
+        //     wait_ms(10);
+        //     bts_process_keys(KC_P6, false, dev_info.devs, keymap_config.no_gui, 8);
+        //     bts_task(dev_info.devs);
+        //     while (bts_is_busy())
+        //         ;
+        //     wait_ms(10);
+        //     bts_process_keys(KC_P1, false, dev_info.devs, keymap_config.no_gui, 8);
+        //     bts_task(dev_info.devs);
+        //     while (bts_is_busy())
+        //         ;
+        //     wait_ms(10);
+        // }
 
         if (dev_info.devs) {
             unregister_code(KC_NUM_LOCK);
+            // bts_process_keys(KC_NUM_LOCK, false, dev_info.devs, keymap_config.no_gui, 8);
+            // bts_task(dev_info.devs);
+            // while (bts_is_busy())
+            //     ;
+            // wait_ms(10);
         }
         if (key_eql_pressed && !host_numlock_state) {
             // USB mode - send NumLock toggle
+            // if (dev_info.devs == DEVS_USB) {
             register_code(KC_NUM_LOCK);
             wait_ms(10);
             unregister_code(KC_NUM_LOCK);
+            wait_ms(10);
+            // } else {
+            //     bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, 8);
+            //     bts_task(dev_info.devs);
+            //     while (bts_is_busy())
+            //         ;
+            //     wait_ms(10);
+            //     bts_process_keys(KC_NUM_LOCK, false, dev_info.devs, keymap_config.no_gui, 8);
+            //     bts_task(dev_info.devs);
+            //     while (bts_is_busy())
+            //         ;
+            //     wait_ms(10);
+            // }
         }
+        // Don't clear numpad_keys_pressed_count - it tracks other numpad keys still held
+        // KEY_EQL's KC_P6/KC_P1 don't affect the counter, so leave it alone
+        // wait_ms(100);
         key_eql_numlock_timer = 0; // Reset timer
         key_eql_pressed       = false;
+        // if (dev_info.num_unsync != host_keyboard_led_state().num_lock) {
+        // synchronize_numlock_state = true;
+        // }
+        // register_code(0x00);
     }
+    // extern uint32_t key_press_time;
+    // if (synchronize_numlock_state && (host_keyboard_led_state().num_lock != dev_info.num_unsync)) {
+    // synchronize_numlock_state = false;
+    // register_code(KC_NUM_LOCK);
+    // wait_ms(10);
+    //     unregister_code(KC_NUM_LOCK);
+    //     wait_ms(10);
+    // }
 }
 
 #ifdef DIP_SWITCH_ENABLE

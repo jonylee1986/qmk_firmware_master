@@ -35,7 +35,7 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record);
 static void bt_scan_mode(void);
 static void bt_used_pin_init(void);
 static void handle_blink_effects(void);
-static void handle_charging_indication(void);
+// static void handle_charging_indication(void);
 static void handle_low_battery_warning(void);
 static void handle_low_battery_shutdow(void);
 static void handle_battery_query(void);
@@ -399,6 +399,11 @@ static THD_FUNCTION(Thread1, arg) {
     chRegSetThreadName("blinker");
     while (true) {
         bts_task(dev_info.devs);
+#ifdef RGB_MATRIX_ENABLE
+        if (((dev_info.devs != DEVS_USB) && (dev_info.sleep_mode_enabled || bts_info.bt_info.low_vol)) || (dev_info.devs == DEVS_USB)) {
+            close_rgb();
+        }
+#endif
         chThdSleepMilliseconds(1);
     }
 }
@@ -410,7 +415,6 @@ void bt_init(void) {
     bts_init(&bts_info);
     bt_used_pin_init();
 
-    // 读取用户配置
     dev_info.raw = eeconfig_read_user();
     if (!dev_info.raw) {
         dev_info.devs      = DEVS_USB;
@@ -482,11 +486,11 @@ void bt_task(void) {
             kb_leds->raw               = bts_info.bt_info.indictor_rgb_s;
             usb_device_state_set_leds(keyboard_led_state);
 
-#ifdef RGB_MATRIX_ENABLE
-            if (dev_info.sleep_mode_enabled || bts_info.bt_info.low_vol) {
-                close_rgb();
-            }
-#endif
+            // #ifdef RGB_MATRIX_ENABLE
+            //             if (dev_info.sleep_mode_enabled || bts_info.bt_info.low_vol) {
+            //                 close_rgb();
+            //             }
+            // #endif
         }
     }
 
@@ -898,7 +902,16 @@ static void close_rgb(void) {
         return;
     }
 
-    led_off_standby();
+    if (dev_info.devs == DEVS_USB) {
+        if (timer_elapsed32(key_press_time) >= ENTRY_SLEEP_TIMEOUT_MS) {
+            rgb_matrix_disable_noeeprom();
+        } else {
+            rgb_status_save = rgb_matrix_config.enable;
+        }
+        return;
+    } else {
+        led_off_standby();
+    }
 
     if (sober) {
         if (kb_sleep_flag || (timer_elapsed32(key_press_time) >= ENTRY_SLEEP_TIMEOUT_MS)) {
@@ -1134,7 +1147,7 @@ static void handle_low_battery_warning(void) {
         Low_power_bink = 0;
     }
 }
-
+#if 0
 static void handle_charging_indication(void) {
     // 充电接入检测
     static uint32_t charging_time = 0;
@@ -1159,7 +1172,7 @@ static void handle_charging_indication(void) {
         }
     }
 }
-
+#endif
 static void handle_low_battery_shutdow(void) {
     extern bool low_vol_offed_sleep;
     if (bts_info.bt_info.low_vol_offed) {
@@ -1264,8 +1277,8 @@ bool bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
 
     handle_battery_query();
     handle_battery_query_display();
-    // 充电状态指示
-    handle_charging_indication();
+
+    // handle_charging_indication();
 
 #if defined(CABLE_PLUG_PIN)
     bool no_cable_plugin = readPin(CABLE_PLUG_PIN);

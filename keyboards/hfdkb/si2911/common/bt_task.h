@@ -24,6 +24,7 @@ enum multimode_keycodes {
     BT_2_4G,
     BT_USB,
     BT_VOL,
+
     BLED_MOD,
     BLED_HUI,
     BLED_VAI,
@@ -32,6 +33,7 @@ enum multimode_keycodes {
     SLED_HUI,
     SLED_VAI,
     SLED_SPI,
+
     RGB_TEST,
     WIN_TSK,
 };
@@ -45,13 +47,13 @@ extern mode_t mode;
 
 typedef union {
     uint32_t raw;
-    struct {
+    struct PACKED {
         uint8_t devs;
         uint8_t last_devs;
-        uint8_t bled_mode : 3;  // Mode
-        uint8_t bled_color : 5; // Color
-        uint8_t sled_mode : 3;  // Mode
-        uint8_t sled_color : 5; // Color
+        uint8_t bled_color : 4;
+        uint8_t bled_mode : 4;
+        uint8_t sled_color : 4;
+        uint8_t sled_mode : 4;
     };
 } dev_info_t;
 
@@ -59,6 +61,8 @@ extern dev_info_t dev_info;
 extern bts_info_t bts_info;
 
 extern bool backlight_sleep_flag;
+
+extern bool query_vol_flag;
 
 void bt_housekeeping_task(void);
 void led_config_all(void);

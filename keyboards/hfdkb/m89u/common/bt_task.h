@@ -32,6 +32,18 @@ enum bt_keycodes {
     KEYBOARD_RESET,
     BLE_RESET,
     KEY_EQL,
+
+    RGB_TOG,
+    RGB_MOD,
+    RGB_HUD,
+    RGB_HUI,
+    RGB_SAD,
+    RGB_SAI,
+    RGB_VAD,
+    RGB_VAI,
+    RGB_SPD,
+    RGB_SPI,
+
     RGB_TEST,
 };
 

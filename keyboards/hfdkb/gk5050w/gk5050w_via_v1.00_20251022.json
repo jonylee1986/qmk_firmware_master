@@ -1,0 +1,263 @@
+{
+    "name": "Model 1",
+    "vendorId": "0xFFFE",
+    "productId": "0x0024",
+    "keycodes": ["qmk_lighting"],
+    "menus": [
+      {
+        "label": "Lighting",
+        "content": [
+          {
+            "label": "Backlight",
+            "content": [
+              {
+                "label": "Brightness",
+                "type": "range",
+                "options": [0, 200],
+                "content": ["id_qmk_rgb_matrix_brightness", 3, 1]
+              },
+              {
+                "label": "Effect",
+                "type": "dropdown",
+                "content": ["id_qmk_rgb_matrix_effect", 3, 2],
+                "options": [
+                  ["All Off", 0],
+                  ["SOLID_COLOR", 1],
+                  ["BREATHING", 2],
+                  ["CYCLE_ALL", 3],
+                  ["CYCLE_LEFT_RIGHT", 4],
+                  ["CYCLE_UP_DOWN", 5],
+                  ["CYCLE_OUT_IN", 6],
+                  ["CYCLE_OUT_IN_DUAL", 7],
+                  ["CYCLE_PINWHEEL", 8],
+                  ["CYCLE_SPIRAL", 9],
+                  ["DUAL_BEACON", 10],
+                  ["RAINBOW_BEACON", 11],
+                  ["JELLYBEAN_RAINDROPS", 12],
+                  ["TYPING_HEATMAP", 13],
+                  ["DIGITAL_RAIN", 14],
+                  ["SOLID_REACTIVE_MULTINEXUS", 15],
+                  ["SOLID_REACTIVE_MULTIWIDE", 16],
+                  ["SOLID_REACTIVE_SIMPLE", 17],
+                  ["SPLASH", 18]
+                ]
+              },
+              {
+                "showIf": "{id_qmk_rgb_matrix_effect} != 0 && {id_qmk_rgb_matrix_effect} != 10",
+                "label": "Effect Speed",
+                "type": "range",
+                "options": [0, 255],
+                "content": ["id_qmk_rgb_matrix_effect_speed", 3, 3]
+              },
+              {
+                "showIf": "{id_qmk_rgb_matrix_effect} != 0 && {id_qmk_rgb_matrix_effect} != 10",
+                "label": "Color",
+                "type": "color",
+                "content": ["id_qmk_rgb_matrix_color", 3, 4]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "customKeycodes":[
+        {"name": "BT_1",      "title":"BT_HOST1",                          "shortName":"BT_1"},
+        {"name": "BT_2",      "title":"BT_HOST2",                          "shortName":"BT_2"},
+        {"name": "BT_3",      "title":"BT_HOST3",                          "shortName":"BT_3"},
+        {"name": "2_4G",      "title":"2_4G",                              "shortName":"2_4G"},
+        {"name": "BT_VOL",    "title":"Query the voltage of battery",      "shortName":"BT_VOL"},
+        {"name": "LCD _HOME", "title":"Switch to LCD home page",           "shortName":"LCD_HOME"},
+        {"name": "LCD _PAGE", "title":"Switch LCD display page",           "shortName":"LCD_PAGE"},
+        {"name": "LCD _MOD",  "title":"Switch LCD display mode",           "shortName":"LCD_MOD"},
+        {"name": "LCD _SW",   "title":"Toggle LCD display status",         "shortName":"LCD_SW"},
+        {"name": "SSHOT",     "title":"Print screen in MAC os",            "shortName":"SSHOT"},
+        {"name": "SW_OS1",    "title":"Switch between MAC and Windows os", "shortName":"SW_OS1"}
+    ],
+    "matrix": { "rows": 6, "cols": 15 },
+    "layouts": {
+      "keymap":[
+        [
+          {
+            "c": "#777777"
+          },
+          "0,0",
+          {
+            "c": "#cccccc",
+            "x": 0.25
+          },
+          "0,1",
+          "0,2",
+          "0,3",
+          "0,4",
+          {
+            "c": "#AAAAAA",
+            "x": 0.25
+          },
+          "0,5",
+          "0,6",
+          "0,7",
+          "0,8",
+          {
+            "c": "#cccccc",
+            "x": 0.25
+          },
+          "0,9",
+          "0,10",
+          "0,11",
+          "0,12",
+          {
+            "c": "#AAAAAA",
+            "x": 0.25
+          },
+          "0,13",
+          "0,14"
+        ],
+        [
+          {
+            "c": "#cccccc",
+            "y": 0.25
+          },
+          "1,0",
+          "1,1",
+          "1,2",
+          "1,3",
+          "1,4",
+          "1,5",
+          "1,6",
+          "1,7",
+          "1,8",
+          "1,9",
+          "1,10",
+          "1,11",
+          "1,12",
+          {
+            "c": "#AAAAAA",
+            "w": 2
+          },
+          "1,13",
+          "1,14"
+        ],
+        [
+          {
+            "w": 1.5
+          },
+          "2,0",
+          {
+            "c": "#cccccc"
+          },
+          "2,1",
+          "2,2",
+          "2,3",
+          "2,4",
+          "2,5",
+          "2,6",
+          "2,7",
+          "2,8",
+          "2,9",
+          "2,10",
+          "2,11",
+          "2,12",
+          {
+            "w": 1.5
+          },
+          "2,13",
+          {
+            "c":"#AAAAAA"
+          },
+          "2,14"
+        ],
+        [
+          {
+            "w": 1.75
+          },
+          "3,0",
+          {
+            "c": "#cccccc"
+          },
+          "3,1",
+          "3,2",
+          "3,3",
+          "3,4",
+          "3,5",
+          "3,6",
+          "3,7",
+          "3,8",
+          "3,9",
+          "3,10",
+          "3,11",
+          {
+            "c": "#777777",
+            "w": 2.25
+          },
+          "3,13",
+          {
+            "c": "#AAAAAA"
+          },
+          "3,14"
+        ],
+        [
+          {
+            "w": 2.25
+          },
+          "4,0",
+          {
+            "c": "#cccccc"
+          },
+          "4,2",
+          "4,3",
+          "4,4",
+          "4,5",
+          "4,6",
+          "4,7",
+          "4,8",
+          "4,9",
+          "4,10",
+          "4,11",
+          {
+            "c": "#AAAAAA",
+            "w": 1.75
+          },
+          "4,12",
+          {
+            "c": "#777777"
+          },
+          "4,13",
+          {
+            "c": "#AAAAAA"
+          },
+          "4,14"
+        ],
+        [
+          {
+            "w": 1.25
+          },
+          "5,0",
+          {
+            "w": 1.25
+          },
+          "5,1",
+          {
+            "w": 1.25
+          },
+          "5,2",
+          {
+            "c": "#cccccc",
+            "w": 6.25
+          },
+          "5,5",
+          {
+            "c": "#AAAAAA"
+          },
+          "5,9",
+          "5,10",
+          "5,11",
+          {
+            "c": "#777777"
+          },
+          "5,12",
+          "5,13",
+          "5,14"
+        ]
+      ]
+    }
+  }

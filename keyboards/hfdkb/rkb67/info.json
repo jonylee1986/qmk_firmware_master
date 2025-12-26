@@ -1,0 +1,70 @@
+{
+    "manufacturer": " ",
+    "keyboard_name": "pixel 67",
+    "maintainer": "jonylee@hfd",
+    "url": "https://github.com/jonylee1986/qmk_firmware_master/tree/hfdkb_playground",
+    "processor": "WB32FQ95",
+    "bootloader": "wb32-dfu",
+    "usb": {
+        "vid": "0xFFFE",
+        "suspend_wakeup_delay": 1000
+    },
+    "host": {
+        "default": { "nkro": true }
+    },
+    "diode_direction": "ROW2COL",
+    "features": {
+        "bootmagic": true,
+        "command": false,
+        "console": false,
+        "extrakey": true,
+        "mousekey": true,
+        "nkro": true,
+        "rgb_matrix": true
+    },
+    "matrix_pins": {
+        "cols": ["C1","C2","C3","A0","A1","A2","A3","A4","A5","A6","A7","C4","C5", "B0", "B1", "B2"],
+        "rows": ["C6", "C7", "C8", "C9", "B14"]
+    },
+    "dynamic_keymap": {
+        "layer_count": 6
+    },
+    "eeprom": {
+        "driver": "wear_leveling",
+        "wear_leveling": {
+            "driver": "spi_flash",
+            "backing_size": 4096
+        }
+    },
+    "ws2812": {
+        "pin": "C15"
+    },
+    "rgb_matrix": {
+        "driver": "ws2812",
+        "react_on_keyup": true,
+        "sleep": true,
+        "max_brightness": 160,
+        "animations": {
+            "solid_color": true,
+            "breathing": true,
+            "gradient_up_down": true,
+            "band_pinwheel_sat": true,
+            "band_spiral_sat": true,
+            "cycle_all": true,
+            "cycle_left_right": true,
+            "rainbow_moving_chevron": true,
+            "cycle_out_in": true,
+            "cycle_out_in_dual": true,
+            "cycle_pinwheel": true,
+            "dual_beacon": true,
+            "rainbow_pinwheels": true,
+            "hue_wave": true,
+            "typing_heatmap": true,
+            "solid_reactive_simple": true,
+            "solid_reactive_wide": true,
+            "solid_reactive_cross": true,
+            "solid_reactive_nexus": true,
+            "multisplash": true
+        }
+    }
+}

@@ -177,6 +177,8 @@ static uint32_t rgb_test_time  = 0;
 
 static bool rgb_status_save = 1;
 
+static bool show_chrg_full_wakeup = false;
+
 const uint32_t sleep_time_table[4] = {0, 10 * 60 * 1000, 30 * 60 * 1000, 60 * 60 * 1000};
 
 // 工厂重置相关
@@ -462,6 +464,7 @@ void bt_init(void) {
         usbStop(&USB_DRIVER);
     }
 
+    // writePinLow(A14);
     setPinOutput(A14);
     if (dev_info.devs == DEVS_USB) {
         writePinLow(A14);
@@ -976,10 +979,6 @@ static void close_rgb(void) {
         return;
     }
 
-    if (dev_info.devs == DEVS_USB) {
-        return;
-    }
-
     if (sober) {
         if (kb_sleep_flag || (timer_elapsed32(key_press_time) >= 10 * 60 * 1000)) {
             bak_rgb_toggle = rgb_matrix_config.enable;
@@ -1011,6 +1010,20 @@ static void open_rgb(void) {
 #ifdef RGB_DRIVER_SDB_PIN
         writePinHigh(RGB_DRIVER_SDB_PIN);
 #endif
+
+        if (bts_info.bt_info.pvol >= FULL_PVOL_THRESHOLD) {
+            is_in_full_power_state = false;
+            memset(&charge_complete_warning, 0, sizeof(charge_complete_warning_t));
+            // charge_complete_warning.entry_full_time = timer_read32();
+            show_chrg_full_wakeup = true;
+        }
+
+        low_battery_warning.triggered   = true;
+        low_battery_warning.blink_count = 0;
+        low_battery_warning.blink_time  = timer_read32();
+        low_battery_warning.blink_state = false;
+        low_battery_warning.completed   = false;
+
         if (bak_rgb_toggle) {
             extern bool low_vol_offed_sleep;
             kb_sleep_flag       = false;
@@ -1102,12 +1115,20 @@ static void handle_bt_indicate_led(void) {
                 rgb.g = rgb_index_color_table[dev_info.devs][1];
                 rgb.b = rgb_index_color_table[dev_info.devs][2];
             } else {
+                if (bts_info.bt_info.pvol >= FULL_PVOL_THRESHOLD) {
+                    is_in_full_power_state = false;
+                    memset(&charge_complete_warning, 0, sizeof(charge_complete_warning_t));
+                    // charge_complete_warning.entry_full_time = timer_read32();
+                    show_chrg_full_wakeup = true;
+                }
+
                 low_battery_warning.triggered   = true;
                 low_battery_warning.blink_count = 0;
                 low_battery_warning.blink_time  = timer_read32();
                 low_battery_warning.blink_state = false;
                 low_battery_warning.completed   = false;
-                indicator_status                = 0;
+
+                indicator_status = 0;
             }
         } break;
 
@@ -1264,85 +1285,58 @@ static void handle_layer_indication(void) {
 }
 
 static void handle_charging_indication(void) {
-    // Debounced, hysteretic "first full" detector
-    // static uint8_t  prev_pvol               = 0;
-    static bool     first_reach_full        = false; // drives the blink once per cycle
-    static uint32_t full_candidate_since    = 0;
-    static bool     full_latched_this_cycle = false;
-
-    uint8_t pv      = bts_info.bt_info.pvol;
-    bool    plugged = (get_battery_charge_state() != BATTERY_STATE_UNPLUGGED);
-
-    if (dev_info.devs != DEVS_USB) {
-        // Detect and debounce first reach to FULL_PVOL_THRESHOLD
-        if (!full_latched_this_cycle) {
-            if (pv >= FULL_PVOL_THRESHOLD && plugged) {
-                if (full_candidate_since == 0) {
-                    full_candidate_since = timer_read32();
-                } else if (timer_elapsed32(full_candidate_since) >= FULL_DEBOUNCE_MS) {
-                    first_reach_full        = true; // trigger this cycle's indication
-                    full_latched_this_cycle = true; // prevent re-trigger until hysteresis clears
-                    full_candidate_since    = 0;    // reset candidate window
-                }
-            } else {
-                full_candidate_since = 0; // reset if we dip below threshold
-            }
-        } else {
-            // Re-arm for next cycle only after dropping below hysteresis or unplugging
-            if (pv <= FULL_HYSTERESIS_PVOL || !plugged) {
-                full_latched_this_cycle = false;
-                // Don't force first_reach_full here; it'll be set when we debounce next time
-            }
-        }
-    }
+    static bool show_chrg_full = false;
 
     if (!readPin(BT_CABLE_PIN)) {
         if (!readPin(BT_CHARGE_PIN)) {
             charge_complete_warning.entry_full_time = timer_read32();
         } else {
-            if ((timer_elapsed32(charge_complete_warning.entry_full_time) > 2000) || first_reach_full) {
-                // 充满状态
-                if (!is_in_full_power_state) {
-                    is_in_full_power_state = true;
-                    if (!charge_complete_warning.triggered) {
-                        charge_complete_warning.triggered   = true;
-                        charge_complete_warning.blink_count = 0;
-                        charge_complete_warning.blink_time  = timer_read32();
-                        charge_complete_warning.blink_state = false;
-                        charge_complete_warning.completed   = false;
+            if (timer_elapsed32(charge_complete_warning.entry_full_time) > 2000) {
+                show_chrg_full = true;
+            }
+        }
+    } else {
+        show_chrg_full = false;
+    }
+
+    if (show_chrg_full || show_chrg_full_wakeup) {
+        if (!is_in_full_power_state) {
+            is_in_full_power_state = true;
+            if (!charge_complete_warning.triggered) {
+                charge_complete_warning.triggered   = true;
+                charge_complete_warning.blink_count = 0;
+                charge_complete_warning.blink_time  = timer_read32();
+                charge_complete_warning.blink_state = false;
+                charge_complete_warning.completed   = false;
+            }
+
+            if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 6) {
+                if (timer_elapsed32(charge_complete_warning.blink_time) >= 1000) {
+                    charge_complete_warning.blink_time  = timer_read32();
+                    charge_complete_warning.blink_state = !charge_complete_warning.blink_state;
+
+                    if (charge_complete_warning.blink_state) {
+                        charge_complete_warning.blink_count++;
+                        if (charge_complete_warning.blink_count >= 6) {
+                            charge_complete_warning.completed   = true;
+                            charge_complete_warning.blink_state = false;
+                            show_chrg_full_wakeup               = false;
+                        }
                     }
                 }
 
-                // 只有在未完成闪烁且闪烁次数未达到5次时才显示充电指示
-                if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 6) {
-                    if (timer_elapsed32(charge_complete_warning.blink_time) >= 1000) {
-                        charge_complete_warning.blink_time  = timer_read32();
-                        charge_complete_warning.blink_state = !charge_complete_warning.blink_state;
-
-                        if (charge_complete_warning.blink_state) {
-                            charge_complete_warning.blink_count++;
-                            if (charge_complete_warning.blink_count >= 6) {
-                                charge_complete_warning.completed   = true;
-                                charge_complete_warning.blink_state = false;
-                            }
-                        }
+                if (charge_complete_warning.blink_state) {
+                    for (uint8_t i = 104; i <= 106; i++) {
+                        rgb_matrix_set_color(i, 0, 100, 0);
                     }
-
-                    // 显示充电完成闪烁
-                    if (charge_complete_warning.blink_state) {
-                        for (uint8_t i = 104; i <= 106; i++) {
-                            rgb_matrix_set_color(i, 0, 100, 0);
-                        }
-                    } else {
-                        for (uint8_t i = 104; i <= 106; i++) {
-                            rgb_matrix_set_color(i, 0, 0, 0);
-                        }
+                } else {
+                    for (uint8_t i = 104; i <= 106; i++) {
+                        rgb_matrix_set_color(i, 0, 0, 0);
                     }
                 }
             }
         }
     } else {
-        // 充电线未接入，重置充电状态
         if (is_in_full_power_state) {
             is_in_full_power_state = false;
             memset(&charge_complete_warning, 0, sizeof(charge_complete_warning_t));
@@ -1352,7 +1346,7 @@ static void handle_charging_indication(void) {
 
 static void handle_low_battery_warning(void) {
     // 低电量警告（电量≤20%）
-    if (bts_info.bt_info.pvol <= 20) {
+    if (bts_info.bt_info.low_vol) {
         if (!is_in_low_power_state) {
             is_in_low_power_state = true;
 
@@ -1392,13 +1386,12 @@ static void handle_low_battery_warning(void) {
             }
         }
     }
-
-    if (bts_info.bt_info.pvol > 20) {
-        if (is_in_low_power_state) {
-            is_in_low_power_state = false;
-            memset(&low_battery_warning, 0, sizeof(low_battery_warning_t));
-        }
-    }
+    // else {
+    //     if (is_in_low_power_state) {
+    //         is_in_low_power_state = false;
+    //         memset(&low_battery_warning, 0, sizeof(low_battery_warning_t));
+    //     }
+    // }
 }
 
 static void handle_low_battery_shutdow(void) {
@@ -1463,25 +1456,25 @@ static void handle_battery_query_display(void) {
         }
 
         // 电量显示LED
-        uint8_t query_index[10] = {17, 18, 19, 20, 21, 22, 23, 24, 25, 26};
-        uint8_t pvol            = bts_info.bt_info.pvol;
+        // uint8_t query_index[10] = {17, 18, 19, 20, 21, 22, 23, 24, 25, 26};
+        uint8_t pvol = bts_info.bt_info.pvol;
 
         // 计算LED数量（至少2个，最多10个）
-        uint8_t led_count = (pvol < 30) ? 2 : ((pvol / 10) > 10 ? 10 : (pvol / 10));
+        // uint8_t led_count = (pvol < 30) ? 2 : ((pvol / 10) > 10 ? 10 : (pvol / 10));
 
         // 根据电量确定颜色
         RGB color;
-        if (pvol < 30) {
+        if (pvol < 21) {
             color = (RGB){100, 0, 0}; // 红色
-        } else if (pvol < 60) {
+        } else if (pvol < 90) {
             color = (RGB){100, 50, 0}; // 橙色
         } else {
             color = (RGB){0, 100, 0}; // 绿色
         }
 
         // 点亮LED
-        for (uint8_t i = 0; i < led_count; i++) {
-            rgb_matrix_set_color(query_index[i], color.r, color.g, color.b);
+        for (uint8_t i = 0; i < 104; i++) {
+            rgb_matrix_set_color(i, color.r, color.g, color.b);
         }
     }
 }

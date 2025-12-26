@@ -32,24 +32,25 @@ typedef enum {
 } devs_t;
 
 typedef enum {
-    v_usb            = 0x11, // USB模式
-    v_2_4g           = 0x30, // 2.4G模式
-    v_host1          = 0x31, // 蓝牙1
-    v_host2          = 0x32, // 蓝牙2
-    v_host3          = 0x33, // 蓝牙3
-    v_host4          = 0x34, // 蓝牙4
-    v_host5          = 0x35, // 蓝牙5
-    v_pair           = 0x51, // 无线配对
-    v_clear          = 0x52, // 清除配对信息
-    v_query_vol      = 0x53, // 查询电量信息
-    v_query_vol_chrg = 0xA3, // 查询电量信息 in charge status
-    v_query_vol_full = 0xA4, // 查询电量信息 in full charge status
-    v_en_sleep_bt    = 0x55, // 允许休眠蓝牙30分钟
-    v_dis_sleep_bt   = 0x56, // 禁止蓝牙休眠
-    v_en_sleep_wl    = 0x57, // 允许休眠2.4G30分钟
-    v_dis_sleep_wl   = 0x58, // 禁止2.4G休眠
-    v_ota            = 0x81, // 无线空中升级
-    v_fixed_freq     = 0x82, // 进入定频模式
+    v_usb              = 0x11, // USB模式
+    v_2_4g             = 0x30, // 2.4G模式
+    v_host1            = 0x31, // 蓝牙1
+    v_host2            = 0x32, // 蓝牙2
+    v_host3            = 0x33, // 蓝牙3
+    v_host4            = 0x34, // 蓝牙4
+    v_host5            = 0x35, // 蓝牙5
+    v_pair             = 0x51, // 无线配对
+    v_clear            = 0x52, // 清除配对信息
+    v_query_vol        = 0x53, // 查询电量信息
+    v_query_vol_chrg   = 0xA3, // 查询电量信息 in charge status
+    v_query_vol_full   = 0xA4, // 查询电量信息 in full charge status
+    v_query_vol_update = 0xA5,
+    v_en_sleep_bt      = 0x55, // 允许休眠蓝牙30分钟
+    v_dis_sleep_bt     = 0x56, // 禁止蓝牙休眠
+    v_en_sleep_wl      = 0x57, // 允许休眠2.4G30分钟
+    v_dis_sleep_wl     = 0x58, // 禁止2.4G休眠
+    v_ota              = 0x81, // 无线空中升级
+    v_fixed_freq       = 0x82, // 进入定频模式
 } vbs_t;
 
 typedef struct {
@@ -84,13 +85,14 @@ void bts_init(bts_info_t *info);
 void bts_task(devs_t dev_state); // 需要每1ms调用一次
 bool bts_process_keys(uint16_t keycode, bool pressed, devs_t dev_state, bool no_gui, uint8_t num);
 
-bool    bts_send_fn(bool pressed);
-bool    bts_send_name(devs_t host);
-bool    bts_send_vendor(vbs_t cmd);
-bool    bts_send_consumer(uint16_t usage);
-bool    bts_send_mouse_report(uint8_t *report);
-void    bts_test_report_rate_task(void);
-char   *bts_get_version(void);
+bool  bts_send_fn(bool pressed);
+bool  bts_send_name(devs_t host);
+bool  bts_send_vendor(vbs_t cmd);
+bool  bts_send_consumer(uint16_t usage);
+bool  bts_send_mouse_report(uint8_t *report);
+void  bts_test_report_rate_task(void);
+char *bts_get_version(void);
+
 uint8_t bts_is_busy(void);
 
 void lp_system_sleep(void);

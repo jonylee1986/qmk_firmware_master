@@ -162,7 +162,8 @@ static void pad_enbale_interrupt(ioline_t pin) {
     }
 }
 
-bool        low_vol_offed_sleep;
+bool low_vol_offed_sleep;
+
 static void exti_init(void) {
     if (!low_vol_offed_sleep) {
         for (int col = 0; col < MATRIX_COLS; col++) {
@@ -176,8 +177,10 @@ static void exti_init(void) {
             _pal_lld_enablepadevent(PAL_PORT(row_pins[row]), PAL_PAD(row_pins[row]), PAL_EVENT_MODE_BOTH_EDGES);
             pad_enbale_interrupt(PAL_PAD(row_pins[row]));
         }
+
 #    if defined(MM_BT_MODE_PIN) && defined(MM_2G4_MODE_PIN)
         setPinInputHigh(MM_BT_MODE_PIN);
+        waitInputPinDelay();
         setPinInputHigh(MM_2G4_MODE_PIN);
         _pal_lld_enablepadevent(PAL_PORT(MM_BT_MODE_PIN), PAL_PAD(MM_BT_MODE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
         _pal_lld_enablepadevent(PAL_PORT(MM_2G4_MODE_PIN), PAL_PAD(MM_2G4_MODE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
@@ -185,11 +188,19 @@ static void exti_init(void) {
         pad_enbale_interrupt(PAL_PAD(MM_2G4_MODE_PIN));
 
 #    endif
+
+#    ifdef MM_CABLE_PIN
+        setPinInputHigh(MM_CABLE_PIN);
+        _pal_lld_enablepadevent(PAL_PORT(MM_CABLE_PIN), PAL_PAD(MM_CABLE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
+        pad_enbale_interrupt(PAL_PAD(MM_CABLE_PIN));
+#    endif
     } else {
+#    ifdef MM_CABLE_PIN
         setPinInputHigh(MM_CABLE_PIN);
         _pal_lld_enablepadevent(PAL_PORT(MM_CABLE_PIN), PAL_PAD(MM_CABLE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
         pad_enbale_interrupt(PAL_PAD(MM_CABLE_PIN));
     }
+#    endif
 }
 
 static void stop_mode_entry(void) {
@@ -388,7 +399,7 @@ void bootmagic_lite(void) {
 #    if defined(DEBOUNCE) && DEBOUNCE > 0
         wait_ms(DEBOUNCE * 2);
 #    else
-        wait_ms(30);
+            wait_ms(30);
 #    endif
         matrix_scan();
 

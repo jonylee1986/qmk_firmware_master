@@ -68,7 +68,17 @@
     {"name": "Reset_ All", "title": "Reset the PCB setting", "shortName": "Reset_All"},
     {"name": "Reset_ Keymap", "title": "Reset the keyboard resetting", "shortName": "Reset_Keymap"},
     {"name": "Reset_ BT", "title": "Reset the Bluetooth setting", "shortName": "Reset_BT"},
-    {"name": "=", "title": "Key equal for windows", "shortName": "="}
+    {"name": "=", "title": "Key equal for windows", "shortName": "="},
+    {"name": "RGB_ Toggle", "title": "Toggle RGB lighting", "shortName": "RGB_TOG"},
+    {"name": "RGB_ Mode+", "title": "Cycle RGB lighting modes", "shortName": "RGB_MOD"},
+    {"name": "RGB_ Hue-", "title": "Decrease RGB hue", "shortName": "RGB_HUD"},
+    {"name": "RGB_ Hue+", "title": "Increase RGB hue", "shortName": "RGB_HUI"},
+    {"name": "RGB_ Sat-", "title": "Decrease RGB saturation", "shortName": "RGB_SAD"},
+    {"name": "RGB_ Sat+", "title": "Increase RGB saturation", "shortName": "RGB_SAI"},
+    {"name": "RGB_ Bright-", "title": "Decrease RGB brightness", "shortName": "RGB_VAD"},
+    {"name": "RGB_ Bright+", "title": "Increase RGB brightness", "shortName": "RGB_VAI"},
+    {"name": "RGB_ Speed-", "title": "Decrease RGB effect speed", "shortName": "RGB_SPD"},
+    {"name": "RGB_ Speed+", "title": "Increase RGB effect speed", "shortName": "RGB_SPI"}
   ],
   "layouts": {
     "keymap": [

@@ -17,9 +17,9 @@
 #pragma once
 
 #ifdef MULTIMODE_ENABLE
-#    define MM_BT_HOST1_NAME "YUNZII YZ99 BT$"
-#    define MM_BT_HOST2_NAME "YUNZII YZ99 BT$"
-#    define MM_BT_HOST3_NAME "YUNZII YZ99 BT$"
+#    define MM_BT_HOST1_NAME "YUNZII B98 PRO BT"
+#    define MM_BT_HOST2_NAME "YUNZII B98 PRO BT"
+#    define MM_BT_HOST3_NAME "YUNZII B98 PRO BT"
 
 // Indicate index of mm device
 #    define MM_BLINK_HOST1_INDEX 18
@@ -42,6 +42,8 @@
 #    define MM_BLINK_USB_COLOR RGB_WHITE  // USB color
 
 #    define BAT_LEVEL_DISPLAY_INDEX {102, 103, 104, 105, 106} // Battery level indicator
+
+#    define USB_SUSPEND_CHECK_ENABLE
 #endif
 
 // Win lock indicator
@@ -63,7 +65,7 @@
 #define SNLED27351_I2C_ADDRESS_2 SNLED27351_I2C_ADDRESS_VDDIO
 
 #define I2C1_OPMODE OPMODE_I2C
-#define I2C1_CLOCK_SPEED 400000
+#define I2C1_CLOCK_SPEED 1000000
 
 // RGB Matrix Config
 #define RGB_MATRIX_SHUTDOWN_PIN A15
@@ -71,3 +73,7 @@
 // Encoder Config
 #define ENCODER_DEFAULT_POS 0x0
 // #define ENCODER_DIRECTION_FLIP
+
+// #define DEBUG_MATRIX_SCAN_RATE
+
+// #define RGB_MATRIX_LED_FLUSH_LIMIT 32

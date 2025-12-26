@@ -8,7 +8,7 @@
     "usb": {
         "vid": "0xFFFE",
         "pid": "0x00B0",
-        "device_version": "1.0.4",
+        "device_version": "1.0.6",
         "suspend_wakeup_delay": 1000
     },
     "host": {
@@ -44,8 +44,16 @@
         ],
         "default": 0
     },
+    "eeprom": {
+        "driver": "wear_leveling",
+        "wear_leveling": {
+            "driver": "spi_flash",
+            "backing_size": 4096
+        }
+    },
     "rgb_matrix": {
         "driver": "ws2812",
+        "react_on_keyup": true,
         "led_count": 85,
         "max_brightness": 160,
         "val_steps": 40,
