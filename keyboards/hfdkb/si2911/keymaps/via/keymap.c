@@ -200,7 +200,11 @@ void keyboard_post_init_user(void) {
         eeconfig_update_keymap(&keymap_config);
         // sled_mode_before_charge = SLED_MODE_VOL;
     }
+
     bled_init();
+
+    extern void snled27351_reset(void);
+    snled27351_reset();
 }
 
 void eeconfig_init_user(void) {
@@ -351,12 +355,16 @@ void matrix_scan_user(void) {
 }
 
 void matrix_init_user(void) {
+    extern bool enable_dog;
+    enable_dog = true;
+
 #ifdef RGB_MATRIX_SHUTDOWN_PIN
     setPinOutputPushPull(RGB_MATRIX_SHUTDOWN_PIN);
     writePinLow(RGB_MATRIX_SHUTDOWN_PIN);
     wait_ms(10);
     writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
 #endif
+
 #ifdef MULTIMODE_ENABLE
     bt_init();
     led_config_all();

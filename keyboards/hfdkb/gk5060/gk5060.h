@@ -11,7 +11,8 @@ enum bt_keycodes {
     BT_HOST3,
     BT_2_4G,
     BT_VOL,
-    SW_OS1,
+    SW_MAC,
+    SW_WIN,
     KC_DICT,
     KC_DNDT,
 };

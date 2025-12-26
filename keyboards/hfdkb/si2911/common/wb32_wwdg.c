@@ -90,6 +90,17 @@ void housekeeping_task_kb(void) {
             WWDG_SetCounter(127);
         }
     }
+}
 
-    // housekeeping_task_user();
+void snled27351_reset(void) {
+    setPinOutputOpenDrain(C11);
+    writePinLow(C11);
+    wait_ms(1);
+    writePinHigh(C11);
+    wait_ms(20);
+
+    WWDG_SetCounter(127);
+    time = timer_read();
+
+    rgb_matrix_init();
 }

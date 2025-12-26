@@ -18,6 +18,7 @@ void led_config_all(void) {
 void led_deconfig_all(void) {
     if (led_inited) {
         // Set our LED pins as input
+        setPinOutput(RGB_DRIVER_SDB_PIN);
         writePinLow(RGB_DRIVER_SDB_PIN);
         led_inited = false;
     }
@@ -159,10 +160,18 @@ void housekeeping_task_kb(void) {
 
 #ifdef RGB_MATRIX_ENABLE
 
+void suspend_power_down_kb(void) {
+    led_deconfig_all();
+}
+
+void suspend_wakeup_init_kb(void) {
+    led_config_all();
+}
+
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     rgb_matrix_set_color_all(RGB_BLACK);
 
-    // rgb_matrix_set_color(5, 160, 160, 160);
+    // rgb_matrix_set_color(0, 160, 160, 160);
 
     if (rgb_matrix_indicators_advanced_user(led_min, led_max) != true) {
         return false;
@@ -177,6 +186,7 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     // caps lock red
     if ((host_keyboard_led_state().caps_lock) && ((bts_info.bt_info.paired) || (dev_info.devs == DEVS_USB))) {
         RGB_MATRIX_INDICATOR_SET_COLOR(4, 100, 100, 100);
+        RGB_MATRIX_INDICATOR_SET_COLOR(5, 100, 100, 100);
     }
     // GUI lock red
     // if (keymap_config.no_gui) {

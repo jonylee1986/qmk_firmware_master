@@ -180,19 +180,14 @@ static void exti_init(void) {
         }
 
 #    if defined(BT_MODE_SW_PIN) && defined(RF_MODE_SW_PIN)
-        static ioline_t exti_pins[] = {BT_MODE_SW_PIN, RF_MODE_SW_PIN};
-        for (uint8_t i = 0; i < 2; i++) {
-            setPinInputHigh(exti_pins[i]);
-            waitInputPinDelay();
-            _pal_lld_enablepadevent(PAL_PORT(exti_pins[i]), PAL_PAD(exti_pins[i]), PAL_EVENT_MODE_BOTH_EDGES);
-            pad_enbale_interrupt(PAL_PAD(exti_pins[i]));
-        }
+        // static ioline_t exti_pins[] = {BT_MODE_SW_PIN, RF_MODE_SW_PIN};
+        // for (uint8_t i = 0; i < 2; i++) {
+        //     setPinInputHigh(exti_pins[i]);
+        //     waitInputPinDelay();
+        //     _pal_lld_enablepadevent(PAL_PORT(exti_pins[i]), PAL_PAD(exti_pins[i]), PAL_EVENT_MODE_BOTH_EDGES);
+        //     pad_enbale_interrupt(PAL_PAD(exti_pins[i]));
+        // }
 #    endif
-
-        setPinInputHigh(B14);
-        waitInputPinDelay();
-        _pal_lld_enablepadevent(PAL_PORT(B14), PAL_PAD(B14), PAL_EVENT_MODE_BOTH_EDGES);
-        pad_enbale_interrupt(PAL_PAD(B14));
     } else {
         setPinInputHigh(BT_CABLE_PIN);
         waitInputPinDelay();

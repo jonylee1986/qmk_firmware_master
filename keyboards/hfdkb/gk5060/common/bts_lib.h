@@ -26,9 +26,9 @@ typedef enum {
     DEVS_HOST1,
     DEVS_HOST2,
     DEVS_HOST3,
+    DEVS_2_4G,
     DEVS_HOST4,
     DEVS_HOST5,
-    DEVS_2_4G,
 } devs_t;
 
 typedef enum {
