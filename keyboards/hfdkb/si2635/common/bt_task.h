@@ -62,6 +62,7 @@ typedef union {
         uint8_t bled_val;
         uint8_t bled_mode : 3;
         uint8_t bled_color : 4;
+        uint8_t encoder_mode : 1;
     };
 } dev_info_t;
 

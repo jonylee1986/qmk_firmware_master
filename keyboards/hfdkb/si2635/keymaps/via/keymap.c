@@ -22,6 +22,10 @@
 #include "bled/bled.h"
 #include "lib/lib8tion/lib8tion.h"
 
+#ifdef USB_SUSPEND_CHECK_ENABLE
+#    include "usb_main.h"
+#endif
+
 enum _layers {
     WIN_BASE,
     WIN_FN,
@@ -31,8 +35,8 @@ enum _layers {
     MAC_FN,
 };
 
-#define KC_TASK A(KC_TAB)
-#define AN_HOME A(KC_ESC)
+#define KC_TASK G(KC_TAB)
+#define AN_HOME G(KC_H)
 #define KC_SER G(KC_SPC)
 // #define MAC_TSK LWIN(KC_TAB)
 #define KEY_WIN PDF(0)
@@ -50,12 +54,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_LCTL, KC_LWIN,  KC_LALT,                               KC_SPC,                             MO(1),   KC_RCTL,  KC_LEFT,  KC_DOWN,  KC_RGHT),
 
     [WIN_FN] = LAYOUT_80_ansi(
-        EE_CLR,  KC_WHOM,  KC_MAIL,  KC_TASK,  KC_FLXP,  RM_VALD, RM_VALU, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,  KC_VOLU,            _______,
+        EE_CLR,  KC_BRID,  KC_BRIU,  KC_TASK,  KC_MYCM,  KC_MAIL, KC_WHOM, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,  KC_VOLU,            _______,
         BT_2_4G, BT_HOST1, BT_HOST2, BT_HOST3, _______,  _______, _______, _______, _______, _______, _______, _______,  _______,  RM_TOGG,  KC_INS,
         RM_HUEU, KEY_AND,  _______,  KEY_MAC,  _______,  _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,  _______,  RM_NEXT,  _______,
         _______, _______,  _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______,            _______,  _______,
-        BLED_MOD,          BLED_HUI, _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RM_VALU,  KC_HOME,
-        BLED_SPI, GU_TOGG, BLED_VAI,                              _______,                            _______, _______,  RM_SPDD,  RM_VALD,  RM_SPDU),
+        BLED_MOD,          _______, _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RM_VALU,  KC_HOME,
+        _______, GU_TOGG, _______,                              _______,                            _______, _______,  RM_SPDD,  RM_VALD,  RM_SPDU),
 
     [AND_BASE] = LAYOUT_80_ansi(
         KC_ESC,  KC_BRID,  KC_BRIU,  KC_TASK,  AN_HOME,  RM_VALD, RM_VALU, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,  KC_VOLU,            WORK_MOD,
@@ -70,11 +74,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         BT_2_4G, BT_HOST1, BT_HOST2, BT_HOST3, _______,  _______, _______, _______, _______, _______, _______, _______,  _______,  RM_TOGG,  _______,
         RM_HUEU, _______,  KEY_WIN,  KEY_MAC,  _______,  _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,  _______,  RM_NEXT,  _______,
         _______, _______,  _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______,            _______,  _______,
-        BLED_MOD,          BLED_HUI, _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RM_VALU,  KC_HOME,
-        BLED_SPI, _______, BLED_VAI,                              _______,                            _______, _______,  RM_SPDD,  RM_VALD,  RM_SPDU),
+        BLED_MOD,          _______, _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RM_VALU,  KC_HOME,
+        _______, _______, _______,                              _______,                            _______, _______,  RM_SPDD,  RM_VALD,  RM_SPDU),
 
     [MAC_BASE] = LAYOUT_80_ansi(
-        KC_ESC,  KC_BRID,  KC_BRIU,  KC_MCTL,  KC_SER,   RM_VALD, RM_VALU, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,  KC_VOLU,            WORK_MOD,
+        KC_ESC,  KC_BRID,  KC_BRIU,  KC_MCTL,  KC_SER,   KC_F5,   KC_F6,   KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,  KC_VOLU,            WORK_MOD,
         KC_GRV,  KC_1,     KC_2,     KC_3,     KC_4,     KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS,  KC_EQL,   KC_BSPC,  KC_DEL,
         KC_TAB,  KC_Q,     KC_W,     KC_E,     KC_R,     KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC,  KC_RBRC,  KC_BSLS,  KC_PGUP,
         KC_CAPS, KC_A,     KC_S,     KC_D,     KC_F,     KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,            KC_ENT,   KC_PGDN,
@@ -86,8 +90,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         BT_2_4G, BT_HOST1, BT_HOST2, BT_HOST3, BT_2_4G,  _______, _______, _______, _______, _______, _______, _______,  _______,  RM_TOGG,  _______,
         RM_HUEU, KEY_AND,  KEY_WIN,  _______,  _______,  _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,  _______,  RM_NEXT,  _______,
         _______, _______,  _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______,            _______,  _______,
-        BLED_MOD,          BLED_HUI, _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RM_VALU,  KC_HOME,
-        BLED_SPI, _______, BLED_VAI,                              _______,                            _______, _______,  RM_SPDD,  RM_VALD,  RM_SPDU),
+        BLED_MOD,          _______, _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, _______,  _______,  RM_VALU,  KC_HOME,
+        _______, _______, _______,                              _______,                            _______, _______,  RM_SPDD,  RM_VALD,  RM_SPDU),
 };
 
 #if defined(ENCODER_MAP_ENABLE)
@@ -178,9 +182,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KEY_WIN:
             if (record->event.pressed) {
                 single_blink_cnt   = 6;
-                single_blink_time  = timer_read32();
                 single_blink_index = LED_W_INDEX;
                 single_blink_color = (RGB){RGB_RED};
+                if (timer_elapsed32(single_blink_time) >= 500) {
+                    single_blink_time = timer_read32();
+                }
             }
             break;
 
@@ -191,9 +197,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     eeconfig_update_keymap(&keymap_config);
                 }
                 single_blink_cnt   = 6;
-                single_blink_time  = timer_read32();
                 single_blink_index = LED_Q_INDEX;
                 single_blink_color = (RGB){RGB_RED};
+                if (timer_elapsed32(single_blink_time) >= 500) {
+                    single_blink_time = timer_read32();
+                }
             }
             break;
 
@@ -204,9 +212,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     eeconfig_update_keymap(&keymap_config);
                 }
                 single_blink_cnt   = 6;
-                single_blink_time  = timer_read32();
                 single_blink_index = LED_E_INDEX;
                 single_blink_color = (RGB){RGB_RED};
+                if (timer_elapsed32(single_blink_time) >= 500) {
+                    single_blink_time = timer_read32();
+                }
             }
             break;
 
@@ -303,7 +313,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 if (mode_long_pressed_flag) {
                     mode_long_pressed_flag = false;
                 } else {
-                    if (mode == MODE_WORKING) {
+                    if (dev_info.encoder_mode == MODE_WORKING) {
                         tap_code(KC_MUTE);
                     } else {
                         rgb_matrix_step();
@@ -353,10 +363,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 }
 
 void keyboard_pre_init_user(void) {
-#ifdef RGB_MATRIX_SHUTDOWN_PIN
-    setPinOutputPushPull(RGB_MATRIX_SHUTDOWN_PIN);
-    writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
-#endif
+    // #ifdef RGB_MATRIX_SHUTDOWN_PIN
+    //     setPinOutputPushPull(RGB_MATRIX_SHUTDOWN_PIN);
+    //     writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
+    // #endif
 }
 
 void keyboard_post_init_user(void) {
@@ -369,14 +379,17 @@ void keyboard_post_init_user(void) {
 }
 
 void eeconfig_init_user(void) {
+    dev_info.encoder_mode = MODE_WORKING;
+    eeconfig_update_user(dev_info.raw);
+
     bled_eeconfig_init();
 }
 
-void suspend_power_down_user(void) {
+void suspend_power_down_kb(void) {
     led_deconfig_all();
 }
 
-void suspend_wakeup_init_user(void) {
+void suspend_wakeup_init_kb(void) {
     led_config_all();
 }
 
@@ -429,7 +442,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     }
 
     if (single_blink_cnt) {
-        if (timer_elapsed32(single_blink_time) > 300) {
+        if (timer_elapsed32(single_blink_time) > 500) {
             single_blink_time = timer_read32();
             single_blink_cnt--;
         }
@@ -441,7 +454,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     }
 
     if (double_blink_cnt) {
-        if (timer_elapsed32(double_blink_time) > 300) {
+        if (timer_elapsed32(double_blink_time) > 500) {
             double_blink_time = timer_read32();
             double_blink_cnt--;
         }
@@ -472,8 +485,10 @@ void housekeeping_task_user(void) {
     if (mode_long_pressed_time && (timer_elapsed32(mode_long_pressed_time) >= 3000)) {
         mode_long_pressed_time = 0;
         mode_long_pressed_flag = true;
-        if (mode == MODE_WORKING) {
-            mode = MODE_GAMING;
+        if (dev_info.encoder_mode == MODE_WORKING) {
+            dev_info.encoder_mode = MODE_GAMING;
+            eeconfig_update_user(dev_info.raw);
+
             for (int layer = 0; layer < DYNAMIC_KEYMAP_LAYER_COUNT; layer += 2) {
                 //     if (dynamic_keymap_get_encoder(layer, 0, true) != RGB_VAI || dynamic_keymap_get_encoder(layer, 0, false) != RGB_VAD) {
                 dynamic_keymap_set_encoder(layer, 0, true, RM_VALU);
@@ -490,7 +505,9 @@ void housekeeping_task_user(void) {
             double_blink_color[LWIN_INDEX] = (RGB){RGB_GREEN};
             double_blink_color[CAPS_INDEX] = (RGB){RGB_GREEN};
         } else {
-            mode = MODE_WORKING;
+            dev_info.encoder_mode = MODE_WORKING;
+            eeconfig_update_user(dev_info.raw);
+
             for (int layer = 0; layer < DYNAMIC_KEYMAP_LAYER_COUNT; layer += 2) {
                 //     if (dynamic_keymap_get_encoder(layer, 0, true) != KC_VOLU || dynamic_keymap_get_encoder(layer, 0, false) != KC_VOLD) {
                 dynamic_keymap_set_encoder(layer, 0, true, KC_VOLU);
@@ -508,6 +525,39 @@ void housekeeping_task_user(void) {
             double_blink_color[CAPS_INDEX] = (RGB){RGB_BLUE};
         }
     }
+
+#ifdef USB_SUSPEND_CHECK_ENABLE
+    static uint32_t usb_suspend_timer = 0;
+    static uint32_t usb_suspend       = false;
+
+    if (dev_info.devs == DEVS_USB) {
+        if (USB_DRIVER.state != USB_ACTIVE || USB_DRIVER.state == USB_SUSPENDED) {
+            if (!usb_suspend_timer) {
+                usb_suspend_timer = timer_read32();
+            } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
+                if (!usb_suspend) {
+                    usb_suspend = true;
+                    led_deconfig_all();
+                }
+                usb_suspend_timer = 0;
+            }
+        } else {
+            if (usb_suspend_timer) {
+                usb_suspend_timer = 0;
+                if (usb_suspend) {
+                    usb_suspend = false;
+                    led_config_all();
+                }
+            }
+        }
+    } else {
+        if (usb_suspend) {
+            usb_suspend_timer = 0;
+            usb_suspend       = false;
+            led_config_all();
+        }
+    }
+#endif
 }
 
 void matrix_scan_user(void) {
@@ -517,6 +567,12 @@ void matrix_scan_user(void) {
 }
 
 void matrix_init_user(void) {
+#ifdef RGB_MATRIX_SHUTDOWN_PIN
+    setPinOutputPushPull(RGB_MATRIX_SHUTDOWN_PIN);
+    writePinLow(RGB_MATRIX_SHUTDOWN_PIN);
+    wait_ms(10);
+    writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
+#endif
 #ifdef MULTIMODE_ENABLE
     bt_init();
     led_config_all();

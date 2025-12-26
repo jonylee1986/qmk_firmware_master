@@ -23,11 +23,13 @@
 #define BLED_BRIGHTNESS_STEP 25
 
 typedef enum {
-    BLED_MODE_CYCLE,
+    BLED_MODE_FLOW,
     BLED_MODE_BREATHING,
     BLED_MODE_SOLID,
     BLED_MODE_OFF,
     BLED_MODE_COUNT,
+    BLED_MODE_CYCLE,
+    BLED_MODE_CYCLE1,
 } bled_mode_t;
 
 typedef enum {

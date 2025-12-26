@@ -1,6 +1,6 @@
 {
     "manufacturer": "hfd",
-    "keyboard_name": "AULA F75 Ultra",
+    "keyboard_name": "Epomaker×Aula F75 Ultra",
     "maintainer": "jonylee@hfd",
     "url": "https://github.com/jonylee1986",
     "processor": "WB32FQ95",
@@ -8,7 +8,7 @@
     "usb": {
         "vid": "0xFFFE",
         "pid": "0x00A9",
-        "device_version": "1.0.6",
+        "device_version": "1.0.7",
         "suspend_wakeup_delay": 1000
     },
     "features": {
@@ -18,6 +18,11 @@
         "nkro": true,
         "encoder": true,
         "rgb_matrix": true
+    },
+    "host": {
+        "default": {
+            "nkro": true
+        }
     },
     "matrix_pins": {
         "cols": ["C1", "C2", "C3", "A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "C4", "C5", "B0", "B1", "B2"],

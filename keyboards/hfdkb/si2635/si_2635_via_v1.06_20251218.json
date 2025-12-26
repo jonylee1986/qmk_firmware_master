@@ -1,5 +1,5 @@
 {
-    "name": "AULA F75 Ultra",
+    "name": "F75 Ultra",
     "vendorId": "0xFFFE",
     "productId": "0x00A9",
     "keycodes": ["qmk_lighting"],

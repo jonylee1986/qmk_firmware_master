@@ -187,10 +187,10 @@ static void exti_init(void) {
         pad_enbale_interrupt(PAL_PAD(MM_2G4_MODE_PIN));
 #    endif
 
-#    ifdef MM_CABLE_PIN
-        setPinInputHigh(MM_CABLE_PIN);
-        _pal_lld_enablepadevent(PAL_PORT(MM_CABLE_PIN), PAL_PAD(MM_CABLE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
-        pad_enbale_interrupt(PAL_PAD(MM_CABLE_PIN));
+#    ifdef ENCODER_ENABLE
+        setPinInputHigh(C13);
+        _pal_lld_enablepadevent(PAL_PORT(C13), PAL_PAD(C13), PAL_EVENT_MODE_BOTH_EDGES);
+        pad_enbale_interrupt(PAL_PAD(C13));
 #    endif
     } else {
 #    ifdef MM_CABLE_PIN
