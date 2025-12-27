@@ -4,14 +4,15 @@
     "productId": "0x0024",
     "matrix": { "rows": 5, "cols": 14 },
     "customKeycodes":[
-        {"name":"BT_HOST1","title":"BT_HOST1","shortName":"BT_HOST1"},
-        {"name":"BT_HOST2","title":"BT_HOST2","shortName":"BT_HOST2"},
-        {"name":"BT_HOST3","title":"BT_HOST3","shortName":"BT_HOST3"},
-        {"name":"BT_2_4G","title":"BT_2_4G","shortName":"BT_2_4G"},
-        {"name":"SW_OS1","title":"SW_OS1","shortName":"SW_OS1"},
-        {"name":"KC_MTCL","title":"KC_MTCL","shortName":"KC_MTCL"},
-        {"name":"KC_DICT","title":"KC_DICT","shortName":"KC_DICT"},
-        {"name":"KC_DNDT","title":"KC_DNDT","shortName":"KC_DNDT"}
+        {"name":"BT_1","title":"BT_HOST1","shortName":"BT_1"},
+        {"name":"BT_2","title":"BT_HOST2","shortName":"BT_2"},
+        {"name":"BT_3","title":"BT_HOST3","shortName":"BT_3"},
+        {"name":"2_4G","title":"BT_2_4G","shortName":"2_4G"},
+        {"name":"Vol_ Check","title":"Check the voltage of battery","shortName":"V_Check"},
+        {"name":"SW_MAC","title":"Switch to Mac OS","shortName":"SW_MAC"},
+        {"name":"SW_WIN","title":"Switch to Win os","shortName":"SW_WIN"},
+        {"name":"KC_ DICT","title":"KC_DICT","shortName":"KC_DICT"},
+        {"name":"KC_ DNDT","title":"KC_DNDT","shortName":"KC_DNDT"}
     ],
     "layouts": {
       "keymap":[
