@@ -1,0 +1,69 @@
+{
+    "manufacturer": " ",
+    "maintainer": "jonylee@hfd",
+    "url": "https://github.com/jonylee1986",
+    "processor": "WB32FQ95",
+    "bootloader": "wb32-dfu",
+    "usb": {
+        "vid": "0xFFFE",
+        "device_version": "1.0.0",
+        "suspend_wakeup_delay": 1000
+    },
+    "host": {
+        "default": {
+            "nkro": true
+        }
+    },
+    "diode_direction": "ROW2COL",
+    "features": {
+        "bootmagic": true,
+        "command": false,
+        "console": false,
+        "extrakey": true,
+        "mousekey": true,
+        "nkro": true,
+        "rgb_matrix": true
+    },
+    "matrix_pins": {
+        "rows": ["C6", "C7", "C8", "C9", "B14"]
+    },
+    "eeprom": {
+        "driver": "wear_leveling",
+        "wear_leveling": {
+            "driver": "spi_flash",
+            "backing_size": 4096
+        }
+    },
+    "ws2812": {"pin": "D2"},
+    "rgb_matrix": {
+        "sleep": true,
+        "react_on_keyup": true,
+        "driver": "ws2812",
+        "max_brightness": 120,
+        "val_steps": 30,
+        "speed_steps": 64,
+        "default": {
+            "speed": 191,
+            "animation": "cycle_all"
+        },
+        "animations": {
+            "solid_color": true,
+            "breathing": true,
+            "cycle_all": true,
+            "cycle_left_right": true,
+            "cycle_up_down": true,
+            "cycle_out_in": true,
+            "cycle_out_in_dual": true,
+            "rainbow_moving_chevron": true,
+            "cycle_pinwheel": true,
+            "cycle_spiral": true,
+            "dual_beacon": true,
+            "rainbow_beacon": true,
+            "raindrops": true,
+            "typing_heatmap": true,
+            "solid_reactive_simple": true,
+            "solid_reactive": true,
+            "multisplash": true
+        }
+    }
+}
