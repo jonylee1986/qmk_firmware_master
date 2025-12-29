@@ -114,7 +114,8 @@ bool            key_eql_pressed       = false;
 static uint32_t key_eql_numlock_timer = 0;
 static uint8_t  host_numlock_state    = 0;
 
-// bool synchronize_numlock_state = false;
+extern uint8_t numpad_keys_pressed_count;
+extern bool    no_eql;
 
 bool process_rgb_matrix_user(uint16_t keycode, keyrecord_t *record) {
     if (record->event.pressed) {
@@ -247,52 +248,36 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KEY_EQL: {
             if (get_highest_layer(default_layer_state) == 0) {
                 if (record->event.pressed) {
-                    key_eql_pressed = true;
-                    // synchronize_numlock_state = false;
-                    host_numlock_state = host_keyboard_led_state().num_lock;
-                    // if (dev_info.devs == DEVS_USB) {
-                    if (!host_numlock_state) {
-                        register_code(KC_NUM_LOCK);
-                        wait_ms(10);
-                    }
-                    register_code(KC_LALT);
-                    register_code(KC_P6);
-                    register_code(KC_P1);
-                    // } else {
-                    //     if (!host_numlock_state) {
-                    //         bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, 8);
-                    //         bts_task(dev_info.devs);
-                    //         while (bts_is_busy())
-                    //             ;
-                    //         wait_ms(10);
-                    //     }
-                    //     bts_process_keys(KC_LALT, true, dev_info.devs, keymap_config.no_gui, 8);
-                    //     bts_task(dev_info.devs);
-                    //     while (bts_is_busy())
-                    //         ;
-                    //     bts_process_keys(KC_P6, true, dev_info.devs, keymap_config.no_gui, 8);
-                    //     bts_task(dev_info.devs);
-                    //     while (bts_is_busy())
-                    //         ;
-                    //     bts_process_keys(KC_P1, true, dev_info.devs, keymap_config.no_gui, 8);
-                    //     bts_task(dev_info.devs);
-                    //     while (bts_is_busy())
-                    //         ;
-                    // }
+                    if (numpad_keys_pressed_count == 0) {
+                        key_eql_pressed = true;
 
-                    key_eql_numlock_timer = timer_read32(); // 50ms delay
+                        host_numlock_state = host_keyboard_led_state().num_lock;
+
+                        if (!host_numlock_state) {
+                            register_code(KC_NUM_LOCK);
+                            wait_ms(10);
+                        }
+
+                        register_code(KC_LALT);
+                        register_code(KC_P6);
+                        register_code(KC_P1);
+
+                        key_eql_numlock_timer = timer_read32();
+                    }
                 }
             }
             return false;
         }
 
         case KC_NUM: {
-            if (dev_info.unsync) {
-                if (record->event.pressed) {
-                    dev_info.num_unsync = !dev_info.num_unsync;
-                    // uprintf("num_unsync: %d", dev_info.num_unsync);
-                    eeconfig_update_user(dev_info.raw);
-                    return false;
+            if (dev_info.devs == DEVS_USB) {
+                if (dev_info.unsync) {
+                    if (record->event.pressed) {
+                        dev_info.num_unsync = !dev_info.num_unsync;
+                        // uprintf("num_unsync: %d", dev_info.num_unsync);
+                        eeconfig_update_user(dev_info.raw);
+                        return false;
+                    }
                 }
             }
             break;
@@ -401,74 +386,24 @@ void housekeeping_task_user(void) {
     }
 
     if (key_eql_numlock_timer && (timer_elapsed32(key_eql_numlock_timer) >= 10)) {
-        // if (dev_info.devs == DEVS_USB) {
         unregister_code(KC_LALT);
         unregister_code(KC_P6);
         unregister_code(KC_P1);
-        // } else {
-        //     bts_process_keys(KC_LALT, false, dev_info.devs, keymap_config.no_gui, 8);
-        //     bts_task(dev_info.devs);
-        //     while (bts_is_busy())
-        //         ;
-        //     wait_ms(10);
-        //     bts_process_keys(KC_P6, false, dev_info.devs, keymap_config.no_gui, 8);
-        //     bts_task(dev_info.devs);
-        //     while (bts_is_busy())
-        //         ;
-        //     wait_ms(10);
-        //     bts_process_keys(KC_P1, false, dev_info.devs, keymap_config.no_gui, 8);
-        //     bts_task(dev_info.devs);
-        //     while (bts_is_busy())
-        //         ;
-        //     wait_ms(10);
-        // }
 
         if (dev_info.devs) {
             unregister_code(KC_NUM_LOCK);
-            // bts_process_keys(KC_NUM_LOCK, false, dev_info.devs, keymap_config.no_gui, 8);
-            // bts_task(dev_info.devs);
-            // while (bts_is_busy())
-            //     ;
-            // wait_ms(10);
         }
         if (key_eql_pressed && !host_numlock_state) {
-            // USB mode - send NumLock toggle
-            // if (dev_info.devs == DEVS_USB) {
             register_code(KC_NUM_LOCK);
             wait_ms(10);
             unregister_code(KC_NUM_LOCK);
             wait_ms(10);
-            // } else {
-            //     bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, 8);
-            //     bts_task(dev_info.devs);
-            //     while (bts_is_busy())
-            //         ;
-            //     wait_ms(10);
-            //     bts_process_keys(KC_NUM_LOCK, false, dev_info.devs, keymap_config.no_gui, 8);
-            //     bts_task(dev_info.devs);
-            //     while (bts_is_busy())
-            //         ;
-            //     wait_ms(10);
-            // }
         }
-        // Don't clear numpad_keys_pressed_count - it tracks other numpad keys still held
-        // KEY_EQL's KC_P6/KC_P1 don't affect the counter, so leave it alone
-        // wait_ms(100);
-        key_eql_numlock_timer = 0; // Reset timer
-        key_eql_pressed       = false;
-        // if (dev_info.num_unsync != host_keyboard_led_state().num_lock) {
-        // synchronize_numlock_state = true;
-        // }
-        // register_code(0x00);
+
+        key_eql_numlock_timer     = 0; // Reset timer
+        key_eql_pressed           = false;
+        numpad_keys_pressed_count = 0;
     }
-    // extern uint32_t key_press_time;
-    // if (synchronize_numlock_state && (host_keyboard_led_state().num_lock != dev_info.num_unsync)) {
-    // synchronize_numlock_state = false;
-    // register_code(KC_NUM_LOCK);
-    // wait_ms(10);
-    //     unregister_code(KC_NUM_LOCK);
-    //     wait_ms(10);
-    // }
 }
 
 #ifdef DIP_SWITCH_ENABLE

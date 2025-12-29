@@ -218,8 +218,11 @@ uint32_t last_total_time = 0;
 #include "command.h"
 #include "action.h"
 
-static bool original_num_lock_state   = false; // Track original NumLock state
-uint8_t     numpad_keys_pressed_count = 0;     // Count of currently pressed numpad keys
+static bool original_num_lock_state = false; // Track original NumLock state
+
+bool no_eql = false;
+
+uint8_t numpad_keys_pressed_count = 0; // Count of currently pressed numpad keys
 
 // uint32_t numlock_release_time = 0;s
 
@@ -237,7 +240,7 @@ __attribute__((weak)) void register_code(uint8_t code) {
         if (key_eql_pressed && IS_NUMPAD_KEYCODE(code) && (code != KC_P6 && code != KC_P1)) {
             return; // Block other numpad keys while equal is pressed
         }
-        // bool is_key_eql_numpad = key_eql_pressed && (code == KC_P6 || code == KC_P1);
+
         bool is_key_eql_numpad = key_eql_pressed;
 
         if (dev_info.unsync && IS_NUMPAD_KEYCODE(code) && !is_key_eql_numpad) {
@@ -333,6 +336,7 @@ __attribute__((weak)) void register_code(uint8_t code) {
             if (key_eql_pressed && IS_NUMPAD_KEYCODE(code) && (code != KC_P6 && code != KC_P1)) {
                 return; // Block other numpad keys while equal is pressed
             }
+
             bool is_key_eql_numpad = key_eql_pressed;
 
             if (!is_key_eql_numpad && dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
@@ -382,8 +386,12 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
     if (dev_info.devs) {
         if (!system_inited) return;
         // Handle numpad keys with custom behavior when unsync is enabled (BT mode)
+        if (key_eql_pressed && IS_NUMPAD_KEYCODE(code) && (code != KC_P6 && code != KC_P1)) {
+            return; // Block other numpad keys while equal is pressed
+        }
         // Skip async numpad logic for KC_P6 and KC_P1 when KEY_EQL is active (Alt+61 sequence)
-        bool is_key_eql_numpad = key_eql_pressed && (code == KC_P6 || code == KC_P1);
+        bool is_key_eql_numpad = key_eql_pressed;
+
         if (dev_info.unsync && IS_NUMPAD_KEYCODE(code) && !is_key_eql_numpad) {
             if (dev_info.num_unsync) {
                 // Force numpad to produce numbers (NumLock ON behavior)
@@ -469,6 +477,7 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
             if (key_eql_pressed && IS_NUMPAD_KEYCODE(code) && (code != KC_P6 && code != KC_P1)) {
                 return; // Block other numpad keys while equal is pressed
             }
+
             bool is_key_eql_numpad = key_eql_pressed;
 
             if (!is_key_eql_numpad && dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
