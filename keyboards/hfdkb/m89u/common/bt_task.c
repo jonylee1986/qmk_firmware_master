@@ -220,9 +220,10 @@ uint32_t last_total_time = 0;
 
 static bool original_num_lock_state = false; // Track original NumLock state
 
-bool no_eql = false;
-
 uint8_t numpad_keys_pressed_count = 0; // Count of currently pressed numpad keys
+
+uint8_t num_p6_pressed_count = 0;
+uint8_t num_p1_pressed_count = 0;
 
 // uint32_t numlock_release_time = 0;s
 
@@ -241,6 +242,22 @@ __attribute__((weak)) void register_code(uint8_t code) {
             return; // Block other numpad keys while equal is pressed
         }
 
+        if (key_eql_pressed && (code == KC_P6 || code == KC_P1)) {
+            if (code == KC_P6) {
+                num_p6_pressed_count++;
+                if (num_p6_pressed_count > 1) {
+                    return;
+                }
+            }
+            if (code == KC_P1) {
+                num_p1_pressed_count++;
+                if (num_p1_pressed_count > 1) {
+                    return;
+                }
+            }
+        }
+
+        // bool is_key_eql_numpad = key_eql_pressed && (code == KC_P6 || code == KC_P1);
         bool is_key_eql_numpad = key_eql_pressed;
 
         if (dev_info.unsync && IS_NUMPAD_KEYCODE(code) && !is_key_eql_numpad) {
@@ -331,12 +348,27 @@ __attribute__((weak)) void register_code(uint8_t code) {
             }
 
             // Handle numpad keys with custom behavior when unsync is enabled
-            // bool is_key_eql_numpad = key_eql_pressed && (code == KC_P6 || code == KC_P1);
 
             if (key_eql_pressed && IS_NUMPAD_KEYCODE(code) && (code != KC_P6 && code != KC_P1)) {
                 return; // Block other numpad keys while equal is pressed
             }
 
+            if (key_eql_pressed && (code == KC_P6 || code == KC_P1)) {
+                if (code == KC_P6) {
+                    num_p6_pressed_count++;
+                    if (num_p6_pressed_count > 1) {
+                        return;
+                    }
+                }
+                if (code == KC_P1) {
+                    num_p1_pressed_count++;
+                    if (num_p1_pressed_count > 1) {
+                        return;
+                    }
+                }
+            }
+
+            // bool is_key_eql_numpad = key_eql_pressed && (code == KC_P6 || code == KC_P1);
             bool is_key_eql_numpad = key_eql_pressed;
 
             if (!is_key_eql_numpad && dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
@@ -389,6 +421,22 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
         if (key_eql_pressed && IS_NUMPAD_KEYCODE(code) && (code != KC_P6 && code != KC_P1)) {
             return; // Block other numpad keys while equal is pressed
         }
+
+        if (key_eql_pressed && (code == KC_P6 || code == KC_P1)) {
+            if (code == KC_P6) {
+                num_p6_pressed_count++;
+                if (num_p6_pressed_count > 1) {
+                    return;
+                }
+            }
+            if (code == KC_P1) {
+                num_p1_pressed_count++;
+                if (num_p1_pressed_count > 1) {
+                    return;
+                }
+            }
+        }
+
         // Skip async numpad logic for KC_P6 and KC_P1 when KEY_EQL is active (Alt+61 sequence)
         bool is_key_eql_numpad = key_eql_pressed;
 
@@ -473,9 +521,23 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
 
         } else if (IS_BASIC_KEYCODE(code)) {
             // Handle numpad keys with custom behavior when unsync is enabled
-            // bool is_key_eql_numpad = key_eql_pressed && (code == KC_P6 || code == KC_P1);
             if (key_eql_pressed && IS_NUMPAD_KEYCODE(code) && (code != KC_P6 && code != KC_P1)) {
                 return; // Block other numpad keys while equal is pressed
+            }
+
+            if (key_eql_pressed && (code == KC_P6 || code == KC_P1)) {
+                if (code == KC_P6) {
+                    num_p6_pressed_count++;
+                    if (num_p6_pressed_count > 1) {
+                        return;
+                    }
+                }
+                if (code == KC_P1) {
+                    num_p1_pressed_count++;
+                    if (num_p1_pressed_count > 1) {
+                        return;
+                    }
+                }
             }
 
             bool is_key_eql_numpad = key_eql_pressed;

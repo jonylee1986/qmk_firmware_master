@@ -110,12 +110,15 @@ static uint8_t  single_blink_cnt   = 0;
 static uint32_t single_blink_time  = 0;
 RGB             single_blink_color = {0};
 
-bool            key_eql_pressed       = false;
+bool key_eql_pressed = false;
+
 static uint32_t key_eql_numlock_timer = 0;
-static uint8_t  host_numlock_state    = 0;
+
+static uint8_t host_numlock_state = 0;
 
 extern uint8_t numpad_keys_pressed_count;
-extern bool    no_eql;
+extern uint8_t num_p6_pressed_count;
+extern uint8_t num_p1_pressed_count;
 
 bool process_rgb_matrix_user(uint16_t keycode, keyrecord_t *record) {
     if (record->event.pressed) {
@@ -260,7 +263,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
                         register_code(KC_LALT);
                         register_code(KC_P6);
+                        unregister_code(KC_P6);
                         register_code(KC_P1);
+                        unregister_code(KC_P1);
 
                         key_eql_numlock_timer = timer_read32();
                     }
@@ -272,10 +277,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KC_NUM: {
             if (dev_info.devs == DEVS_USB) {
                 if (dev_info.unsync) {
-                    if (record->event.pressed) {
-                        dev_info.num_unsync = !dev_info.num_unsync;
-                        // uprintf("num_unsync: %d", dev_info.num_unsync);
-                        eeconfig_update_user(dev_info.raw);
+                    if (numpad_keys_pressed_count == 0) {
+                        if (record->event.pressed) {
+                            dev_info.num_unsync = !dev_info.num_unsync;
+                            // uprintf("num_unsync: %d", dev_info.num_unsync);
+                            eeconfig_update_user(dev_info.raw);
+                            return false;
+                        }
+                    } else {
                         return false;
                     }
                 }
@@ -387,8 +396,8 @@ void housekeeping_task_user(void) {
 
     if (key_eql_numlock_timer && (timer_elapsed32(key_eql_numlock_timer) >= 10)) {
         unregister_code(KC_LALT);
-        unregister_code(KC_P6);
-        unregister_code(KC_P1);
+        // unregister_code(KC_P6);
+        // unregister_code(KC_P1);
 
         if (dev_info.devs) {
             unregister_code(KC_NUM_LOCK);
@@ -403,6 +412,8 @@ void housekeeping_task_user(void) {
         key_eql_numlock_timer     = 0; // Reset timer
         key_eql_pressed           = false;
         numpad_keys_pressed_count = 0;
+        num_p6_pressed_count      = 0;
+        num_p1_pressed_count      = 0;
     }
 }
 
