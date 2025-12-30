@@ -171,6 +171,8 @@ static uint8_t  caps_blink_cnt         = 0;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // if (!process_rgb_matrix_user(keycode, record)) return false;
+    // extern bool process_record_kb_dg(uint16_t keycode, keyrecord_t *record);
+    // if (!process_record_kb_dg(keycode, record)) return false;
 
 #ifdef MULTIMODE_ENABLE
     if (!bt_process_record(keycode, record)) {
@@ -373,9 +375,12 @@ void keyboard_post_init_user(void) {
     if (keymap_config.no_gui) {
         keymap_config.no_gui = 0;
         eeconfig_update_keymap(&keymap_config);
-
-        bled_init();
     }
+
+    bled_init();
+
+    extern void snled27351_reset(void);
+    snled27351_reset();
 }
 
 void eeconfig_init_user(void) {
@@ -567,12 +572,16 @@ void matrix_scan_user(void) {
 }
 
 void matrix_init_user(void) {
+    extern bool enable_dog;
+    enable_dog = true;
+
 #ifdef RGB_MATRIX_SHUTDOWN_PIN
     setPinOutputPushPull(RGB_MATRIX_SHUTDOWN_PIN);
     writePinLow(RGB_MATRIX_SHUTDOWN_PIN);
     wait_ms(10);
     writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
 #endif
+
 #ifdef MULTIMODE_ENABLE
     bt_init();
     led_config_all();

@@ -8,13 +8,15 @@
     "usb": {
         "vid": "0xFFFE",
         "pid": "0x00A9",
-        "device_version": "1.0.7",
+        "device_version": "1.0.8",
         "suspend_wakeup_delay": 1000
     },
     "features": {
         "bootmagic": true,
+        "command": false,
+        "console": false,
         "extrakey": true,
-        "mousekey": false,
+        "mousekey": true,
         "nkro": true,
         "encoder": true,
         "rgb_matrix": true
