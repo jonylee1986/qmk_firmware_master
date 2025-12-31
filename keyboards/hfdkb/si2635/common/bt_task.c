@@ -105,11 +105,8 @@ typedef struct PACKED {
     bool     completed;
     bool     full_completed;
 } charge_complete_warning_t;
-static charge_complete_warning_t charge_complete_warning = {0};
 
-// ===========================================
-// Global variables
-// ===========================================
+charge_complete_warning_t charge_complete_warning = {0};
 
 extern keymap_config_t keymap_config;
 
@@ -440,9 +437,6 @@ static THD_FUNCTION(Thread1, arg) {
 void bt_init(void) {
     bts_init(&bts_info);
     bt_used_pin_init();
-
-    charge_complete_warning.full_completed = true;
-    charge_complete_warning.completed      = true;
 
     dev_info.raw = eeconfig_read_user();
     if (!dev_info.raw) {
@@ -1423,7 +1417,7 @@ static void bt_bat_low_level_warning(void) {
 }
 
 static void bt_charging_indication(void) {
-    static bool show_chrg_full         = false;
+    static bool should_show_chrg_full  = false;
     static bool is_in_charging_state   = false;
     static bool is_in_full_power_state = false;
     static bool charge_full_displayed  = false;
@@ -1432,6 +1426,8 @@ static void bt_charging_indication(void) {
 
     // charge_complete_warning.completed      = true;
     // charge_complete_warning.full_completed = true;
+    extern bool show_chrg;
+    extern bool show_chrg_full;
 
     if (!readPin(MM_CABLE_PIN)) {
         if (!readPin(MM_CHARGE_PIN)) {
@@ -1446,20 +1442,24 @@ static void bt_charging_indication(void) {
                         charge_complete_warning.blink_time  = timer_read32();
                         charge_complete_warning.blink_state = false;
                         charge_complete_warning.completed   = false;
+
+                        show_chrg = true;
                     }
                 }
             }
 
-            if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 10) {
+            if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 11) {
                 if (timer_elapsed32(charge_complete_warning.blink_time) >= 1000) {
                     charge_complete_warning.blink_time  = timer_read32();
                     charge_complete_warning.blink_state = !charge_complete_warning.blink_state;
 
                     if (charge_complete_warning.blink_state) {
                         charge_complete_warning.blink_count++;
-                        if (charge_complete_warning.blink_count >= 10) {
+                        if (charge_complete_warning.blink_count > 10) {
                             charge_complete_warning.completed   = true;
                             charge_complete_warning.blink_state = false;
+
+                            show_chrg = false;
                         }
                     }
                 }
@@ -1468,18 +1468,20 @@ static void bt_charging_indication(void) {
                     for (uint8_t i = 0; i < 5; i++) {
                         rgb_matrix_set_color(leds[i], RGB_GREEN);
                     }
-                } else {
-                    for (uint8_t i = 0; i < 5; i++) {
-                        rgb_matrix_set_color(leds[i], RGB_OFF);
-                    }
                 }
+                // else {
+                //     for (uint8_t i = 0; i < 5; i++) {
+                //         rgb_matrix_set_color(leds[i], RGB_OFF);
+                //     }
+                // }
             }
+
         } else {
             // Charge pin indicates full - trigger only if not already displayed
             charge_complete_warning.entry_chrg_time = timer_read32();
             if (timer_elapsed32(charge_complete_warning.entry_full_time) >= 1200) {
                 if (!charge_full_displayed) {
-                    show_chrg_full        = true;
+                    should_show_chrg_full = true;
                     charge_full_displayed = true;
                 }
             }
@@ -1487,16 +1489,18 @@ static void bt_charging_indication(void) {
 
         // Check voltage >= 100% while cable connected - trigger only if not already displayed
         if ((bts_info.bt_info.pvol >= 100) && !charge_full_displayed) {
-            show_chrg_full        = true;
+            should_show_chrg_full = true;
             charge_full_displayed = true;
         }
 
-        if (show_chrg_full) {
+        if (should_show_chrg_full) {
             if (!is_in_full_power_state) {
                 is_in_full_power_state = true;
                 if (!charge_complete_warning.full_triggered) {
                     charge_complete_warning.full_triggered = true;
                     charge_complete_warning.full_time      = timer_read32();
+
+                    show_chrg_full = true;
                 }
             }
 
@@ -1507,7 +1511,9 @@ static void bt_charging_indication(void) {
                     }
                 } else {
                     charge_complete_warning.full_completed = true;
-                    show_chrg_full                         = false;
+                    should_show_chrg_full                  = false;
+
+                    show_chrg_full = false;
                 }
             }
         }

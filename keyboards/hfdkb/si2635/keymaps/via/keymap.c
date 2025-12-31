@@ -364,13 +364,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
-void keyboard_pre_init_user(void) {
-    // #ifdef RGB_MATRIX_SHUTDOWN_PIN
-    //     setPinOutputPushPull(RGB_MATRIX_SHUTDOWN_PIN);
-    //     writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
-    // #endif
-}
-
 void keyboard_post_init_user(void) {
     if (keymap_config.no_gui) {
         keymap_config.no_gui = 0;
@@ -398,9 +391,11 @@ void suspend_wakeup_init_kb(void) {
     led_config_all();
 }
 
-// extern bool kb_light_sleep_flag;
-
 bool rgb_matrix_indicators_user(void) {
+    for (uint8_t i = 80; i <= 84; i++) {
+        rgb_matrix_set_color(i, RGB_OFF);
+    }
+
     if (!rgb_matrix_get_flags()) {
         rgb_matrix_set_color_all(RGB_OFF);
     }
@@ -408,10 +403,14 @@ bool rgb_matrix_indicators_user(void) {
     return true;
 }
 
+bool show_chrg      = false;
+bool show_chrg_full = false;
+
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     static bool f_caps_blink = false;
 
-    if (rgb_matrix_get_flags()) {
+    // extern charge_complete_warning_t charge_complete_warning;
+    if (!show_chrg && !show_chrg_full && rgb_matrix_get_flags()) {
         bled_task();
     }
 
