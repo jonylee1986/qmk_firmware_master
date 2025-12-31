@@ -207,29 +207,30 @@ bool process_rgb_matrix_user(uint16_t keycode, keyrecord_t *record) {
             case RGB_MOD:
                 rgb_matrix_step();
                 return false;
-            case RGB_HUI:
-                rgb_matrix_increase_hue();
-                return false;
-            case RGB_HUD:
-                rgb_matrix_decrease_hue();
-                return false;
+            // case RGB_HUI:
+            //     rgb_matrix_increase_hue();
+            //     return false;
+            // case RGB_HUD:
+            //     rgb_matrix_decrease_hue();
+            //     return false;
             case RGB_SAI:
                 rgb_matrix_increase_sat();
                 return false;
-            case RGB_SAD:
-                rgb_matrix_decrease_sat();
-                return false;
+            // case RGB_SAD:
+            //     rgb_matrix_decrease_sat();
+            //     return false;
             case RGB_VAI:
                 rgb_matrix_increase_val();
                 return false;
-            case RGB_VAD:
-                rgb_matrix_decrease_val();
+            // case RGB_VAD:
+            //     rgb_matrix_decrease_val();
+            //     return false;
             case RGB_SPI:
                 rgb_matrix_increase_speed();
                 return false;
-            case RGB_SPD:
-                rgb_matrix_decrease_speed();
-                return false;
+                // case RGB_SPD:
+                //     rgb_matrix_decrease_speed();
+                //     return false;
         }
     }
 
@@ -242,27 +243,37 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case RGB_VAD: {
             if (record->event.pressed) {
-                rgb_matrix_config.hsv.v = rgb_matrix_get_val() - RGB_MATRIX_VAL_STEP;
-                if (rgb_matrix_get_val() <= 32) rgb_matrix_config.hsv.v = 32;
+                if (rgb_matrix_get_val() <= RGB_MATRIX_VAL_STEP) {
+                    rgb_matrix_config.hsv.v = RGB_MATRIX_VAL_STEP;
+                    eeconfig_update_rgb_matrix(&rgb_matrix_config);
+                } else {
+                    rgb_matrix_decrease_val();
+                }
             }
-        }
             return false;
+        }
         case RGB_SPD: {
             if (record->event.pressed) {
-                rgb_matrix_config.speed = rgb_matrix_get_speed() - RGB_MATRIX_SPD_STEP;
-                eeconfig_update_rgb_matrix(&rgb_matrix_config);
-                if (rgb_matrix_get_speed() <= 51) rgb_matrix_config.speed = 51;
+                if (rgb_matrix_get_speed() <= RGB_MATRIX_SPD_STEP) {
+                    rgb_matrix_config.speed = RGB_MATRIX_SPD_STEP;
+                    eeconfig_update_rgb_matrix(&rgb_matrix_config);
+                } else {
+                    rgb_matrix_decrease_speed();
+                }
             }
-        }
             return false;
+        }
         case RGB_SAD: {
             if (record->event.pressed) {
-                rgb_matrix_config.hsv.s = rgb_matrix_get_sat() - RGB_MATRIX_SAT_STEP;
-                eeconfig_update_rgb_matrix(&rgb_matrix_config);
-                if (rgb_matrix_get_sat() <= 64) rgb_matrix_config.hsv.s = 64;
+                if (rgb_matrix_get_sat() <= RGB_MATRIX_SAT_STEP) {
+                    rgb_matrix_config.hsv.s = RGB_MATRIX_SAT_STEP;
+                    eeconfig_update_rgb_matrix(&rgb_matrix_config);
+                } else {
+                    rgb_matrix_decrease_sat();
+                }
             }
-        }
             return false;
+        }
 
         case IND_VAL: {
             if (record->event.pressed) {

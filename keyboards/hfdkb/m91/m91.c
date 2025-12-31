@@ -265,8 +265,8 @@ void housekeeping_task_kb(void) {
 }
 
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
-    if (!rgb_matrix_get_flags()) {
-        rgb_matrix_set_color_all(0x00, 0x00, 0x00);
+    if (!rgb_matrix_get_flags() || (bts_info.bt_info.low_vol && readPin(BT_CABLE_PIN))) {
+        rgb_matrix_set_color_all(RGB_BLACK);
     }
 
     if (rgb_matrix_indicators_advanced_user(led_min, led_max) != true) {
