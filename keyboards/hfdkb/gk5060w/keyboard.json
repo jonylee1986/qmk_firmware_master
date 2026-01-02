@@ -43,19 +43,43 @@
     },
     "rgb_matrix": {
         "driver": "ws2812",
+        "max_brightness": 160,
         "react_on_keyup": true,
         "sleep": true,
-        "max_brightness": 160,
+        "val_steps": 40,
+        "hue_steps": 16,
+        "speed_steps": 64,
         "animations": {
-            "solid_color": true
+            "solid_color": true,
+            "breathing": true,
+            "cycle_all": true,
+            "cycle_left_right": true,
+            "cycle_up_down": true,
+            "cycle_out_in": true,
+            "cycle_out_in_dual": true,
+            "cycle_pinwheel": true,
+            "cycle_spiral": true,
+            "dual_beacon": true,
+            "rainbow_beacon": true,
+            "jellybean_raindrops": true,
+            "typing_heatmap": true,
+            "digital_rain": true,
+            "solid_reactive_multinexus": true,
+            "solid_reactive_multiwide": true,
+            "solid_reactive_simple": true,
+            "splash": true
+        },
+        "default": {
+            "val": 120,
+            "speed": 192
         },
         "layout": [
-            { "flags": 4, "x":  25, "y": 16 },
-            { "flags": 4, "x":  41, "y": 16 },
-            { "flags": 4, "x":  58, "y": 16 },
-            { "flags": 4, "x":  75, "y": 16 },
-            { "flags": 8, "x":   6, "y": 32 },
-            { "flags": 4, "x":   0, "y": 0 }
+            { "flags": 2, "x":  25, "y": 16 },
+            { "flags": 2, "x":  41, "y": 16 },
+            { "flags": 2, "x":  58, "y": 16 },
+            { "flags": 2, "x":  75, "y": 16 },
+            { "flags": 2, "x":   6, "y": 32 },
+            { "flags": 2, "x":   0, "y": 0 }
         ]
     },
     "layouts": {

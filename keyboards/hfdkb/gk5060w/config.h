@@ -8,16 +8,39 @@
  *  These options are also useful to firmware size reduction.
  */
 
-#define BT_MODE_ENABLE
-
 #ifdef BT_MODE_ENABLE
-#    define NO_USB_STARTUP_CHECK
-#    define ENTRY_STOP_MODE
+#    define BT_HOST1_NAME "Metafor Air - BT$"
+#    define BT_HOST2_NAME "Metafor Air - BT$"
+#    define BT_HOST3_NAME "Metafor Air - BT$"
+
+/* Multi mode used pins */
 #    define BT_CABLE_PIN B8
 #    define BT_CHARGE_PIN B9
-#    define RGB_DRIVER_SDB_PIN B1
 #    define BT_MODE_SW_PIN C13
 #    define RF_MODE_SW_PIN C14
+#    define RGB_DRIVER_SDB_PIN B1
+
+/* Indicator index of mm device */
+#    define BT_HOST1_INDEX 3
+#    define BT_HOST2_INDEX 2
+#    define BT_HOST3_INDEX 1
+#    define BT_HOST4_INDEX 0xFF
+#    define BT_HOST5_INDEX 0xFF
+#    define BT_2G4_INDEX 0
+#    define BT_USB_INDEX 5
+
+/* Indicator color of mm device */
+#    define BT_HOST1_COLOR RGB_BLUE    // Host1 color
+#    define BT_HOST2_COLOR RGB_CYAN    // Host2 color
+#    define BT_HOST3_COLOR RGB_MAGENTA // Host3 color
+#    define BT_HOST4_COLOR RGB_BLACK   // Host4 color
+#    define BT_HOST5_COLOR RGB_BLACK   // Host5 color
+#    define BT_2G4_COLOR RGB_WHITE     // 2.4G color
+#    define BT_USB_COLOR RGB_WHITE     // USB color
+
+/* Others */
+#    define KEY_NUM 8
+#    define CW2017_EN
 #endif
 
 /* I2C Config for LED Driver */
@@ -33,9 +56,7 @@
 
 #define EXTERNAL_FLASH_SPI_SLAVE_SELECT_PIN C12
 
-#define KEY_NUM 8
-
-#define CW2017_EN
+#define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_CUSTOM_effect_off
 
 // clang-format off
 #if 0

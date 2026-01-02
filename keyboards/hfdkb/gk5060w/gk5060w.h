@@ -13,6 +13,7 @@ enum bt_keycodes {
     BT_VOL,
     SW_MAC,
     SW_WIN,
-    KC_DICT,
-    KC_DNDT,
+    KC_DICTATION,
+    KC_DO_NOT_DISTURB,
+    KC_SPOTLIGHT,
 };
