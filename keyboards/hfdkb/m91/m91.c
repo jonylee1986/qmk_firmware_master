@@ -264,9 +264,56 @@ void housekeeping_task_kb(void) {
 #endif // NKRO_ENABLE
 }
 
+// static bool backlight_shut_down = false;
+// static uint32_t backlight_shut_down_time = 0;
+extern bool low_vol_shut_down;
+
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
-    if (!rgb_matrix_get_flags() || (bts_info.bt_info.low_vol && readPin(BT_CABLE_PIN))) {
-        rgb_matrix_set_color_all(RGB_BLACK);
+    // if (!rgb_matrix_get_flags()){
+    //     rgb_matrix_set_color_all(0, 0, 0);
+    // }
+    if (low_vol_shut_down && readPin(BT_CABLE_PIN)) {
+        // if (!rgb_matrix_get_flags()) {
+        // rgb_matrix_set_color_all(RGB_BLACK);
+        // if (!backlight_shut_down) {
+        // backlight_shut_down = true;
+        //     rgb_matrix_set_flags(LED_FLAG_NONE);
+        // snled27351_sw_shutdown(0);
+        // snled27351_sw_shutdown(1);
+        rgb_matrix_set_color_all(0, 0, 0);
+        // }
+        // } else {
+        //     if (backlight_shut_down) {
+        //         backlight_shut_down = false;
+        //         rgb_matrix_set_flags(LED_FLAG_ALL);
+        //         rgb_matrix_enable();
+        //     }
+        // } else {
+        //     if (backlight_shut_down) {
+        //         backlight_shut_down      = false;
+        //         backlight_shut_down_time = timer_read32();
+        //     }
+        // }
+
+        // if (backlight_shut_down_time && timer_elapsed32(backlight_shut_down_time) <= 3000) {
+        //     rgb_matrix_set_color_all(0, 0, 0);
+        // } else {
+        //     backlight_shut_down_time = 0;
+        // } else {
+        //     if (backlight_shut_down) {
+        // backlight_shut_down = false;
+        // snled27351_sw_shutdown(0);
+        // snled27351_sw_shutdown(1);
+        // wait_ms(100);
+        // snled27351_sw_return_normal(0);
+        // snled27351_sw_return_normal(1);
+        // #ifdef RGB_DRIVER_SDB_PIN
+        //             writePinLow(RGB_DRIVER_SDB_PIN);
+        //             wait_ms(10);
+        //             writePinHigh(RGB_DRIVER_SDB_PIN);
+        // #endif
+        //             rgb_matrix_init();
+        // }
     }
 
     if (rgb_matrix_indicators_advanced_user(led_min, led_max) != true) {

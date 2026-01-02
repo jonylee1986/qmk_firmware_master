@@ -517,8 +517,8 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
             if (reset != false) {
                 indicator_status          = 1;
                 indicator_reset_last_time = true;
-                // bts_send_name(DEVS_HOST1);
-                // bts_send_vendor(v_host1);
+                bts_send_name(DEVS_HOST1);
+                bts_send_vendor(v_host1);
                 bts_send_vendor(v_pair);
             } else {
                 indicator_status          = 2;
@@ -530,8 +530,8 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
             if (reset != false) {
                 indicator_status          = 1;
                 indicator_reset_last_time = 0;
-                // bts_send_name(DEVS_HOST2);
-                // bts_send_vendor(v_host2);
+                bts_send_name(DEVS_HOST2);
+                bts_send_vendor(v_host2);
                 bts_send_vendor(v_pair);
             } else {
                 indicator_status          = 2;
@@ -543,8 +543,8 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
             if (reset != false) {
                 indicator_status          = 1;
                 indicator_reset_last_time = true;
-                // bts_send_name(DEVS_HOST3);
-                // bts_send_vendor(v_host3);
+                bts_send_name(DEVS_HOST3);
+                bts_send_vendor(v_host3);
                 bts_send_vendor(v_pair);
             } else {
                 indicator_status          = 2;
