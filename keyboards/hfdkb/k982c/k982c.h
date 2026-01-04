@@ -31,5 +31,8 @@ enum custom_keycodes {
     KC_SPOTLIGHT,
     EN_MODE,
     LED_TOG,
+    LCD_HOME,
+    LCD_PAGE,
     RGB_TEST = SAFE_RANGE,
+    LCD_SW,
 };

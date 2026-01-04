@@ -20,6 +20,7 @@ typedef union {
     struct {
         uint8_t devs;
         uint8_t last_devs;
+        uint8_t LCD_Page;
         bool    encoder_mode;
         bool    ind_toggle;
     };

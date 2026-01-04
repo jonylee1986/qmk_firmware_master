@@ -74,6 +74,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 rgb_matrix_enable();
             }
             return false;
+
 #    endif
     }
 

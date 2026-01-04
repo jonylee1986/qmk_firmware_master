@@ -18,6 +18,7 @@
 
 #ifdef MM_MODE_ENABLE
 #    include "bt_task.h"
+#    include "lcd.h"
 #endif
 
 // clang-format off
@@ -50,7 +51,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______,  BT_1,     BT_2,     BT_3,     WL_2G4,   _______,  _______,  _______,  _______,  _______,  _______,    _______,  _______,  RM_TOGG,  _______,
         RGB_TEST, _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,    _______,  _______,  RM_NEXT,  KC_PSCR,
         _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,    _______,            RM_HUEU,
-        _______,            _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,    _______,  _______,  RM_VALU,
+        _______,            _______,  _______,  _______,  _______,  _______,  _______,  _______,  LCD_HOME,  LCD_PAGE,    _______,  _______,  RM_VALU,
         _______,  GU_TOGG,  _______,                                _______,                      LED_TOG,  _______,    BT_VOL,   RM_SPDD,  RM_VALD,  RM_SPDU),
 
     [MAC_BASE] = LAYOUT_ansi(
@@ -66,7 +67,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______,  BT_1,     BT_2,     BT_3,     WL_2G4,   _______,  _______,  _______,  _______,  _______,  _______,    _______,  _______,  RM_TOGG,  _______,
         RGB_TEST, _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,    _______,  _______,  RM_NEXT,  KC_PSCR,
         _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,    _______,            RM_HUEU,
-        _______,            _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,    _______,  _______,  RM_VALU,
+        _______,            _______,  _______,  _______,  _______,  _______,  _______,  _______,  LCD_HOME,  LCD_PAGE,    _______,  _______,  RM_VALU,
         _______,  _______,  _______,                                _______,                      LED_TOG,  _______,    BT_VOL,   RM_SPDD,  RM_VALD,  RM_SPDU),
 
 };
@@ -155,6 +156,29 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 }
             }
             break;
+
+        case LCD_HOME: {
+            if (record->event.pressed) {
+                dev_info.LCD_Page = 0;
+                LCD_Page_update(dev_info.LCD_Page);
+                eeconfig_update_kb(dev_info.raw);
+            }
+            return false;
+        }
+        case LCD_PAGE: {
+            if (record->event.pressed) {
+                dev_info.LCD_Page = 1;
+                LCD_Page_update(dev_info.LCD_Page);
+                eeconfig_update_kb(dev_info.raw);
+            }
+            return false;
+        }
+        case LCD_SW: {
+            if (record->event.pressed) {
+                LCD_command_update(LCD_SWITCH);
+            }
+            return false;
+        }
 
         default:
             break;
