@@ -1,6 +1,6 @@
 {
     "manufacturer": " ",
-    "keyboard_name": "EWEADN-X75",
+    "keyboard_name": "YUNZII IF75 Keyboard",
     "url": "https://github.com/jonylee1986",
     "maintainer": "jonylee@hfd",
     "processor": "WB32FQ95",
@@ -34,17 +34,21 @@
     "encoder": {
         "enabled": true,
         "rotary": [
-            {"pin_a": "C13", "pin_b": "C14"}
+            {"pin_a": "C13", "pin_b": "C14", "resolution": 2}
         ]
     },
     "matrix_pins": {
         "cols": ["C1", "C2", "C3", "A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "C4", "C5", "B0", "B1"],
-        "rows": ["B15", "C6", "C7", "C8", "C9", "B14"],
-        "custom_lite": true
+        "rows": ["B15", "C6", "C7", "C8", "C9", "B14"]
     },
     "diode_direction": "ROW2COL",
     "rgb_matrix": {
+        "react_on_keyup": true,
         "driver": "snled27351",
+        "max_brightness": 160,
+        "val_steps": 40,
+        "hue_steps": 32,
+        "speed_steps": 64,
         "animations": {
             "band_spiral_val": true,
             "breathing": true,
@@ -68,6 +72,9 @@
             "splash": true,
             "solid_splash": true
         },
-        "sleep": true
+        "sleep": true,
+        "default": {
+            "speed": 128
+        }
     }
 }

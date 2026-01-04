@@ -20,11 +20,15 @@ typedef union {
     struct {
         uint8_t devs;
         uint8_t last_devs;
+        bool    encoder_mode;
+        bool    ind_toggle;
     };
 } dev_info_t;
 
 extern dev_info_t dev_info;
 extern bts_info_t bts_info;
+
+bool get_kb_sleep_flag(void);
 
 /**
  * @brief bluetooth 初始化函数

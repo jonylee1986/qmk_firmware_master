@@ -27,6 +27,9 @@ enum mm_keycodes {
 #endif
 
 enum custom_keycodes {
-    KC_SIRI  = QK_KB_5,
+    KC_SIRI = QK_KB_5,
+    KC_SPOTLIGHT,
+    EN_MODE,
+    LED_TOG,
     RGB_TEST = SAFE_RANGE,
 };
