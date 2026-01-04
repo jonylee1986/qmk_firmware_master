@@ -54,12 +54,14 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
-void matrix_init_kb(void) {
-#ifdef WS2812_EN_PIN
-    setPinOutput(WS2812_EN_PIN);
-    writePinLow(WS2812_EN_PIN);
-#endif
+void keyboard_post_init_kb(void) {
+    if (keymap_config.no_gui) {
+        keymap_config.no_gui = 0;
+        eeconfig_update_keymap(&keymap_config);
+    }
+}
 
+void matrix_init_kb(void) {
 #ifdef BT_MODE_ENABLE
     bt_init();
     led_config_all();
@@ -101,10 +103,6 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     // if (!rgb_matrix_get_flags())
     rgb_matrix_set_color_all(0, 0, 0);
 
-    if (rgb_matrix_indicators_advanced_user(led_min, led_max) != true) {
-        return false;
-    }
-
     if (rgb_test_en) {
         if (timer_elapsed32(rgb_test_time) > 3000 * (rgb_test_index + 1)) {
             rgb_test_index++;
@@ -126,14 +124,9 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     }
 #endif
 
-    // caps lock red
-    // if ((host_keyboard_led_state().caps_lock) && ((bts_info.bt_info.paired) || (dev_info.devs == DEVS_USB))) {
-    //     rgb_matrix_set_color(17, 160, 160, 160);
-    // }
-    // GUI lock red
-    // if (keymap_config.no_gui) {
-    //     rgb_matrix_set_color(2, 160, 160, 160);
-    // }
+    if (rgb_matrix_indicators_advanced_user(led_min, led_max) != true) {
+        return false;
+    }
 
     return true;
 }

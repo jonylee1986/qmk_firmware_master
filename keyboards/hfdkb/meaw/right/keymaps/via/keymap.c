@@ -15,19 +15,16 @@
  */
 
 #include QMK_KEYBOARD_H
-// clang-format off
 #include "common/bt_task.h"
+
 enum __layers {
     WIN_B,
     WIN_FN,
     MAC_B,
-    MAC_FN
+    MAC_FN,
 };
 
-#define KC_TASK LGUI(KC_TAB)
-#define KC_FLXP LGUI(KC_E)
-#define KC_SIRI LGUI(KC_SPC)
-
+// clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [WIN_B] = LAYOUT( /* Base */
@@ -57,8 +54,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         BT_HOST1,BT_HOST2,BT_HOST3,BT_2_4G, BT_USB,  _______, _______, _______,
         CHG_TOG, _______, _______, _______,                   _______, _______, _______)
 };
-
 // clang-format on
+
 uint16_t pressed_code_user;
 uint16_t pressed_time_user = 0;
 bool     W2UP_flag;
@@ -72,7 +69,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 pressed_code_user = KC_W2UP;
                 pressed_time_user = timer_read();
-            }else{
+            } else {
                 pressed_time_user = 0;
             }
             break;

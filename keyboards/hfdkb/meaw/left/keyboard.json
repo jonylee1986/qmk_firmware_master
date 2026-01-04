@@ -2,7 +2,7 @@
     "keyboard_name": "Meaw Keyboard-L",
     "usb": {
         "pid": "0x016D",
-        "device_version": "1.0.0"
+        "device_version": "1.0.1"
     },
     "matrix_pins": {
         "cols": ["C1","C2","C3","A0","A1","A2","A3","A4"]

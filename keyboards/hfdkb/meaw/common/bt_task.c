@@ -42,6 +42,10 @@ bts_info_t bts_info     = {
         .timer_read32   = timer_read32,
 };
 
+static uint32_t last_total_time           = 0;
+uint8_t         indicator_status          = 2;
+uint8_t         indicator_reset_last_time = false;
+
 static void long_pressed_keys_hook(void);
 static void long_pressed_keys_cb(uint16_t keycode);
 static bool process_record_other(uint16_t keycode, keyrecord_t *record);
@@ -245,6 +249,7 @@ void bt_init(void) {
         writePinHigh(A14);
     }
 }
+
 static bool kb_sleep_flag = false;
 
 /**
@@ -358,6 +363,10 @@ bool process_record_bt(uint16_t keycode, keyrecord_t *record) {
             if (rgb_status_save) {
                 rgb_matrix_enable_noeeprom();
             }
+        }
+
+        if (indicator_status != 0) {
+            last_total_time = timer_read32();
         }
     }
     retval = process_record_other(keycode, record);
@@ -1128,6 +1137,11 @@ static void long_pressed_keys_cb(uint16_t keycode) {
                 single_blink_color = (RGB){RGB_WHITE};
                 single_blink_index = 0;
                 set_single_persistent_default_layer(2);
+
+                if (keymap_config.no_gui) {
+                    keymap_config.no_gui = 0;
+                    eeconfig_update_keymap(&keymap_config);
+                }
             } else if (get_highest_layer(default_layer_state) == 2) { // MAC_BASE
                 set_single_persistent_default_layer(0);
                 single_blink_time  = timer_read32();
@@ -1304,41 +1318,56 @@ void open_rgb(void) {
     }
 }
 
-uint8_t indicator_status          = 2;
-uint8_t indicator_reset_last_time = false;
-
 uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
-    if (EE_CLR_flag) {
-        if (timer_elapsed32(EE_CLR_press_time) >= EE_CLR_press_cnt * 300) {
-            EE_CLR_press_cnt++;
-        }
-        if (EE_CLR_press_cnt >= 7) {
-            EE_CLR_press_time = 0;
-            EE_CLR_press_cnt  = 0;
-            EE_CLR_flag       = false;
-            eeconfig_init();
-            eeconfig_update_rgb_matrix_default();
-            // dev_info.sleep_disable     = 0;
-            dev_info.Charge_flag = 0;
-            eeconfig_update_user(dev_info.raw);
-            keymap_config.no_gui = 0;
-            eeconfig_update_keymap(&keymap_config);
-            bts_send_vendor(v_clear);
-        }
-        if (EE_CLR_press_cnt & 0x1) {
-            if (EE_CLR_press_cnt == 1) {
-                rgb_matrix_set_color_all(RGB_RED);
-            } else if (EE_CLR_press_cnt == 3) {
-                rgb_matrix_set_color_all(RGB_BLUE);
-            } else if (EE_CLR_press_cnt == 5) {
-                rgb_matrix_set_color_all(RGB_GREEN);
+    if (!dev_info.Charge_flag) {
+#if defined(BT_CABLE_PIN) && defined(BT_CHARGE_PIN)
+        // 充电接入
+        static uint32_t charging_time  = 0;
+        static uint32_t full_time      = 0;
+        static uint32_t full_hold_time = 0;
+        static uint32_t Low_power_time = 0;
+        static bool     Low_power_bink = false;
+
+        if (!readPin(BT_CABLE_PIN)) {
+            if (!readPin(BT_CHARGE_PIN)) {
+                // 正在充电
+                full_time      = timer_read32();
+                full_hold_time = timer_read32();
+                if (timer_elapsed32(charging_time) >= 500) {
+                    rgb_matrix_set_color(0, 100, 0, 0);
+                }
+            } else {
+                // 充满
+                charging_time = timer_read32();
+                if (timer_elapsed32(full_time) >= 2000) {
+                    if (timer_elapsed32(full_hold_time) < 10000) {
+                        rgb_matrix_set_color(0, 0, 100, 0);
+                    }
+                }
             }
         } else {
-            rgb_matrix_set_color_all(0, 0, 0);
+            if (bts_info.bt_info.low_vol) {
+                if (timer_elapsed(Low_power_time) >= 500) {
+                    Low_power_bink = !Low_power_bink;
+                    Low_power_time = timer_read32();
+                }
+                rgb_matrix_set_color(0, Low_power_bink ? 100 : 0, 0, 0);
+            }
+
+            if (bts_info.bt_info.low_vol_offed) {
+                extern bool low_vol_offed_sleep;
+                kb_sleep_flag       = true;
+                low_vol_offed_sleep = true;
+            }
         }
-        return true;
+#endif
     }
-    /*************************************************************************************/
+
+    // caps lock red
+    if ((host_keyboard_led_state().caps_lock) && ((bts_info.bt_info.paired) || (dev_info.devs == DEVS_USB))) {
+        rgb_matrix_set_color(0, 100, 100, 100);
+    }
+
     if (all_blink_cnt) { // 全键闪烁
         rgb_matrix_set_color_all(0, 0, 0);
         if (timer_elapsed32(all_blink_time) > 300) {
@@ -1360,83 +1389,14 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
             rgb_matrix_set_color(single_blink_index, 0, 0, 0);
         }
     }
+
     if (dev_info.devs != DEVS_USB) {
-        if (query_vol_flag) {
-            rgb_matrix_set_color_all(0, 0, 0);
-
-            uint8_t pvol = bts_info.bt_info.pvol;
-
-            RGB color;
-            if (pvol < 25) {
-                color = (RGB){RGB_RED}; // 红色
-            } else if (pvol < 50) {
-                color = (RGB){RGB_YELLOW}; // 黄色
-            } else if (pvol < 75) {
-                color = (RGB){RGB_ORANGE}; // 橙色
-            } else {
-                color = (RGB){RGB_GREEN}; // 绿色
-            }
-            // uint8_t power_check_table[10] = {21, 22, 23, 24, 25};
-            rgb_matrix_set_color(0, color.r, color.g, color.b);
-        }
-    }
-    if (!dev_info.Charge_flag) {
-        /*************************************************************************************/
-#if defined(BT_CABLE_PIN) && defined(BT_CHARGE_PIN)
-        // 充电接入
-        static uint32_t charging_time  = 0;
-        static uint32_t full_time      = 0;
-        static uint32_t full_hold_time = 0;
-        static uint32_t Low_power_time = 0;
-        static bool     Low_power_bink = false;
-
-        if (!readPin(BT_CABLE_PIN)) {
-            if (!readPin(BT_CHARGE_PIN)) {
-                // 正在充电
-                full_time = timer_read32();
-                if (timer_elapsed32(charging_time) >= 500) {
-                    rgb_matrix_set_color(0, 100, 0, 0);
-                }
-            } else {
-                // 充满
-                charging_time = timer_read32();
-                if (timer_elapsed32(full_time) >= 2000) {
-                    if (!full_hold_time) full_hold_time = timer_read32();
-                    if (timer_elapsed32(full_hold_time) < 10000) {
-                        rgb_matrix_set_color(0, 0, 100, 0);
-                    }
-                }
-            }
-        } else {
-            full_hold_time = 0;
-
-            if (bts_info.bt_info.low_vol) {
-                if (timer_elapsed(Low_power_time) >= 500) {
-                    Low_power_bink = !Low_power_bink;
-                    Low_power_time = timer_read32();
-                }
-                rgb_matrix_set_color(0, Low_power_bink ? 100 : 0, 0, 0);
-            }
-
-            if (bts_info.bt_info.low_vol_offed) {
-                extern bool low_vol_offed_sleep;
-                kb_sleep_flag       = true;
-                low_vol_offed_sleep = true;
-            }
-        }
-#endif
-        /*************************************************************************************/
-    }
-
-    /*************************************************************************************/
-    if (dev_info.devs != DEVS_USB) {
-        uint8_t         rgb_index       = rgb_index_table[dev_info.devs];
-        static uint32_t last_time       = 0;
-        static uint32_t last_long_time  = 0;
-        static uint32_t last_total_time = 0;
-        static uint8_t  last_status     = 0;
-        static bool     rgb_flip        = false;
-        static RGB      rgb             = {0};
+        uint8_t         rgb_index      = rgb_index_table[dev_info.devs];
+        static uint32_t last_time      = 0;
+        static uint32_t last_long_time = 0;
+        static uint8_t  last_status    = 0;
+        static bool     rgb_flip       = false;
+        static RGB      rgb            = {0};
 
         if (last_status != indicator_status) {
             last_status     = indicator_status;
@@ -1569,6 +1529,61 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
                 rgb_matrix_set_color(rgb_index_table[DEVS_USB], rgb_index_color_table[DEVS_USB][0], rgb_index_color_table[DEVS_USB][1], rgb_index_color_table[DEVS_USB][2]);
             }
         }
+    }
+
+    if (dev_info.devs != DEVS_USB) {
+        if (query_vol_flag) {
+            rgb_matrix_set_color_all(0, 0, 0);
+
+            uint8_t pvol = bts_info.bt_info.pvol;
+
+            RGB color;
+            if (pvol < 25) {
+                color = (RGB){RGB_RED}; // 红色
+            } else if (pvol < 50) {
+                color = (RGB){RGB_YELLOW}; // 黄色
+            } else if (pvol < 75) {
+                color = (RGB){RGB_ORANGE}; // 橙色
+            } else {
+                color = (RGB){RGB_GREEN}; // 绿色
+            }
+            // uint8_t power_check_table[10] = {21, 22, 23, 24, 25};
+            rgb_matrix_set_color(0, color.r, color.g, color.b);
+        }
+    }
+
+    if (EE_CLR_flag) {
+        if (timer_elapsed32(EE_CLR_press_time) >= EE_CLR_press_cnt * 300) {
+            EE_CLR_press_cnt++;
+        }
+        if (EE_CLR_press_cnt >= 7) {
+            EE_CLR_press_time = 0;
+            EE_CLR_press_cnt  = 0;
+            EE_CLR_flag       = false;
+            eeconfig_init();
+            eeconfig_update_rgb_matrix_default();
+            // dev_info.sleep_disable     = 0;
+            dev_info.Charge_flag = 0;
+            eeconfig_update_user(dev_info.raw);
+            keymap_config.no_gui = 0;
+            eeconfig_update_keymap(&keymap_config);
+            bts_send_vendor(v_clear);
+
+            indicator_status = 2;
+            last_total_time  = timer_read32();
+        }
+        if (EE_CLR_press_cnt & 0x1) {
+            if (EE_CLR_press_cnt == 1) {
+                rgb_matrix_set_color_all(RGB_RED);
+            } else if (EE_CLR_press_cnt == 3) {
+                rgb_matrix_set_color_all(RGB_BLUE);
+            } else if (EE_CLR_press_cnt == 5) {
+                rgb_matrix_set_color_all(RGB_GREEN);
+            }
+        } else {
+            rgb_matrix_set_color_all(0, 0, 0);
+        }
+        return true;
     }
 
     return true;
