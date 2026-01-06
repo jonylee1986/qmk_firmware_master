@@ -12,13 +12,15 @@
 #ifdef BT_MODE_ENABLE
 #    define BT_CABLE_PIN B9  // 充电接入时为高
 #    define BT_CHARGE_PIN B8 // 充电时为低，充满时为高
-#    define RGB_DRIVER_SDB_PIN A15
 #    define BT_HOST1_INDEX 17
 #    define BT_HOST2_INDEX 18
 #    define BT_HOST3_INDEX 19
 #    define BT_2_4G_INDEX 20
 #    define BT_USB_INDEX 21
 #    define BT_MODE_SW_PIN B10
+
+#    define RGB_DRIVER_SDB_PIN A15
+#    define RGB_DRIVER_RESET_PIN C11
 
 // Indicate color of wl device
 #    define BT_HOST1_COLOR RGB_WHITE // 蓝牙1指示灯颜色

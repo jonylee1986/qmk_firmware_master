@@ -897,6 +897,11 @@ static void bt_used_pin_init(void) {
     setPinOutputOpenDrain(RGB_DRIVER_SDB_PIN);
     writePinHigh(RGB_DRIVER_SDB_PIN);
 #endif
+
+#ifdef RGB_DRIVER_RESET_PIN
+    setPinOutputOpenDrain(RGB_DRIVER_RESET_PIN);
+    writePinHigh(RGB_DRIVER_RESET_PIN);
+#endif
 }
 
 static void bt_scan_mode(void) {
@@ -980,6 +985,7 @@ static void close_rgb(void) {
 #ifdef ENTRY_STOP_MODE
                 lp_system_sleep();
 #endif
+
                 open_rgb();
             }
         }
@@ -995,9 +1001,11 @@ static void open_rgb(void) {
 #ifdef RGB_DRIVER_SDB_PIN
         writePinHigh(RGB_DRIVER_SDB_PIN);
 
-        // if (low_vol_offed_sleep) {
-        //     rgb_matrix_init();
-        // }
+        setPinOutputOpenDrain(C11);
+        writePinLow(C11);
+        wait_ms(1);
+        writePinHigh(C11);
+        wait_ms(20);
 #endif
 
         if (!readPin(BT_CABLE_PIN)) {
