@@ -1378,12 +1378,11 @@ static void charging_indicate(void) {
             }
         }
     } else {
-        show_chrg_full = false;
+        show_chrg_full        = false;
+        show_chrg_full_wakeup = false; // Clear wakeup flag when cable unplugged
 
-        // if (is_in_full_power_state) {
         is_in_full_power_state = false;
         memset(&charge_complete_warning, 0, sizeof(charge_complete_warning_t));
-        // }
     }
 
     if (show_chrg_full || show_chrg_full_wakeup) {
@@ -1439,7 +1438,7 @@ bool get_low_vol_status(void) {
 }
 
 static void bt_bat_low_level_warning(void) {
-    if (bts_info.bt_info.pvol < 10) {
+    if (bts_info.bt_info.pvol < 20) {
         if (!low_vol_shut_down) {
             low_vol_shut_down = true;
         }
@@ -1564,7 +1563,7 @@ static void bt_bat_level_display(void) {
 
         // 根据电量确定颜色
         RGB color;
-        if (pvol < 30) {
+        if ((pvol < 30) || low_vol_shut_down) {
             color = (RGB){100, 0, 0}; // 红色
         } else if (pvol < 95) {
             color = (RGB){100, 50, 0}; // 橙色

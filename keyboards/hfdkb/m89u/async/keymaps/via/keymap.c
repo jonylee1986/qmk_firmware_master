@@ -303,9 +303,19 @@ static void num_lock_indicator(void) {
 
     if (!dev_info.eco_tog_flag && !charge_full) {
         if (dev_info.unsync) {
-            should_show_numlock = (dev_info.num_unsync && (bts_info.bt_info.paired || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE))));
+            // should_show_numlock = (dev_info.num_unsync && (bts_info.bt_info.paired || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE))));
+            // clang-format off
+            should_show_numlock = (dev_info.num_unsync && \
+                                    ((bts_info.bt_info.paired && (dev_info.devs != DEVS_USB)) || \
+                                    ((dev_info.devs == DEVS_USB) && \
+                                    (USB_DRIVER.state != USB_SUSPENDED))));
+            // clang-format on
         } else {
-            should_show_numlock = (host_keyboard_led_state().num_lock && (bts_info.bt_info.paired || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE))));
+            // clang-format off
+            should_show_numlock = (host_keyboard_led_state().num_lock && \
+                                    ((bts_info.bt_info.paired && (dev_info.devs != DEVS_USB)) || \
+                                    ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state != USB_ACTIVE))));
+            // clang-format on
         }
     }
 

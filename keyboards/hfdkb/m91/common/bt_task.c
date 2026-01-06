@@ -1430,10 +1430,11 @@ static void handle_low_battery_warning(void) {
     // }
 }
 
-// static uint32_t low_pwr_off_time = 0;
-
 static void handle_low_battery_shutdow(void) {
     extern bool low_vol_offed_sleep;
+
+    static uint8_t  low_batt_shutdown_cnt = 0;
+    static uint32_t low_pwr_off_time      = 0;
 
     // Reset timer when charging (cable plugged in)
     // if (!readPin(BT_CABLE_PIN)) {
@@ -1441,14 +1442,20 @@ static void handle_low_battery_shutdow(void) {
     // return;
     // }
 
-    if (bts_info.bt_info.low_vol_offed) {
-        // if (bts_info.bt_info.pvol <= 1) {
-        // if (timer_elapsed32(low_pwr_off_time) >= 3000) {
-        kb_sleep_flag       = true;
-        low_vol_offed_sleep = true;
-        // }
-        // } else {
-        //     low_pwr_off_time = timer_read32();
+    // if (bts_info.bt_info.low_vol_offed) {
+    if (timer_elapsed32(low_pwr_off_time) >= 500) {
+        low_pwr_off_time = timer_read32();
+        if (bts_info.bt_info.pvol < 1) {
+            low_batt_shutdown_cnt++;
+            if (low_batt_shutdown_cnt >= 10) {
+                kb_sleep_flag       = true;
+                low_vol_offed_sleep = true;
+            }
+            // } else {
+            //     low_pwr_off_time = timer_read32();
+        } else {
+            low_batt_shutdown_cnt = 0;
+        }
     }
 }
 
