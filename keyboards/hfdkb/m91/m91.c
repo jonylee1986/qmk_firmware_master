@@ -264,16 +264,30 @@ void housekeeping_task_kb(void) {
 #endif // NKRO_ENABLE
 }
 
-// static bool backlight_shut_down = false;
+static bool backlight_shut_down = false;
 // static uint32_t backlight_shut_down_time = 0;
 extern bool low_vol_shut_down;
 
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
-    // if (!rgb_matrix_get_flags()) {
-    //     rgb_matrix_set_color_all(0, 0, 0);
-    // }
-    if ((low_vol_shut_down && readPin(BT_CABLE_PIN)) || !rgb_matrix_get_flags()) {
+    if (!rgb_matrix_get_flags()) {
         rgb_matrix_set_color_all(0, 0, 0);
+    }
+    if (low_vol_shut_down && readPin(BT_CABLE_PIN)) {
+        rgb_matrix_set_color_all(0, 0, 0);
+        backlight_shut_down = true;
+    } else {
+        if (backlight_shut_down) {
+            backlight_shut_down = false;
+            writePinLow(RGB_DRIVER_SDB_PIN);
+            wait_ms(10);
+            writePinHigh(RGB_DRIVER_SDB_PIN);
+
+            setPinOutputOpenDrain(C11);
+            writePinLow(C11);
+            wait_ms(1);
+            writePinHigh(C11);
+            wait_ms(20);
+        }
     }
 
     if (rgb_matrix_indicators_advanced_user(led_min, led_max) != true) {
