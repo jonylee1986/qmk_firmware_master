@@ -373,8 +373,8 @@ void keyboard_post_init_user(void) {
 
     bled_init();
 
-    // extern void snled27351_reset(void);
-    // snled27351_reset();
+    extern void snled27351_reset(void);
+    snled27351_reset();
 }
 
 void eeconfig_init_user(void) {
@@ -385,12 +385,12 @@ void eeconfig_init_user(void) {
 }
 
 void suspend_power_down_kb(void) {
-    // wwdg_pause();
+    wwdg_pause();
     led_deconfig_all();
 }
 
 void suspend_wakeup_init_kb(void) {
-    // wwdg_resume();
+    wwdg_resume();
     // led_config_all();
 }
 
@@ -489,7 +489,7 @@ void housekeeping_task_user(void) {
     bt_housekeeping_task();
 #endif
     if (mode_long_pressed_time && (timer_elapsed32(mode_long_pressed_time) >= 3000)) {
-        // wwdg_pause();
+        wwdg_pause();
         mode_long_pressed_time = 0;
         mode_long_pressed_flag = true;
         if (dev_info.encoder_mode == MODE_WORKING) {
@@ -535,7 +535,7 @@ void housekeeping_task_user(void) {
             double_blink_color[LWIN_INDEX] = (RGB){RGB_BLUE};
             double_blink_color[CAPS_INDEX] = (RGB){RGB_BLUE};
         }
-        // wwdg_resume();
+        wwdg_resume();
     }
 
 #ifdef USB_SUSPEND_CHECK_ENABLE
@@ -551,7 +551,7 @@ void housekeeping_task_user(void) {
                 if (!usb_suspend) {
                     usb_suspend = true;
                     led_deconfig_all();
-                    // wwdg_pause();
+                    wwdg_pause();
                 }
                 usb_suspend_timer = 0;
             }
@@ -561,7 +561,7 @@ void housekeeping_task_user(void) {
                 if (usb_suspend) {
                     usb_suspend = false;
                     led_config_all();
-                    // wwdg_resume();
+                    wwdg_resume();
                 }
             }
         }
@@ -584,8 +584,13 @@ void matrix_scan_user(void) {
 }
 
 void matrix_init_user(void) {
-    // extern bool enable_dog;
-    // enable_dog = true;
+    extern bool enable_dog;
+    enable_dog = true;
+
+    // if (enable_dog) {
+    //     enable_dog = false;
+    //     wwdg_init();
+    // }
 
 #ifdef RGB_MATRIX_SHUTDOWN_PIN
     setPinOutputPushPull(RGB_MATRIX_SHUTDOWN_PIN);

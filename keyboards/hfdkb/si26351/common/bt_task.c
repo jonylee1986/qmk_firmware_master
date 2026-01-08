@@ -616,7 +616,7 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
     //     rgb_matrix_enable_noeeprom();
     //     kb_light_sleep_flag = false;
     // }
-    // wwdg_pause();
+    wwdg_pause();
     // Handle USB driver state changes
     bool usb_sws = !!last_mode ? !now_mode : !!now_mode;
     if (usb_sws) {
@@ -718,7 +718,7 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
         default:
             break;
     }
-    // wwdg_resume();
+    wwdg_resume();
 }
 
 // ===========================================
@@ -1225,7 +1225,7 @@ static void close_rgb(void) {
 
     if (sober) {
         if (kb_sleep_flag || (timer_elapsed32(key_press_time) >= ENTRY_SLEEP_TIMEOUT_MS)) {
-            // wwdg_pause();
+            wwdg_pause();
             bak_rgb_toggle = rgb_matrix_config.enable;
             // bak_rgb_toggle = rgb_status_save;
             sober          = false;
@@ -1259,7 +1259,7 @@ static void open_rgb(void) {
     key_press_time = timer_read32();
 
     if (!sober) {
-        // wwdg_resume();
+        wwdg_resume();
         if (bak_rgb_toggle) {
             kb_sleep_flag       = false;
             low_vol_offed_sleep = false;

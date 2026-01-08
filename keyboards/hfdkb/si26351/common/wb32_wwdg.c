@@ -84,7 +84,6 @@ void wwdg_init(void) {
     wwdg_time = timer_read();
 }
 
-#if 0
 void housekeeping_task_kb(void) {
     if (enable_dog) {
         enable_dog = false;
@@ -100,7 +99,6 @@ void housekeeping_task_kb(void) {
         }
     }
 }
-#endif
 
 void snled27351_reset(void) {
     setPinOutputOpenDrain(C11);

@@ -12,7 +12,7 @@ ifeq ($(strip $(MULTIMODE_ENABLE)), yes)
     SRC += $(COMMON_DIR)/bt_task.c
     SRC += $(COMMON_DIR)/retarget_suspend.c
     SRC += $(COMMON_DIR)/lp_sleep.c
-#     SRC += $(COMMON_DIR)/wb32_wwdg.c
-#     SRC += $(COMMON_DIR)/wwdg.c
+    SRC += $(COMMON_DIR)/wb32_wwdg.c
+    SRC += $(COMMON_DIR)/wwdg.c
     LDFLAGS += -L $(COMMON_DIR)/ -l_bts
 endif
