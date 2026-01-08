@@ -253,14 +253,17 @@ __attribute__((weak)) void register_code(uint8_t code) {
                         // Host NumLock is OFF - turn it ON temporarily
                         bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                         bts_task(dev_info.devs);
-                        while (bts_is_busy())
-                            ;
-                        wait_ms(20);
+                        while (bts_is_busy()) {
+                            wait_ms(1);
+                        }
+                        // wait_ms(20);
+
                         bts_process_keys(KC_NUM_LOCK, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                         bts_task(dev_info.devs);
-                        while (bts_is_busy())
-                            ;
-                        wait_ms(20);
+                        while (bts_is_busy()) {
+                            wait_ms(1);
+                        }
+                        // wait_ms(20);
                         // kb_leds->raw            = bts_info.bt_info.indictor_rgb_s;
                         // original_num_lock_state = kb_leds->num_lock;
                     }
@@ -341,12 +344,12 @@ __attribute__((weak)) void register_code(uint8_t code) {
                 if (numpad_keys_pressed_count == 0) {
                     // First numpad key pressed: apply NumLock sync logic
                     if (dev_info.num_unsync) {
-                        wait_ms(10);
+                        // wait_ms(10);
                         original_num_lock_state = host_keyboard_led_state().num_lock;
                         if (!original_num_lock_state) {
                             add_key(KC_NUM_LOCK);
                             send_keyboard_report();
-                            wait_ms(100);
+                            // wait_ms(100);
                             del_key(KC_NUM_LOCK);
                             send_keyboard_report();
                         }
@@ -407,14 +410,17 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
                             // Original was OFF, current is ON, restore to OFF
                             bts_process_keys(KC_NUM_LOCK, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                             bts_task(dev_info.devs);
-                            while (bts_is_busy())
-                                ;
-                            wait_ms(20);
+                            while (bts_is_busy()) {
+                                wait_ms(1);
+                            }
+                            // wait_ms(20);
+
                             bts_process_keys(KC_NUM_LOCK, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                             bts_task(dev_info.devs);
-                            while (bts_is_busy())
-                                ;
-                            wait_ms(20);
+                            while (bts_is_busy()) {
+                                wait_ms(1);
+                            }
+                            // wait_ms(20);
                         }
                     }
                 }
@@ -729,28 +735,28 @@ bool bt_process_record(uint16_t keycode, keyrecord_t *record) {
 
     // return true;
 
-    // switch (keycode) {
-    //     case KC_P1: {
-    //         if (key_eql_pressed) {
-    //             if (record->event.pressed) {
-    //                 return false;
-    //             }
-    //         }
-    //         break;
-    //     }
+    switch (keycode) {
+        case KC_P1: {
+            if (key_eql_pressed) {
+                if (record->event.pressed) {
+                    return false;
+                }
+            }
+            break;
+        }
 
-    //     case KC_P6: {
-    //         if (key_eql_pressed) {
-    //             if (record->event.pressed) {
-    //                 return false;
-    //             }
-    //         }
-    //         break;
-    //     }
+        case KC_P6: {
+            if (key_eql_pressed) {
+                if (record->event.pressed) {
+                    return false;
+                }
+            }
+            break;
+        }
 
-    //     default:
-    //         break;
-    // }
+        default:
+            break;
+    }
     // if (key_eql_pressed) {
     //     if (IS_NUMPAD_KEYCODE(keycode)) {
     //         return false;
@@ -1632,7 +1638,19 @@ static void charging_indicate(void) {
     }
 }
 
+static bool low_vol_shut_down = false;
+
+bool get_low_vol_status(void) {
+    return low_vol_shut_down;
+}
+
 static void bt_bat_low_level_warning(void) {
+    if (bts_info.bt_info.pvol < 20) {
+        if (!low_vol_shut_down) {
+            low_vol_shut_down = true;
+        }
+    }
+
     if (bts_info.bt_info.low_vol) {
         if (!is_in_low_power_state) {
             is_in_low_power_state = true;
@@ -1688,13 +1706,19 @@ static battery_charge_state_t get_battery_charge_state(void) {
 #if defined(MM_CABLE_PIN) && defined(MM_CHARGE_PIN)
     static battery_charge_state_t stable_state = BATTERY_STATE_UNPLUGGED;
 
+    static uint32_t full_check_time = 0;
+
     if (readPin(MM_CABLE_PIN)) {
-        stable_state = BATTERY_STATE_UNPLUGGED;
+        full_check_time = 0;
+        stable_state    = BATTERY_STATE_UNPLUGGED;
     } else {
         if (!readPin(MM_CHARGE_PIN)) {
-            stable_state = BATTERY_STATE_CHARGING;
+            full_check_time = timer_read32();
+            stable_state    = BATTERY_STATE_CHARGING;
         } else {
-            stable_state = BATTERY_STATE_CHARGED_FULL;
+            if (timer_elapsed32(full_check_time) > 2000) {
+                stable_state = BATTERY_STATE_CHARGED_FULL;
+            }
         }
     }
 
@@ -1825,39 +1849,39 @@ void housekeeping_task_kb(void) {
 #endif
 
 #ifdef USB_SUSPEND_CHECK_ENABLE
-    static uint32_t usb_suspend_timer = 0;
-    static uint32_t usb_suspend       = false;
+    // static uint32_t usb_suspend_timer = 0;
+    static uint32_t usb_suspend = false;
 
     if (dev_info.devs == DEVS_USB) {
-        if (USB_DRIVER.state != USB_ACTIVE) {
+        if (readPin(MM_CABLE_PIN)) {
             // USB挂起状态
-            if (!usb_suspend_timer) {
-                // 开始计时
-                usb_suspend_timer = timer_read32();
-            } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
-                // 挂起超过10秒，关闭背光
-                if (!usb_suspend) {
-                    // 如果之前没有进入挂起状态，执行挂起操作
-                    usb_suspend = true;
-                    led_deconfig_all();
-                }
-                usb_suspend_timer = 0;
+            // if (!usb_suspend_timer) {
+            // 开始计时
+            // usb_suspend_timer = timer_read32();
+            // } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
+            // 挂起超过10秒，关闭背光
+            if (!usb_suspend) {
+                // 如果之前没有进入挂起状态，执行挂起操作
+                usb_suspend = true;
+                led_deconfig_all();
             }
+            // usb_suspend_timer = 0;
+            // }
         } else {
             // USB活跃状态，重置计时器
-            if (usb_suspend_timer) {
-                usb_suspend_timer = 0;
-                if (usb_suspend) {
-                    // 如果之前处于挂起状态，恢复背光
-                    usb_suspend = false;
-                    led_config_all();
-                }
+            // if (usb_suspend_timer) {
+            // usb_suspend_timer = 0;
+            if (usb_suspend) {
+                // 如果之前处于挂起状态，恢复背光
+                usb_suspend = false;
+                led_config_all();
             }
         }
+        // }
     } else {
         if (usb_suspend) {
-            usb_suspend_timer = 0;
-            usb_suspend       = false;
+            // usb_suspend_timer = 0;
+            usb_suspend = false;
             led_config_all();
         }
     }

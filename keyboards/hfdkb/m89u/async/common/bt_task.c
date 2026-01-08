@@ -1505,13 +1505,19 @@ static battery_charge_state_t get_battery_charge_state(void) {
 #if defined(MM_CABLE_PIN) && defined(MM_CHARGE_PIN)
     static battery_charge_state_t stable_state = BATTERY_STATE_UNPLUGGED;
 
+    static uint32_t full_check_time = 0;
+
     if (readPin(MM_CABLE_PIN)) {
-        stable_state = BATTERY_STATE_UNPLUGGED;
+        full_check_time = 0;
+        stable_state    = BATTERY_STATE_UNPLUGGED;
     } else {
         if (!readPin(MM_CHARGE_PIN)) {
-            stable_state = BATTERY_STATE_CHARGING;
+            full_check_time = timer_read32();
+            stable_state    = BATTERY_STATE_CHARGING;
         } else {
-            stable_state = BATTERY_STATE_CHARGED_FULL;
+            if (timer_elapsed32(full_check_time) > 2000) {
+                stable_state = BATTERY_STATE_CHARGED_FULL;
+            }
         }
     }
 
@@ -1646,61 +1652,67 @@ void housekeeping_task_kb(void) {
 #endif
 
 #ifdef USB_SUSPEND_CHECK_ENABLE
-    static uint32_t usb_suspend_timer = 0;
-    static uint32_t usb_suspend       = false;
+    // static uint32_t usb_suspend_timer = 0;
+    static uint32_t usb_suspend = false;
 
     if (dev_info.devs == DEVS_USB) {
-        if (USB_DRIVER.state != USB_ACTIVE) {
+        if (readPin(MM_CABLE_PIN)) {
+            // if (USB_DRIVER.state == USB_SUSPENDED) {
             // USB挂起状态
-            if (!usb_suspend_timer) {
-                // 开始计时
-                usb_suspend_timer = timer_read32();
-            } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
-                // 挂起超过10秒，关闭背光
-                if (!usb_suspend) {
-                    // 如果之前没有进入挂起状态，执行挂起操作
-                    usb_suspend = true;
-                    led_deconfig_all();
-                }
-                usb_suspend_timer = 0;
+            // if (!usb_suspend_timer) {
+            // 开始计时
+            // usb_suspend_timer = timer_read32();
+            // } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
+            // 挂起超过10秒，关闭背光
+            if (!usb_suspend) {
+                // 如果之前没有进入挂起状态，执行挂起操作
+                usb_suspend = true;
+#    ifdef RGB_DRIVER_SDB_PIN
+                writePinLow(RGB_DRIVER_SDB_PIN);
+#    endif
             }
+            // usb_suspend_timer = 0;
+            // }
         } else {
             // USB活跃状态，重置计时器
-            if (usb_suspend_timer) {
-                usb_suspend_timer = 0;
-                if (usb_suspend) {
-                    // 如果之前处于挂起状态，恢复背光
-                    usb_suspend = false;
-                    led_config_all();
-                }
+            // if (usb_suspend_timer) {
+            // usb_suspend_timer = 0;
+            if (usb_suspend) {
+                // 如果之前处于挂起状态，恢复背光
+                usb_suspend = false;
+#    ifdef RGB_DRIVER_SDB_PIN
+                writePinHigh(RGB_DRIVER_SDB_PIN);
+#    endif
             }
         }
+        // }
     } else {
         if (usb_suspend) {
-            usb_suspend_timer = 0;
-            usb_suspend       = false;
-            led_config_all();
+            // usb_suspend_timer = 0;
+            usb_suspend = false;
+#    ifdef RGB_DRIVER_SDB_PIN
+            writePinHigh(RGB_DRIVER_SDB_PIN);
+#    endif
         }
     }
 #endif
-
-    housekeeping_task_user();
 }
 
 void matrix_init_user(void) {
 #ifdef MULTIMODE_ENABLE
     // 初始化蓝牙
     bt_init();
-    led_config_all();
+    // led_config_all();
 #endif
 }
 
 void suspend_power_down_user(void) {
-    // rgb_matrix_disable_noeeprom();
-    led_deconfig_all();
+#ifdef RGB_DRIVER_SDB_PIN
+    writePinLow(RGB_DRIVER_SDB_PIN);
+#endif
 }
 
 void suspend_wakeup_init_user(void) {
     // rgb_matrix_enable_noeeprom();
-    led_config_all();
+    // led_config_all();
 }

@@ -328,7 +328,7 @@ static void num_lock_indicator(void) {
 }
 
 bool rgb_matrix_indicators_user(void) {
-    if (!rgb_matrix_get_flags() || (dev_info.devs != DEVS_USB && bts_info.bt_info.low_vol && readPin(MM_CABLE_PIN))) {
+    if (!rgb_matrix_get_flags() || (dev_info.devs != DEVS_USB && get_low_vol_status() && readPin(MM_CABLE_PIN))) {
         rgb_matrix_set_color_all(RGB_OFF);
     }
 
