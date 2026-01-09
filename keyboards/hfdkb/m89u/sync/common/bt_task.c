@@ -836,6 +836,10 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
     extern uint8_t  indicator_reset_last_time;
     extern uint32_t last_total_time;
 
+    // Clear keyboard and layer state to prevent stuck keys when switching modes
+    clear_keyboard();
+    layer_clear();
+
     if (usb_sws) {
         if (!!now_mode) {
             usbDisconnectBus(&USB_DRIVER);

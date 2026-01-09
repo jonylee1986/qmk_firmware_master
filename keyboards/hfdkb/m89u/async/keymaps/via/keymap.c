@@ -314,7 +314,7 @@ static void num_lock_indicator(void) {
             // clang-format off
             should_show_numlock = (host_keyboard_led_state().num_lock && \
                                     ((bts_info.bt_info.paired && (dev_info.devs != DEVS_USB)) || \
-                                    ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state != USB_ACTIVE))));
+                                    ((dev_info.devs == DEVS_USB) && ((USB_DRIVER.state == USB_ACTIVE) || (USB_DRIVER.state != USB_SUSPENDED)))));
             // clang-format on
         }
     }

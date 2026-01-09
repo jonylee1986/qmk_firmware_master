@@ -226,6 +226,9 @@ void register_mouse(uint8_t mouse_keycode, bool pressed);
 
 __attribute__((weak)) void register_code(uint8_t code) {
     if (dev_info.devs) {
+        if (code == KC_NO) {
+            return;
+        }
         bts_process_keys(code, true, dev_info.devs, keymap_config.no_gui, KEY_NUM);
         // Always call bts_task for BT mode
         bts_task(dev_info.devs);
@@ -306,6 +309,9 @@ __attribute__((weak)) void register_code(uint8_t code) {
  */
 __attribute__((weak)) void unregister_code(uint8_t code) {
     if (dev_info.devs) {
+        if (code == KC_NO) {
+            return;
+        }
         bts_process_keys(code, false, dev_info.devs, keymap_config.no_gui, KEY_NUM);
         bts_task(dev_info.devs);
         while (bts_is_busy()) {
@@ -445,15 +451,15 @@ __attribute__((weak)) void unregister_code16(uint16_t code) {
 // ===========================================
 // 线程定义
 // ===========================================
-static THD_WORKING_AREA(waThread1, 128);
-static THD_FUNCTION(Thread1, arg) {
-    (void)arg;
-    chRegSetThreadName("blinker");
-    while (true) {
-        bts_task(dev_info.devs);
-        chThdSleepMilliseconds(1);
-    }
-}
+// static THD_WORKING_AREA(waThread1, 128);
+// static THD_FUNCTION(Thread1, arg) {
+//     (void)arg;
+//     chRegSetThreadName("blinker");
+//     while (true) {
+//         bts_task(dev_info.devs);
+//         chThdSleepMilliseconds(1);
+//     }
+// }
 
 // ===========================================
 // 初始化函数
@@ -470,13 +476,13 @@ void bt_init(void) {
         eeconfig_update_user(dev_info.raw);
     }
 
-    bt_init_time = timer_read32();
-    chThdCreateStatic(waThread1, sizeof(waThread1), HIGHPRIO, Thread1, NULL);
+    // chThdCreateStatic(waThread1, sizeof(waThread1), HIGHPRIO, Thread1, NULL);
     bt_scan_mode();
 
     if (dev_info.devs != DEVS_USB) {
         usbDisconnectBus(&USB_DRIVER);
         usbStop(&USB_DRIVER);
+        writePinHigh(A12);
     }
 
     setPinOutput(A14);
@@ -485,6 +491,8 @@ void bt_init(void) {
     } else {
         writePinHigh(A14);
     }
+
+    bt_init_time = timer_read32();
 }
 
 // ===========================================
@@ -523,6 +531,8 @@ void bt_task(void) {
     if (timer_elapsed32(last_time) >= 1) {
         last_time = timer_read32();
 
+        bts_task(dev_info.devs);
+
         if (dev_info.devs != DEVS_USB) {
             uint8_t keyboard_led_state = 0;
             led_t  *kb_leds            = (led_t *)&keyboard_led_state;
@@ -544,8 +554,6 @@ void bt_task(void) {
 // ===========================================
 bool bt_process_record(uint16_t keycode, keyrecord_t *record) {
     bool retval = true;
-
-    // return false;
 
     if (record->event.pressed) {
         BT_DEBUG_INFO("\n\nkeycode = [0x%x], pressed time: [%d]\n\n", keycode, record->event.time);
@@ -622,6 +630,10 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
     extern uint8_t  indicator_status;
     extern uint8_t  indicator_reset_last_time;
     extern uint32_t last_total_time;
+
+    // Clear keyboard and layer state to prevent stuck keys when switching modes
+    // clear_keyboard();
+    // layer_clear();
 
     if (usb_sws) {
         if (!!now_mode) {
@@ -1643,58 +1655,64 @@ void matrix_scan_user(void) {
 #ifdef MULTIMODE_ENABLE
     bt_task();
 #endif
+
+#ifdef USB_SUSPEND_CHECK_ENABLE
+    static uint32_t usb_suspend_timer = 0;
+    static uint32_t usb_suspend       = false;
+
+    if (dev_info.devs == DEVS_USB) {
+        // if (readPin(MM_CABLE_PIN)) {
+        if (USB_DRIVER.state == USB_SUSPENDED || USB_DRIVER.state != USB_ACTIVE || USB_DRIVER.state == USB_UNINIT) {
+            // USB挂起状态
+            if (!usb_suspend_timer) {
+                // 开始计时
+                usb_suspend_timer = timer_read32();
+            } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
+                // 挂起超过10秒，关闭背光
+                if (!usb_suspend) {
+                    // 如果之前没有进入挂起状态，执行挂起操作
+                    usb_suspend = true;
+#    ifdef RGB_DRIVER_SDB_PIN
+                    writePinLow(RGB_DRIVER_SDB_PIN);
+#    endif
+
+                    // clear_keyboard();
+                    // layer_clear();
+                }
+                usb_suspend_timer = 0;
+            }
+        } else {
+            // USB活跃状态，重置计时器
+            if (usb_suspend_timer) {
+                usb_suspend_timer = 0;
+                if (usb_suspend) {
+                    // 如果之前处于挂起状态，恢复背光
+                    usb_suspend = false;
+#    ifdef RGB_DRIVER_SDB_PIN
+                    writePinHigh(RGB_DRIVER_SDB_PIN);
+#    endif
+
+                    clear_keyboard();
+                    layer_clear();
+                }
+            }
+        }
+    } else {
+        if (usb_suspend) {
+            usb_suspend_timer = 0;
+            usb_suspend       = false;
+#    ifdef RGB_DRIVER_SDB_PIN
+            writePinHigh(RGB_DRIVER_SDB_PIN);
+#    endif
+        }
+    }
+#endif
 }
 
 void housekeeping_task_kb(void) {
 #ifdef MULTIMODE_ENABLE
     extern void housekeeping_task_bt(void);
     housekeeping_task_bt();
-#endif
-
-#ifdef USB_SUSPEND_CHECK_ENABLE
-    // static uint32_t usb_suspend_timer = 0;
-    static uint32_t usb_suspend = false;
-
-    if (dev_info.devs == DEVS_USB) {
-        if (readPin(MM_CABLE_PIN)) {
-            // if (USB_DRIVER.state == USB_SUSPENDED) {
-            // USB挂起状态
-            // if (!usb_suspend_timer) {
-            // 开始计时
-            // usb_suspend_timer = timer_read32();
-            // } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
-            // 挂起超过10秒，关闭背光
-            if (!usb_suspend) {
-                // 如果之前没有进入挂起状态，执行挂起操作
-                usb_suspend = true;
-#    ifdef RGB_DRIVER_SDB_PIN
-                writePinLow(RGB_DRIVER_SDB_PIN);
-#    endif
-            }
-            // usb_suspend_timer = 0;
-            // }
-        } else {
-            // USB活跃状态，重置计时器
-            // if (usb_suspend_timer) {
-            // usb_suspend_timer = 0;
-            if (usb_suspend) {
-                // 如果之前处于挂起状态，恢复背光
-                usb_suspend = false;
-#    ifdef RGB_DRIVER_SDB_PIN
-                writePinHigh(RGB_DRIVER_SDB_PIN);
-#    endif
-            }
-        }
-        // }
-    } else {
-        if (usb_suspend) {
-            // usb_suspend_timer = 0;
-            usb_suspend = false;
-#    ifdef RGB_DRIVER_SDB_PIN
-            writePinHigh(RGB_DRIVER_SDB_PIN);
-#    endif
-        }
-    }
 #endif
 }
 
@@ -1708,11 +1726,14 @@ void matrix_init_user(void) {
 
 void suspend_power_down_user(void) {
 #ifdef RGB_DRIVER_SDB_PIN
-    writePinLow(RGB_DRIVER_SDB_PIN);
+    // writePinLow(RGB_DRIVER_SDB_PIN);
 #endif
+    clear_keyboard();
+    layer_clear();
 }
 
 void suspend_wakeup_init_user(void) {
-    // rgb_matrix_enable_noeeprom();
-    // led_config_all();
+#ifdef RGB_DRIVER_SDB_PIN
+    // writePinHigh(RGB_DRIVER_SDB_PIN);
+#endif
 }

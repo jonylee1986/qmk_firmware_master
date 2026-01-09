@@ -1368,19 +1368,19 @@ bool low_vol_shut_down = false;
 static void handle_low_battery_warning(void) {
     // 低电量警告（电量≤20%）
 
-    if (bts_info.bt_info.pvol < 10) {
-        if (!low_vol_shut_down) {
-            low_vol_shut_down = true;
-        }
-    }
+    // if (bts_info.bt_info.pvol < 10) {
+    //     if (!low_vol_shut_down) {
+    //         low_vol_shut_down = true;
+    //     }
+    // }
     // else if (bts_info.bt_info.pvol >= 40) {
     //     if (low_vol_shut_down) {
     //         low_vol_shut_down = false;
     //     }
     // }
 
-    // if (bts_info.bt_info.low_vol) {
-    if (low_vol_shut_down) {
+    if (bts_info.bt_info.low_vol) {
+        // if (low_vol_shut_down) {
         // rgb_matrix_set_color_all(RGB_OFF);
 
         if (!is_in_low_power_state) {
@@ -1433,6 +1433,7 @@ static void handle_low_battery_warning(void) {
 static void handle_low_battery_shutdow(void) {
     extern bool low_vol_offed_sleep;
 
+#if 0
     static uint8_t  low_batt_shutdown_cnt = 0;
     static uint32_t low_pwr_off_time      = 0;
 
@@ -1456,6 +1457,12 @@ static void handle_low_battery_shutdow(void) {
         } else {
             low_batt_shutdown_cnt = 0;
         }
+    }
+#endif
+
+    if (bts_info.bt_info.low_vol_offed) {
+        kb_sleep_flag       = true;
+        low_vol_offed_sleep = true;
     }
 }
 
@@ -1525,7 +1532,7 @@ static void handle_battery_query_display(void) {
         // if (show_chrg_full) {
         //     color = (RGB){0, 100, 0}; // 绿色
         // } else {
-        if (pvol < 21) {
+        if ((pvol < 21) || (bts_info.bt_info.low_vol)) {
             color = (RGB){100, 0, 0}; // 红色
         } else if (pvol < 90) {
             color = (RGB){100, 50, 0}; // 橙色

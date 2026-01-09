@@ -19,14 +19,13 @@
 #    include "quantum.h"
 #    include "common/bt_task.h"
 
-void restart_usb_driver(USBDriver *usbp) {}
+// void restart_usb_driver(USBDriver *usbp) {}
 
 void housekeeping_task_bt(void) {
     if (dev_info.devs == DEVS_USB) {
         if ((USB_DRIVER.state == USB_SUSPENDED) && (USB_DRIVER.saved_state == USB_ACTIVE)) {
             print("[s]");
             while (USB_DRIVER.state == USB_SUSPENDED) {
-                if (readPin(MM_CABLE_PIN)) break;
                 /* Do this in the suspended state */
                 suspend_power_down(); // on AVR this deep sleeps for 15ms
                 /* Remote wakeup */

@@ -153,12 +153,12 @@ void led_deconfig_all(void) {
 
 void suspend_power_down_user(void) {
     // code will run multiple times while keyboard is suspended
-    led_deconfig_all();
+    // led_deconfig_all();
 }
 
 void suspend_wakeup_init_user(void) {
     // code will run on keyboard wakeup
-    led_config_all();
+    // led_config_all();
 }
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
@@ -200,7 +200,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 void matrix_init_kb(void) {
 #ifdef BT_MODE_ENABLE
     bt_init(); // 使用新的初始化函数
-    led_config_all();
+    // led_config_all();
 #endif
 }
 
@@ -214,13 +214,15 @@ void matrix_scan_kb(void) {
     static uint32_t usb_suspend       = false;
 
     if (dev_info.devs == DEVS_USB) {
-        if (USB_DRIVER.state != USB_ACTIVE || USB_DRIVER.state == USB_SUSPENDED) {
+        if (USB_DRIVER.state != USB_ACTIVE || USB_DRIVER.state == USB_SUSPENDED || USB_DRIVER.state == USB_UNINIT) {
             if (!usb_suspend_timer) {
                 usb_suspend_timer = timer_read32();
             } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
                 if (!usb_suspend) {
                     usb_suspend = true;
-                    led_deconfig_all();
+#    ifdef RGB_DRIVER_SDB_PIN
+                    writePinLow(RGB_DRIVER_SDB_PIN);
+#    endif
                 }
                 usb_suspend_timer = 0;
             }
@@ -229,7 +231,9 @@ void matrix_scan_kb(void) {
                 usb_suspend_timer = 0;
                 if (usb_suspend) {
                     usb_suspend = false;
-                    led_config_all();
+#    ifdef RGB_DRIVER_SDB_PIN
+                    writePinHigh(RGB_DRIVER_SDB_PIN);
+#    endif
                 }
             }
         }
@@ -237,7 +241,9 @@ void matrix_scan_kb(void) {
         if (usb_suspend) {
             usb_suspend_timer = 0;
             usb_suspend       = false;
-            led_config_all();
+#    ifdef RGB_DRIVER_SDB_PIN
+            writePinHigh(RGB_DRIVER_SDB_PIN);
+#    endif
         }
     }
 #endif
@@ -272,7 +278,8 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     if (!rgb_matrix_get_flags()) {
         rgb_matrix_set_color_all(0, 0, 0);
     }
-    if (low_vol_shut_down && readPin(BT_CABLE_PIN)) {
+    // if (low_vol_shut_down && readPin(BT_CABLE_PIN)) {
+    if (bts_info.bt_info.low_vol && readPin(BT_CABLE_PIN)) {
         rgb_matrix_set_color_all(0, 0, 0);
         backlight_shut_down = true;
     } else {
