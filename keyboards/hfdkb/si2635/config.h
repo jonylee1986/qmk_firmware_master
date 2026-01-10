@@ -48,6 +48,7 @@
 
 // Other config
 #    define USB_SUSPEND_CHECK_ENABLE
+#    define BT_KEY_NUM 8
 #endif
 
 #define LED_Q_INDEX 29
