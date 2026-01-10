@@ -389,17 +389,20 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     hsv.v = dev_info.ind_brightness;
     rgb   = hsv_to_rgb(hsv);
 
-    if (!dev_info.eco_tog_flag && host_keyboard_led_state().num_lock && ((bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
+    // extern bool show_full;
+    // extern bool low_vol_warning;
+
+    if (!dev_info.eco_tog_flag && host_keyboard_led_state().num_lock && (((dev_info.devs != DEVS_USB) && bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
         rgb_matrix_set_color(NUM_LOCK_IND_INDEX, rgb.r, rgb.g, rgb.b);
     } else {
         rgb_matrix_set_color(NUM_LOCK_IND_INDEX, 0, 0, 0);
     }
-    if (!dev_info.eco_tog_flag && host_keyboard_led_state().caps_lock && ((bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
+    if (!dev_info.eco_tog_flag && host_keyboard_led_state().caps_lock && (((dev_info.devs != DEVS_USB) && bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
         rgb_matrix_set_color(CAPS_LOCK_IND_INDEX, rgb.r, rgb.g, rgb.b);
     } else {
         rgb_matrix_set_color(CAPS_LOCK_IND_INDEX, 0, 0, 0);
     }
-    if (!dev_info.eco_tog_flag && host_keyboard_led_state().scroll_lock && ((bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
+    if (!dev_info.eco_tog_flag && host_keyboard_led_state().scroll_lock && (((dev_info.devs != DEVS_USB) && bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
         rgb_matrix_set_color(SCROLL_LOCK_IND_INDEX, rgb.r, rgb.g, rgb.b);
     } else {
         rgb_matrix_set_color(SCROLL_LOCK_IND_INDEX, 0, 0, 0);

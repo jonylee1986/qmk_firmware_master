@@ -1295,6 +1295,8 @@ static void handle_layer_indication(void) {
     }
 }
 
+bool show_full = false;
+
 static void handle_charging_indication(void) {
     if (!readPin(BT_CABLE_PIN)) {
         if (!readPin(BT_CHARGE_PIN)) {
@@ -1324,6 +1326,8 @@ static void handle_charging_indication(void) {
                 charge_complete_warning.blink_time  = timer_read32();
                 charge_complete_warning.blink_state = false;
                 charge_complete_warning.completed   = false;
+
+                show_full = true;
             }
         }
 
@@ -1340,6 +1344,8 @@ static void handle_charging_indication(void) {
 
                         show_chrg_full        = false;
                         show_chrg_full_wakeup = false;
+
+                        show_full = false;
                     }
                 }
             }
@@ -1363,7 +1369,7 @@ static void handle_charging_indication(void) {
     // }
 }
 
-bool low_vol_shut_down = false;
+bool low_vol_warning = false;
 
 static void handle_low_battery_warning(void) {
     // 低电量警告（电量≤20%）
@@ -1380,6 +1386,7 @@ static void handle_low_battery_warning(void) {
     // }
 
     if (bts_info.bt_info.low_vol) {
+        // rgb_matrix_set_color_all(0, 0, 0);
         // if (low_vol_shut_down) {
         // rgb_matrix_set_color_all(RGB_OFF);
 
@@ -1392,6 +1399,8 @@ static void handle_low_battery_warning(void) {
                 low_battery_warning.blink_time  = timer_read32();
                 low_battery_warning.blink_state = false;
                 low_battery_warning.completed   = false;
+
+                low_vol_warning = true;
             }
         }
 
@@ -1406,6 +1415,8 @@ static void handle_low_battery_warning(void) {
                     if (low_battery_warning.blink_count >= 6) {
                         low_battery_warning.completed   = true;
                         low_battery_warning.blink_state = false;
+
+                        low_vol_warning = false;
                     }
                 }
             }
@@ -1470,13 +1481,23 @@ static battery_charge_state_t get_battery_charge_state(void) {
 #if defined(BT_CABLE_PIN) && defined(BT_CHARGE_PIN)
     static battery_charge_state_t stable_state = BATTERY_STATE_UNPLUGGED;
 
+    static uint32_t full_check_time = 0;
+    // static uint32_t chrg_check_time = 0;
+
     if (readPin(BT_CABLE_PIN)) {
-        stable_state = BATTERY_STATE_UNPLUGGED;
+        full_check_time = 0;
+        stable_state    = BATTERY_STATE_UNPLUGGED;
     } else {
         if (!readPin(BT_CHARGE_PIN)) {
+            full_check_time = timer_read32();
+            // if (timer_elapsed32(chrg_check_time) > 2000) {
             stable_state = BATTERY_STATE_CHARGING;
+            // }
         } else {
-            stable_state = BATTERY_STATE_CHARGED_FULL;
+            // chrg_check_time = timer_read32();
+            if (timer_elapsed32(full_check_time) > 2000) {
+                stable_state = BATTERY_STATE_CHARGED_FULL;
+            }
         }
     }
 
@@ -1582,9 +1603,9 @@ bool bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
             handle_low_battery_shutdow();
         }
     } else {
-        if (low_vol_shut_down) {
-            low_vol_shut_down = false;
-        }
+        // if (low_vol_shut_down) {
+        //     low_vol_shut_down = false;
+        // }
         if (is_in_low_power_state) {
             is_in_low_power_state = false;
             memset(&low_battery_warning, 0, sizeof(low_battery_warning_t));

@@ -185,6 +185,17 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 rgb_matrix_enable();
             }
             return false;
+
+        case KC_A: {
+            if (record->event.pressed) {
+                // Do something when the key is pressed
+                rgb_matrix_enable();
+            } else {
+                // Do something when the key is released
+            }
+            return false; // Return false to prevent further processing of this key
+        }
+
         default:
             break;
     }
@@ -271,30 +282,49 @@ void housekeeping_task_kb(void) {
 }
 
 static bool backlight_shut_down = false;
-// static uint32_t backlight_shut_down_time = 0;
-extern bool low_vol_shut_down;
+
+static uint32_t low_power_entry_time = 0;
+// static uint32_t low_power_exit_time  = 0;
 
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     if (!rgb_matrix_get_flags()) {
         rgb_matrix_set_color_all(0, 0, 0);
     }
-    // if (low_vol_shut_down && readPin(BT_CABLE_PIN)) {
+
     if (bts_info.bt_info.low_vol && readPin(BT_CABLE_PIN)) {
-        rgb_matrix_set_color_all(0, 0, 0);
-        backlight_shut_down = true;
+        if (!backlight_shut_down) {
+            backlight_shut_down = true;
+        }
+        // } else {
+        // low_power_exit_time = timer_read32();
+        if (timer_elapsed32(low_power_entry_time) > 5000) {
+            rgb_matrix_set_color_all(0, 0, 0);
+        }
+        // }
     } else {
+        low_power_entry_time = timer_read32();
+
         if (backlight_shut_down) {
             backlight_shut_down = false;
-            writePinLow(RGB_DRIVER_SDB_PIN);
-            wait_ms(10);
-            writePinHigh(RGB_DRIVER_SDB_PIN);
+
+            // writePinLow(RGB_DRIVER_SDB_PIN);
+            // wait_ms(10);
+            // writePinHigh(RGB_DRIVER_SDB_PIN);
 
             setPinOutputOpenDrain(C11);
             writePinLow(C11);
             wait_ms(1);
             writePinHigh(C11);
             wait_ms(20);
+
+            rgb_matrix_init();
         }
+        // if (low_power_exit_time && timer_elapsed32(low_power_exit_time) < 10000) {
+        //     // 恢复背光显示
+        //     rgb_matrix_set_color_all(0, 0, 0);
+        // } else {
+        //     low_power_exit_time = 0;
+        // }
     }
 
     if (rgb_matrix_indicators_advanced_user(led_min, led_max) != true) {
