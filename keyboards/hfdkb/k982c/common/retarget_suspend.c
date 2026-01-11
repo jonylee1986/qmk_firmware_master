@@ -19,7 +19,7 @@
 #    include "quantum.h"
 #    include "common/bt_task.h"
 
-void restart_usb_driver(USBDriver *usbp) {}
+// void restart_usb_driver(USBDriver *usbp) {}
 
 void housekeeping_task_bt(void) {
     if (dev_info.devs == DEVS_USB) {

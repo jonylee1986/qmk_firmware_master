@@ -753,6 +753,11 @@ static void bt_used_pin_init(void) {
     setPinInputHigh(MM_CABLE_PIN);
     setPinInput(MM_CHARGE_PIN);
 #    endif
+
+#    ifdef RGB_MATRIX_DRIVER_SDB_PIN
+    setPinOutputOpenDrain(RGB_MATRIX_DRIVER_SDB_PIN);
+    writePinHigh(RGB_MATRIX_DRIVER_SDB_PIN);
+#    endif
 }
 
 /**
@@ -958,8 +963,6 @@ static void charge_indicator(void) {
         }
         low_bat_vol     = false;
         low_bat_vol_off = false;
-    } else {
-        chrg_full_ind_hold_time = 0;
     }
 }
 
@@ -1080,9 +1083,9 @@ static void ble_led(void) {
                     }
                     indicator_status = 2;
                     if (dev_info.devs == DEVS_2_4G)
-                        bt_switch_mode(DEVS_USB, DEVS_2_4G, false);
+                        bt_switch_mode(dev_info.devs, DEVS_2_4G, false);
                     else
-                        bt_switch_mode(DEVS_USB, dev_info.last_devs, false);
+                        bt_switch_mode(dev_info.devs, dev_info.last_devs, false);
                     break;
                 }
             }
