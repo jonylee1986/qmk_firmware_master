@@ -49,6 +49,8 @@
 // Other config
 #    define USB_SUSPEND_CHECK_ENABLE
 #    define BT_KEY_NUM 8
+#    define USBLINK_Status readPin(MM_CABLE_PIN)
+#    define CHARGE_Status readPin(MM_CHARGE_PIN)
 #endif
 
 #define LED_Q_INDEX 29

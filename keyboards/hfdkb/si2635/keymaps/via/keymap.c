@@ -400,16 +400,18 @@ void eeconfig_init_user(void) {
     bled_eeconfig_init();
 }
 
+extern void cansel_chrg_full_indicate(void);
+
 void suspend_power_down_kb(void) {
-    extern void cansel_chrg_full_indicate(void);
     cansel_chrg_full_indicate();
 
     led_deconfig_all();
 }
 
 void suspend_wakeup_init_kb(void) {
-    // wwdg_resume();
-    // led_config_all();
+    // cansel_chrg_full_indicate();
+
+    led_config_all();
 }
 
 bool rgb_matrix_indicators_user(void) {
@@ -498,6 +500,8 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 }
 
 void housekeeping_task_user(void) {
+    static uint32_t chrg_check_time = 0;
+
     if (GUI_pressed_time && (timer_elapsed32(GUI_pressed_time) >= 500)) {
         GUI_pressed_time = 0;
         unregister_code(KC_LALT);
@@ -556,12 +560,14 @@ void housekeeping_task_user(void) {
         // wwdg_resume();
     }
 
+    // static bool rgb_status_save = 1;
+
 #ifdef USB_SUSPEND_CHECK_ENABLE
     static uint32_t usb_suspend_timer = 0;
     static uint32_t usb_suspend       = false;
 
     if (dev_info.devs == DEVS_USB) {
-        if (USB_DRIVER.state != USB_ACTIVE || USB_DRIVER.state == USB_SUSPENDED) {
+        if (USB_DRIVER.state != USB_ACTIVE || USB_DRIVER.state == USB_SUSPENDED || USB_DRIVER.state == USB_UNINIT) {
             // if (readPin(MM_CABLE_PIN)) {
             if (!usb_suspend_timer) {
                 usb_suspend_timer = timer_read32();
@@ -572,7 +578,11 @@ void housekeeping_task_user(void) {
                     // setPinOutputOpenDrain(RGB_MATRIX_SHUTDOWN_PIN);
                     writePinLow(RGB_MATRIX_SHUTDOWN_PIN);
 #    endif
+                    // setPinOutputOpenDrain(LED_CAPS_LOCK_PIN);
+                    writePinLow(LED_CAPS_LOCK_PIN);
                     // wwdg_pause();
+
+                    // rgb_status_save = rgb_matrix_is_enabled();
                 }
                 usb_suspend_timer = 0;
             }
@@ -585,6 +595,10 @@ void housekeeping_task_user(void) {
                     // setPinOutputPushPull(RGB_MATRIX_SHUTDOWN_PIN);
                     writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
 #    endif
+                    // setPinOutputOpenDrain(LED_CAPS_LOCK_PIN);
+                    // if (host_keyboard_led_state().caps_lock) {
+                    //     writePinHigh(LED_CAPS_LOCK_PIN);
+                    // }
                     // wwdg_resume();
                 }
             }
@@ -598,12 +612,27 @@ void housekeeping_task_user(void) {
     //         wwdg_resume();
     //     }
     // }
+
+    extern void Charge_Chat(void);
+    if (timer_elapsed32(chrg_check_time) >= 2) {
+        chrg_check_time = timer_read32();
+        Charge_Chat();
+    }
 #endif
+}
+
+extern bool led_inited;
+
+void set_led_state(void) {
+    if (led_inited) {
+        writePin(LED_CAPS_LOCK_PIN, (host_keyboard_led_state().caps_lock));
+    }
 }
 
 void matrix_scan_user(void) {
 #ifdef MULTIMODE_ENABLE
     bt_task();
+    set_led_state();
 #endif
 }
 
@@ -613,6 +642,53 @@ void matrix_init_user(void) {
 
 #ifdef MULTIMODE_ENABLE
     bt_init();
-    // led_config_all();
+    led_config_all();
 #endif
+}
+
+static uint8_t  rChr_ChkBuf  = 0;
+static uint8_t  rChr_OldBuf  = 0;
+static uint16_t rChr_Cnt     = 0;
+static uint8_t  f_ChargeOn   = 0;
+static uint8_t  f_ChargeFull = 0;
+
+#define CHR_DEBOUNCE 100
+
+void Charge_Chat(void) {
+#if defined(MM_CABLE_PIN) && defined(MM_CHARGE_PIN)
+    uint8_t i = 0;
+
+    if (USBLINK_Status == 0) i |= 0x01;
+    if ((CHARGE_Status == 0) || ((dev_info.devs != DEVS_USB) && (bts_info.bt_info.pvol >= 100))) i |= 0x02;
+
+    if (rChr_ChkBuf != i) {
+        rChr_Cnt    = CHR_DEBOUNCE;
+        rChr_ChkBuf = i;
+    } else {
+        if (rChr_Cnt != 0) {
+            rChr_Cnt--;
+            if (rChr_Cnt == 0) {
+                i = rChr_ChkBuf ^ rChr_OldBuf;
+
+                if (i != 0) {
+                    rChr_OldBuf = rChr_ChkBuf;
+
+                    if (i & 0x3) {
+                        f_ChargeOn = (rChr_ChkBuf & 0x01) ? 1 : 0;
+
+                        f_ChargeFull = (rChr_ChkBuf & 0x02) ? 1 : 0;
+                    }
+                }
+            }
+        }
+    }
+#endif
+}
+
+bool is_charging(void) {
+    return f_ChargeOn;
+}
+
+bool is_fully_charged(void) {
+    return f_ChargeFull;
 }

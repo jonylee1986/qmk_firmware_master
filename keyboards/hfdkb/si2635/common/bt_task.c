@@ -97,8 +97,6 @@ static indicator_state_t indicator_status = INDICATOR_CONNECTING;
 typedef struct PACKED {
     uint32_t blink_time;
     uint32_t full_time;
-    uint32_t entry_chrg_time;
-    uint32_t entry_full_time;
     uint8_t  blink_count;
     bool     triggered;
     bool     full_triggered;
@@ -142,7 +140,7 @@ static bool indicator_reset_last_time = false;
 static uint32_t key_press_time = 0;
 static uint32_t close_rgb_time = 0;
 
-static bool led_inited = false;
+bool led_inited = false;
 
 static bool bak_rgb_toggle = false;
 static bool sober          = true;
@@ -198,7 +196,6 @@ static uint32_t USB_switch_time = 0;
 
 static bool is_in_charging_state   = false;
 static bool is_in_full_power_state = false;
-static bool charge_full_displayed  = false;
 
 extern bool show_chrg;
 extern bool show_chrg_full;
@@ -517,6 +514,9 @@ void bt_task(void) {
     // Update task at regular intervals
     if (timer_elapsed32(last_time) >= TASK_UPDATE_INTERVAL_MS) {
         last_time = timer_read32();
+
+        // extern void Charge_Chat(void);
+        // Charge_Chat();
 
         if (dev_info.devs != DEVS_USB) {
             uint8_t keyboard_led_state = 0;
@@ -932,14 +932,16 @@ static void bt_scan_mode(void) {
 
 void led_config_all(void) {
     if (!led_inited) {
-#ifdef RGB_MATRIX_SHUTDOWN_PIN
-        setPinOutputOpenDrain(RGB_MATRIX_SHUTDOWN_PIN);
-        writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
-#endif
-        setPinOutputPushPull(LED_CAPS_LOCK_PIN);
-        if (host_keyboard_led_state().caps_lock) {
-            writePinHigh(LED_CAPS_LOCK_PIN);
-        }
+        // #ifdef RGB_MATRIX_SHUTDOWN_PIN
+        //         setPinOutputOpenDrain(RGB_MATRIX_SHUTDOWN_PIN);
+        //         writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
+        // #endif
+        // setPinOutputOpenDrain(LED_CAPS_LOCK_PIN);
+        // if (host_keyboard_led_state().caps_lock) {
+        //     writePinHigh(LED_CAPS_LOCK_PIN);
+        // }
+        setPinOutput(LED_CAPS_LOCK_PIN);
+        writePin(LED_CAPS_LOCK_PIN, (host_keyboard_led_state().caps_lock));
 
         led_inited = true;
     }
@@ -947,12 +949,13 @@ void led_config_all(void) {
 
 void led_deconfig_all(void) {
     if (led_inited) {
-#ifdef RGB_MATRIX_SHUTDOWN_PIN
-        setPinOutputOpenDrain(RGB_MATRIX_SHUTDOWN_PIN);
-        writePinLow(RGB_MATRIX_SHUTDOWN_PIN);
-#endif
+        // #ifdef RGB_MATRIX_SHUTDOWN_PIN
+        //         setPinOutputOpenDrain(RGB_MATRIX_SHUTDOWN_PIN);
+        //         writePinLow(RGB_MATRIX_SHUTDOWN_PIN);
+        // #endif
         // gpio_write_pin(LED_CAPS_LOCK_PIN, 0);
-        setPinOutputOpenDrain(LED_CAPS_LOCK_PIN);
+        // setPinOutputOpenDrain(LED_CAPS_LOCK_PIN);
+        // writePinLow(LED_CAPS_LOCK_PIN);
         writePinLow(LED_CAPS_LOCK_PIN);
 
         led_inited = false;
@@ -963,10 +966,12 @@ void led_deconfig_all(void) {
 // No operation standby functions
 // ===========================================
 void cansel_chrg_full_indicate(void) {
-    charge_complete_warning.completed      = true;
-    show_chrg                              = false;
-    charge_complete_warning.full_completed = true;
-    show_chrg_full                         = false;
+    // is_in_charging_state   = false;
+    // is_in_full_power_state = false;
+    // memset(&charge_complete_warning, 0, sizeof(charge_complete_warning_t));
+
+    show_chrg      = false;
+    show_chrg_full = false;
 }
 
 // ===========================================
@@ -1004,12 +1009,6 @@ static void close_rgb(void) {
 #ifdef ENTRY_STOP_MODE
                 lp_system_sleep();
 #endif
-
-                if (dev_info.devs != DEVS_2_4G)
-                    bt_switch_mode(DEVS_USB, dev_info.last_devs, false);
-                else if (dev_info.devs != DEVS_USB)
-                    bt_switch_mode(DEVS_USB, DEVS_2_4G, false);
-
                 open_rgb();
             }
         }
@@ -1102,19 +1101,19 @@ static void bt_indicate(void) {
             }
 
             if (bts_info.bt_info.paired) {
-                if (host_keyboard_led_state().caps_lock) {
-                    setPinOutputPushPull(LED_CAPS_LOCK_PIN);
-                    writePinHigh(LED_CAPS_LOCK_PIN);
-                }
+                // if (host_keyboard_led_state().caps_lock) {
+                //     setPinOutputPushPull(LED_CAPS_LOCK_PIN);
+                //     writePinHigh(LED_CAPS_LOCK_PIN);
+                // }
                 last_long_time   = timer_read32();
                 indicator_status = INDICATOR_CONNECTED;
                 break;
             }
 
-            if (host_keyboard_led_state().caps_lock) {
-                setPinOutputOpenDrain(LED_CAPS_LOCK_PIN);
-                writePinLow(LED_CAPS_LOCK_PIN);
-            }
+            // if (host_keyboard_led_state().caps_lock) {
+            //     setPinOutputOpenDrain(LED_CAPS_LOCK_PIN);
+            //     writePinLow(LED_CAPS_LOCK_PIN);
+            // }
 
             if (timer_elapsed32(last_total_time) >= WL_CONN_TIMEOUT_MS) {
                 indicator_status = INDICATOR_OFF;
@@ -1208,13 +1207,16 @@ static void bt_bat_low_level_warning(void) {
 static void bt_charging_indication(void) {
     const uint8_t leds[] = {80, 81, 82, 83, 84};
 
-    // charge_complete_warning.completed      = true;
-    // charge_complete_warning.full_completed = true;
+    static uint32_t entry_chrg_time = 0;
+    static uint32_t entry_full_time = 0;
 
-    if (!readPin(MM_CABLE_PIN)) {
-        if (!readPin(MM_CHARGE_PIN)) {
-            charge_complete_warning.entry_full_time = timer_read32();
-            if (timer_elapsed32(charge_complete_warning.entry_chrg_time) >= 2000) {
+    extern bool is_charging(void);
+    extern bool is_fully_charged(void);
+
+    if (is_charging()) {
+        if (is_fully_charged()) {
+            entry_full_time = timer_read32();
+            if (timer_elapsed32(entry_chrg_time) >= 500) {
                 // show_chrging = true;
                 if (!is_in_charging_state) {
                     is_in_charging_state = true;
@@ -1225,42 +1227,55 @@ static void bt_charging_indication(void) {
                         charge_complete_warning.blink_state = false;
                         charge_complete_warning.completed   = false;
 
+                        // chrg_total_time = timer_read32();
+
                         show_chrg = true;
                     }
                 }
             }
 
-            if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 10) {
+            if (!charge_complete_warning.completed) {
+                // if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 11) {
+                // if (!charge_complete_warning.completed && timer_elapsed32(chrg_total_time) < 10000) {
+                // if (timer_elapsed32(charge_complete_warning.chrg_total_time) < 10000) {
+
                 if (timer_elapsed32(charge_complete_warning.blink_time) >= 500) {
                     charge_complete_warning.blink_time  = timer_read32();
                     charge_complete_warning.blink_state = !charge_complete_warning.blink_state;
 
                     // Count complete on/off cycles (increment on falling edge)
-                    if (!charge_complete_warning.blink_state) {
+                    if (charge_complete_warning.blink_state) {
                         charge_complete_warning.blink_count++;
-                        if (charge_complete_warning.blink_count >= 10) {
-                            charge_complete_warning.completed = true;
-                            show_chrg                         = false;
+                        if (charge_complete_warning.blink_count > 9) {
+                            charge_complete_warning.completed   = true;
+                            charge_complete_warning.blink_state = false;
+
+                            show_chrg = false;
                         }
                     }
                 }
 
                 if (charge_complete_warning.blink_state) {
                     for (uint8_t i = 0; i < 5; i++) {
-                        rgb_matrix_set_color(leds[i], RGB_GREEN);
+                        rgb_matrix_set_color(leds[i], 0, 100, 0);
+                    }
+                } else {
+                    for (uint8_t i = 0; i < 5; i++) {
+                        rgb_matrix_set_color(leds[i], RGB_OFF);
                     }
                 }
             }
+            // else {
+            //     charge_complete_warning.completed = true;
+
+            //     show_chrg = false;
+            // }
+            // }
         } else {
             // Charge pin indicates full - trigger only if not already displayed
-            charge_complete_warning.entry_chrg_time = timer_read32();
-            if (timer_elapsed32(charge_complete_warning.entry_full_time) >= 2000) {
-                if (bts_info.bt_info.pvol >= 100) {
-                    charge_full_displayed = true;
-                }
-            }
-
-            if (charge_full_displayed) {
+            entry_chrg_time = timer_read32();
+            if (timer_elapsed32(entry_full_time) >= 000) {
+                // if ((dev_info.devs != DEVS_USB) && (bts_info.bt_info.pvol >= 100)) {
                 if (!is_in_full_power_state) {
                     is_in_full_power_state = true;
                     if (!charge_complete_warning.full_triggered) {
@@ -1270,35 +1285,30 @@ static void bt_charging_indication(void) {
                         show_chrg_full = true;
                     }
                 }
+                // }
+            }
 
-                if (!charge_complete_warning.full_completed) {
-                    if (timer_elapsed32(charge_complete_warning.full_time) <= 10000) {
-                        for (uint8_t i = 0; i < 5; i++) {
-                            rgb_matrix_set_color(leds[i], RGB_GREEN);
-                        }
-                    } else {
-                        charge_complete_warning.full_completed = true;
-
-                        show_chrg_full = false;
+            if (!charge_complete_warning.full_completed) {
+                if (timer_elapsed32(charge_complete_warning.full_time) <= 10000) {
+                    for (uint8_t i = 0; i < 5; i++) {
+                        rgb_matrix_set_color(leds[i], 0, 100, 0);
                     }
+                } else {
+                    charge_complete_warning.full_completed = true;
+
+                    show_chrg_full = false;
                 }
             }
         }
-    } else {
-        // Cable disconnected - reset charging state but NOT charge_full_displayed
-        charge_full_displayed = false;
 
+        // }
+    } else {
         is_in_charging_state   = false;
         is_in_full_power_state = false;
         memset(&charge_complete_warning, 0, sizeof(charge_complete_warning_t));
-        // charge_complete_warning.full_completed = false;
-        // charge_complete_warning.completed      = false;
-        // charge_complete_warning.full_triggered = false;
-        // charge_complete_warning.triggered      = false;
-        // charge_complete_warning.blink_count    = 0;
-        // charge_complete_warning.blink_state    = false;
-        // charge_complete_warning.blink_time     = 0;
-        // charge_complete_warning.full_time      = 0;
+
+        entry_chrg_time = timer_read32();
+        entry_full_time = timer_read32();
     }
 }
 
