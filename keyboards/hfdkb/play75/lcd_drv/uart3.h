@@ -112,3 +112,5 @@ void uart3_receive(uint8_t *data, uint16_t length);
 bool uart3_available(void);
 
 void uart3_stop(void);
+
+void uart3_start(void);

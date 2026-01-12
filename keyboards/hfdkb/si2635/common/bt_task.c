@@ -457,6 +457,9 @@ void bt_init(void) {
     // If the device is not USB, we need to set the scan mode
     bt_scan_mode();
 
+    bts_send_name(DEVS_HOST1);
+    wait_ms(10);
+
     if (dev_info.devs != DEVS_USB) {
         usbDisconnectBus(&USB_DRIVER);
         usbStop(&USB_DRIVER);
@@ -482,7 +485,9 @@ void bt_task(void) {
     if ((bt_init_time != 0) && (timer_elapsed32(bt_init_time) >= BT_INIT_WAIT_MS)) {
         bt_init_time = 0;
 
-        bts_send_name(DEVS_HOST1);
+        // bts_send_name(DEVS_HOST1);
+        // wait_ms(10);
+        bts_send_vendor(v_en_sleep_bt);
 
         switch (dev_info.devs) {
             case DEVS_HOST1: {
@@ -508,7 +513,8 @@ void bt_task(void) {
         }
 
         // bts_send_vendor(v_en_sleep_bt);
-        bts_send_vendor(v_en_sleep_wl);
+        // wait_ms(200);
+        // bts_send_vendor(v_en_sleep_wl);
     }
 
     // Update task at regular intervals

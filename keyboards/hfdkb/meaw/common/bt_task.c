@@ -327,8 +327,8 @@ void bt_task(void) {
         bt_scan_mode();
     }
 }
-bool     rgb_status_save = 1;
-uint32_t pressed_time    = 0;
+bool rgb_status_save = 1;
+// uint32_t pressed_time    = 0;
 
 bool process_record_bt(uint16_t keycode, keyrecord_t *record) {
     bool retval = true;
@@ -358,7 +358,7 @@ bool process_record_bt(uint16_t keycode, keyrecord_t *record) {
                     bts_info.bt_info.mode_switched,
                     bts_info.bt_info.pvol);
         // clang-format on
-        pressed_time = timer_read32();
+        // pressed_time = timer_read32();
         if (!rgb_matrix_config.enable) {
             if (rgb_status_save) {
                 rgb_matrix_enable_noeeprom();
@@ -369,6 +369,7 @@ bool process_record_bt(uint16_t keycode, keyrecord_t *record) {
             last_total_time = timer_read32();
         }
     }
+
     retval = process_record_other(keycode, record);
 
     if (dev_info.devs != DEVS_USB) {

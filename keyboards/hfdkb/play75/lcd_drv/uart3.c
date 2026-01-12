@@ -74,3 +74,9 @@ bool uart3_available(void) {
 void uart3_stop(void) {
     sdStop(&SERIAL3_DRIVER);
 }
+
+void uart3_start(void) {
+    palSetLineMode(SD3_TX_PIN, PAL_MODE_ALTERNATE(SD3_TX_PAL_MODE) | PAL_OUTPUT_TYPE_PUSHPULL | PAL_OUTPUT_SPEED_HIGHEST);
+    palSetLineMode(SD3_RX_PIN, PAL_MODE_ALTERNATE(SD3_RX_PAL_MODE) | PAL_OUTPUT_TYPE_PUSHPULL | PAL_OUTPUT_SPEED_HIGHEST);
+    sdStart(&SERIAL3_DRIVER, &serialConfig);
+}
