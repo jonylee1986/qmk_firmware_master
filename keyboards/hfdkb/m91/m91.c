@@ -186,15 +186,15 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case KC_A: {
-            if (record->event.pressed) {
-                // Do something when the key is pressed
-                rgb_matrix_enable();
-            } else {
-                // Do something when the key is released
-            }
-            return false; // Return false to prevent further processing of this key
-        }
+            // case KC_A: {
+            //     if (record->event.pressed) {
+            //         // Do something when the key is pressed
+            //         rgb_matrix_enable();
+            //     } else {
+            //         // Do something when the key is released
+            //     }
+            //     return false; // Return false to prevent further processing of this key
+            // }
 
         default:
             break;

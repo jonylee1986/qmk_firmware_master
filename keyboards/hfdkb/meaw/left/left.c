@@ -4,7 +4,7 @@
 #include QMK_KEYBOARD_H
 #include "common/bt_task.h"
 #include <stdlib.h>
-// clang-format on
+#include "usb_main.h"
 
 bool led_inited = false;
 
@@ -77,6 +77,10 @@ void matrix_scan_kb(void) {
     matrix_scan_user();
 }
 
+static uint32_t usb_suspend_timer = 0;
+static uint32_t usb_suspend       = false;
+static uint32_t rgb_status_saved  = 0;
+
 void housekeeping_task_kb(void) {
 #ifdef BT_MODE_ENABLE
     extern void housekeeping_task_bt(void);
@@ -85,6 +89,48 @@ void housekeeping_task_kb(void) {
 
 #ifdef CONSOLE_ENABLE
     debug_enable = true;
+#endif
+
+#ifdef USB_CHECK_SUSPEND_STATE
+    if (dev_info.devs == DEVS_USB) {
+        if (USB_DRIVER.state != USB_ACTIVE || USB_DRIVER.state == USB_SUSPENDED) {
+            if (!usb_suspend_timer) {
+                usb_suspend_timer = timer_read32();
+            } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
+                if (!usb_suspend) {
+                    usb_suspend      = true;
+                    rgb_status_saved = rgb_matrix_is_enabled();
+                    if (rgb_status_saved) {
+                        rgb_matrix_disable_noeeprom();
+                    }
+                    // led_deconfig_all();
+                }
+                usb_suspend_timer = 0;
+            }
+        } else {
+            if (usb_suspend) {
+                usb_suspend_timer = 0;
+                usb_suspend       = false;
+                if (rgb_status_saved) {
+                    if (!rgb_matrix_is_enabled()) {
+                        rgb_matrix_enable_noeeprom();
+                    }
+                }
+                // led_config_all();
+            }
+        }
+    } else {
+        if (usb_suspend) {
+            usb_suspend_timer = 0;
+            usb_suspend       = false;
+            if (rgb_status_saved) {
+                if (!rgb_matrix_is_enabled()) {
+                    rgb_matrix_enable_noeeprom();
+                }
+            }
+            // led_config_all();
+        }
+    }
 #endif
 }
 

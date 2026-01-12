@@ -19,5 +19,5 @@
 #    define BT_HOST2_NAME "Meaw-R BT$"
 #    define BT_HOST3_NAME "Meaw-R BT$"
 
-#    define USB_CHECK_SUSPEND_STATE
+// #    define USB_CHECK_SUSPEND_STATE
 #endif

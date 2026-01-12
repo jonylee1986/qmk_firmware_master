@@ -1371,7 +1371,7 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
     }
 
     // caps lock red
-    if ((host_keyboard_led_state().caps_lock) && ((bts_info.bt_info.paired) || (dev_info.devs == DEVS_USB))) {
+    if ((host_keyboard_led_state().caps_lock) && (((dev_info.devs != DEVS_USB) && bts_info.bt_info.paired && !kb_sleep_flag) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
         rgb_matrix_set_color(0, 100, 100, 100);
     }
 

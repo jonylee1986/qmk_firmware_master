@@ -28,6 +28,8 @@
 #    define BT_BLINK_HOST3_COLOR {0, 0, 100}
 #    define BT_BLINK_2G4_COLOR {0, 100, 0}
 #    define BT_BLINK_USB_COLOR {5, 55, 100}
+
+#    define USB_CHECK_SUSPEND_STATE
 #endif
 
 /* RGB Matrix */
