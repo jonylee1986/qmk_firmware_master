@@ -7,7 +7,6 @@
     "bootloader": "wb32-dfu",
     "usb": {
         "vid": "0xFFFE",
-        "device_version": "1.6.5",
         "suspend_wakeup_delay": 1000
     },
     "diode_direction": "ROW2COL",

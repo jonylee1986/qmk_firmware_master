@@ -1290,6 +1290,13 @@ static void close_rgb(void) {
 #ifdef ENTRY_STOP_MODE
                 lp_system_sleep();
 #endif
+
+                if (dev_info.devs == DEVS_2_4G) {
+                    bt_switch_mode(dev_info.devs, DEVS_USB, false);
+                } else {
+                    bt_switch_mode(dev_info.last_devs, dev_info.last_devs, false);
+                }
+
                 extern void open_rgb(void);
                 open_rgb();
             }
@@ -1430,18 +1437,6 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
                 }
 
                 if (bts_info.bt_info.paired) {
-                    // if (dev_info.devs == DEVS_2_4G) {
-                    //     if (!dev_info.not_first_pair_wl) {
-                    //         dev_info.not_first_pair_wl = 1;
-                    //         eeconfig_update_user(dev_info.raw);
-                    //     }
-                    // }
-                    // if ((dev_info.devs != DEVS_2_4G) && (dev_info.devs == DEVS_USB)) {
-                    //     if (!dev_info.not_first_pair_bt) {
-                    //         dev_info.not_first_pair_bt = 1;
-                    //         eeconfig_update_user(dev_info.raw);
-                    //     }
-                    // }
                     last_long_time   = timer_read32();
                     indicator_status = 3;
                     break;
@@ -1465,7 +1460,7 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
                         rgb = (RGB){.r = 0, .g = 0, .b = 0};
                     }
                 }
-                // if (dev_info.devs == DEVS_2_4G) bts_process_keys(KC_LGUI, 0, DEVS_2_4G, 1);
+
                 if (bts_info.bt_info.paired) {
                     last_long_time   = timer_read32();
                     indicator_status = 3;
@@ -1498,14 +1493,20 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
                             indicator_status = 2;
                             break;
                         }
-                        bt_switch_mode(dev_info.devs, dev_info.last_devs, false);
+                        indicator_status = 2;
+                        if (dev_info.devs == DEVS_2_4G) {
+                            bt_switch_mode(dev_info.devs, DEVS_2_4G, false);
+                        } else {
+                            bt_switch_mode(dev_info.devs, dev_info.last_devs, false);
+                        }
                     }
                 }
-                // rgb_matrix_set_color(rgb_index, 0, 0, 0);
-                return true;
+                // return true;
         }
 
-        rgb_matrix_set_color(rgb_index, rgb.r, rgb.g, rgb.b);
+        if (indicator_status != 0) {
+            rgb_matrix_set_color(rgb_index, rgb.r, rgb.g, rgb.b);
+        }
     } else {
         static uint16_t USB_blink_time;
         static bool     USB_blink;
@@ -1583,7 +1584,7 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
         } else {
             rgb_matrix_set_color_all(0, 0, 0);
         }
-        return true;
+        // return true;
     }
 
     return true;
