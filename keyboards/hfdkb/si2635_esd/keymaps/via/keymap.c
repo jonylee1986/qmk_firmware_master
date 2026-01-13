@@ -27,6 +27,9 @@
 #    include "usb_main.h"
 #endif
 
+// #include <stdlib.h>
+#include "wwdg.h"
+
 enum _layers {
     WIN_BASE,
     WIN_FN,
@@ -37,9 +40,9 @@ enum _layers {
 };
 
 #define KC_TASK G(KC_TAB)
-#define AN_HOME G(KC_H)
-#define KC_SER G(KC_SPC)
-// #define MAC_TSK LWIN(KC_TAB)
+// #define AN_TASK A(KC_TAB)
+#define KC_SPOT KC_SPOTLIGHT
+
 #define KEY_WIN PDF(0)
 #define KEY_AND PDF(2)
 #define KEY_MAC PDF(4)
@@ -63,7 +66,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______, GU_TOGG, _______,                              _______,                            _______, _______,  RM_SPDD,  RM_VALD,  RM_SPDU),
 
     [AND_BASE] = LAYOUT_80_ansi(
-        KC_ESC,  KC_BRID,  KC_BRIU,  KC_TASK,  AN_HOME,  RM_VALD, RM_VALU, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,  KC_VOLU,            WORK_MOD,
+        KC_ESC,  KC_BRID,  KC_BRIU,  AN_TASK,  KC_WHOM,  RM_VALD, RM_VALU, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,  KC_VOLU,            WORK_MOD,
         KC_GRV,  KC_1,     KC_2,     KC_3,     KC_4,     KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS,  KC_EQL,   KC_BSPC,  KC_DEL,
         KC_TAB,  KC_Q,     KC_W,     KC_E,     KC_R,     KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC,  KC_RBRC,  KC_BSLS,  KC_PGUP,
         KC_CAPS, KC_A,     KC_S,     KC_D,     KC_F,     KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,            KC_ENT,   KC_PGDN,
@@ -79,7 +82,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______, _______, _______,                              _______,                            _______, _______,  RM_SPDD,  RM_VALD,  RM_SPDU),
 
     [MAC_BASE] = LAYOUT_80_ansi(
-        KC_ESC,  KC_BRID,  KC_BRIU,  KC_MCTL,  KC_SER,   KC_F5,   KC_F6,   KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,  KC_VOLU,            WORK_MOD,
+        KC_ESC,  KC_BRID,  KC_BRIU,  KC_MCTL,  KC_SPOT,  KC_F5,   KC_F6,   KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,  KC_VOLU,            WORK_MOD,
         KC_GRV,  KC_1,     KC_2,     KC_3,     KC_4,     KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS,  KC_EQL,   KC_BSPC,  KC_DEL,
         KC_TAB,  KC_Q,     KC_W,     KC_E,     KC_R,     KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC,  KC_RBRC,  KC_BSLS,  KC_PGUP,
         KC_CAPS, KC_A,     KC_S,     KC_D,     KC_F,     KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,            KC_ENT,   KC_PGDN,
@@ -132,43 +135,13 @@ static uint32_t mode_long_pressed_time = 0;
 static uint32_t caps_blink_time        = 0;
 static uint8_t  caps_blink_cnt         = 0;
 
-// bool process_rgb_matrix_user(uint16_t keycode, keyrecord_t *record) {
-//     if (record->event.pressed) {
-//         switch (keycode) {
-//             // case RGB_TOG:
-//             //     rgb_matrix_toggle();
-//             //     return false;
-//             case RGB_MOD:
-//                 rgb_matrix_step();
-//                 return false;
-//             case RGB_HUI:
-//                 rgb_matrix_increase_hue();
-//                 return false;
-//             case RGB_HUD:
-//                 rgb_matrix_decrease_hue();
-//                 return false;
-//             case RGB_SAI:
-//                 rgb_matrix_increase_sat();
-//                 return false;
-//             case RGB_SAD:
-//                 rgb_matrix_decrease_sat();
-//                 return false;
-//             case RGB_VAI:
-//                 rgb_matrix_increase_val();
-//                 return false;
-//             case RGB_VAD:
-//                 rgb_matrix_decrease_val();
-//             case RGB_SPI:
-//                 rgb_matrix_increase_speed();
-//                 return false;
-//             case RGB_SPD:
-//                 rgb_matrix_decrease_speed();
-//                 return false;
-//         }
-//     }
+extern void wwdg_pause(void);
+extern void wwdg_resume(void);
+extern void snled27351_reset(void);
 
-//     return true;
-// }
+bool     enable_dog = false;
+bool     feed_dog   = false;
+uint16_t wwdg_time  = 0;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // if (!process_rgb_matrix_user(keycode, record)) return false;
@@ -223,6 +196,22 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             break;
 
+        case KC_SPOT:
+            if (record->event.pressed) {
+                if (dev_info.devs == DEVS_USB) {
+                    host_consumer_send(0x0221);
+                } else {
+                    bts_send_consumer(0x221);
+                }
+            } else {
+                if (dev_info.devs == DEVS_USB) {
+                    host_consumer_send(0);
+                } else {
+                    bts_send_consumer(0);
+                }
+            }
+            return false;
+
         case RM_VALU:
             if (record->event.pressed) {
                 if (rgb_matrix_get_val() >= (RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP)) {
@@ -256,9 +245,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             break;
 
-        case MAC_TSK: {
+        case AN_TASK: {
             if (record->event.pressed) {
-                register_code(KC_LGUI);
+                register_code(KC_LALT);
                 register_code(KC_TAB);
                 GUI_pressed_time = 0; // Reset timer when pressed
             } else {
@@ -326,26 +315,26 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         }
 
-        case KC_FLXP: {
-            if (record->event.pressed) {
-                if (dev_info.devs == DEVS_USB) {
-                    register_code(KC_LWIN);
-                    register_code(KC_E);
-                } else {
-                    bts_process_keys(KC_LWIN, 1, dev_info.devs, 0);
-                    bts_process_keys(KC_E, 1, dev_info.devs, 0);
-                }
-            } else {
-                if (dev_info.devs == DEVS_USB) {
-                    unregister_code(KC_E);
-                    unregister_code(KC_LWIN);
-                } else {
-                    bts_process_keys(KC_E, 0, dev_info.devs, 0);
-                    bts_process_keys(KC_LWIN, 0, dev_info.devs, 0);
-                }
-            }
-            return false;
-        }
+            // case KC_FLXP: {
+            //     if (record->event.pressed) {
+            //         if (dev_info.devs == DEVS_USB) {
+            //             register_code(KC_LWIN);
+            //             register_code(KC_E);
+            //         } else {
+            //             bts_process_keys(KC_LWIN, 1, dev_info.devs, 0);
+            //             bts_process_keys(KC_E, 1, dev_info.devs, 0);
+            //         }
+            //     } else {
+            //         if (dev_info.devs == DEVS_USB) {
+            //             unregister_code(KC_E);
+            //             unregister_code(KC_LWIN);
+            //         } else {
+            //             bts_process_keys(KC_E, 0, dev_info.devs, 0);
+            //             bts_process_keys(KC_LWIN, 0, dev_info.devs, 0);
+            //         }
+            //     }
+            //     return false;
+            // }
 
         case KC_LEFT:
         case KC_RIGHT:
@@ -373,8 +362,9 @@ void keyboard_post_init_user(void) {
 
     bled_init();
 
-    extern void snled27351_reset(void);
     snled27351_reset();
+
+    enable_dog = true;
 }
 
 void eeconfig_init_user(void) {
@@ -384,14 +374,18 @@ void eeconfig_init_user(void) {
     bled_eeconfig_init();
 }
 
+extern void cansel_chrg_full_indicate(void);
+
 void suspend_power_down_kb(void) {
-    wwdg_pause();
+    cansel_chrg_full_indicate();
+
     led_deconfig_all();
 }
 
 void suspend_wakeup_init_kb(void) {
-    wwdg_resume();
-    // led_config_all();
+    // cansel_chrg_full_indicate();
+
+    led_config_all();
 }
 
 bool rgb_matrix_indicators_user(void) {
@@ -482,12 +476,13 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 void housekeeping_task_user(void) {
     if (GUI_pressed_time && (timer_elapsed32(GUI_pressed_time) >= 500)) {
         GUI_pressed_time = 0;
-        unregister_code(KC_LGUI);
+        unregister_code(KC_LALT);
     }
 
 #ifdef MULTIMODE_ENABLE
     bt_housekeeping_task();
 #endif
+
     if (mode_long_pressed_time && (timer_elapsed32(mode_long_pressed_time) >= 3000)) {
         wwdg_pause();
         mode_long_pressed_time = 0;
@@ -538,20 +533,36 @@ void housekeeping_task_user(void) {
         wwdg_resume();
     }
 
+    // static bool rgb_status_save = 1;
+
+    static uint32_t chrg_check_time = 0;
+    extern void     Charge_Chat(void);
+    if (timer_elapsed32(chrg_check_time) >= 2) {
+        chrg_check_time = timer_read32();
+        Charge_Chat();
+    }
+
 #ifdef USB_SUSPEND_CHECK_ENABLE
     static uint32_t usb_suspend_timer = 0;
     static uint32_t usb_suspend       = false;
 
     if (dev_info.devs == DEVS_USB) {
-        if (USB_DRIVER.state != USB_ACTIVE || USB_DRIVER.state == USB_SUSPENDED) {
+        if (USB_DRIVER.state != USB_ACTIVE || USB_DRIVER.state == USB_SUSPENDED || USB_DRIVER.state == USB_UNINIT) {
             // if (readPin(MM_CABLE_PIN)) {
             if (!usb_suspend_timer) {
                 usb_suspend_timer = timer_read32();
             } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
                 if (!usb_suspend) {
                     usb_suspend = true;
-                    led_deconfig_all();
-                    wwdg_pause();
+#    ifdef RGB_MATRIX_SHUTDOWN_PIN
+                    // setPinOutputOpenDrain(RGB_MATRIX_SHUTDOWN_PIN);
+                    writePinLow(RGB_MATRIX_SHUTDOWN_PIN);
+#    endif
+                    // setPinOutputOpenDrain(LED_CAPS_LOCK_PIN);
+                    writePinLow(LED_CAPS_LOCK_PIN);
+                    // wwdg_pause();
+
+                    // rgb_status_save = rgb_matrix_is_enabled();
                 }
                 usb_suspend_timer = 0;
             }
@@ -560,8 +571,15 @@ void housekeeping_task_user(void) {
                 usb_suspend_timer = 0;
                 if (usb_suspend) {
                     usb_suspend = false;
-                    led_config_all();
-                    wwdg_resume();
+#    ifdef RGB_MATRIX_SHUTDOWN_PIN
+                    // setPinOutputPushPull(RGB_MATRIX_SHUTDOWN_PIN);
+                    writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
+#    endif
+                    // setPinOutputOpenDrain(LED_CAPS_LOCK_PIN);
+                    // if (host_keyboard_led_state().caps_lock) {
+                    //     writePinHigh(LED_CAPS_LOCK_PIN);
+                    // }
+                    // wwdg_resume();
                 }
             }
         }
@@ -574,33 +592,112 @@ void housekeeping_task_user(void) {
     //         wwdg_resume();
     //     }
     // }
+
 #endif
+
+    if (enable_dog) {
+        enable_dog = false;
+        feed_dog   = true;
+        Init_WWDG();
+        WWDG_Enable(127);
+        wwdg_time = timer_read();
+    }
+    if (timer_elapsed(wwdg_time) > 1) {
+        wwdg_time = timer_read();
+        if (feed_dog) {
+            WWDG_SetCounter(127);
+        }
+    }
+}
+
+extern bool led_inited;
+
+void set_led_state(void) {
+    if (led_inited) {
+        writePin(LED_CAPS_LOCK_PIN, (host_keyboard_led_state().caps_lock));
+    }
 }
 
 void matrix_scan_user(void) {
 #ifdef MULTIMODE_ENABLE
     bt_task();
+    set_led_state();
 #endif
 }
 
 void matrix_init_user(void) {
-    extern bool enable_dog;
-    enable_dog = true;
-
-    // if (enable_dog) {
-    //     enable_dog = false;
-    //     wwdg_init();
-    // }
-
-#ifdef RGB_MATRIX_SHUTDOWN_PIN
-    setPinOutputPushPull(RGB_MATRIX_SHUTDOWN_PIN);
-    writePinLow(RGB_MATRIX_SHUTDOWN_PIN);
-    wait_ms(10);
-    writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
-#endif
-
 #ifdef MULTIMODE_ENABLE
     bt_init();
     led_config_all();
 #endif
+}
+
+static uint8_t  rChr_ChkBuf  = 0;
+static uint8_t  rChr_OldBuf  = 0;
+static uint16_t rChr_Cnt     = 0;
+static uint8_t  f_ChargeOn   = 0;
+static uint8_t  f_ChargeFull = 0;
+
+#define CHR_DEBOUNCE 100
+
+void Charge_Chat(void) {
+#if defined(MM_CABLE_PIN) && defined(MM_CHARGE_PIN)
+    uint8_t i = 0;
+
+    if (USBLINK_Status == 0) i |= 0x01;
+    if ((CHARGE_Status == 0) || ((dev_info.devs != DEVS_USB) && (bts_info.bt_info.pvol >= 100))) i |= 0x02;
+
+    if (rChr_ChkBuf != i) {
+        rChr_Cnt    = CHR_DEBOUNCE;
+        rChr_ChkBuf = i;
+    } else {
+        if (rChr_Cnt != 0) {
+            rChr_Cnt--;
+            if (rChr_Cnt == 0) {
+                i = rChr_ChkBuf ^ rChr_OldBuf;
+
+                if (i != 0) {
+                    rChr_OldBuf = rChr_ChkBuf;
+
+                    if (i & 0x3) {
+                        f_ChargeOn = (rChr_ChkBuf & 0x01) ? 1 : 0;
+
+                        f_ChargeFull = (rChr_ChkBuf & 0x02) ? 1 : 0;
+                    }
+                }
+            }
+        }
+    }
+#endif
+}
+
+bool is_charging(void) {
+    return f_ChargeOn;
+}
+
+bool is_fully_charged(void) {
+    return f_ChargeFull;
+}
+
+void snled27351_reset(void) {
+    setPinOutputOpenDrain(C11);
+    writePinLow(C11);
+    wait_ms(1);
+    writePinHigh(C11);
+    // wait_ms(20);
+
+    WWDG_SetCounter(127);
+    wwdg_time = timer_read();
+
+    rgb_matrix_init();
+}
+
+void wwdg_pause(void) {
+    Disable_WWDG();
+    feed_dog = false;
+}
+
+void wwdg_resume(void) {
+    // wwdg_init();
+    enable_dog = true;
 }

@@ -29,8 +29,9 @@ enum multimode_keycodes {
     BLED_VAI,
     BLED_SPI,
     WORK_MOD,
-    KC_FLXP,
-    MAC_TSK,
+    // KC_FLXP,
+    AN_TASK,
+    KC_SPOTLIGHT,
 
     // RGB_TOG,
     // RGB_MOD,
@@ -43,7 +44,11 @@ enum multimode_keycodes {
     // RGB_SPD,
     // RGB_SPI,
 
-    RGB_TEST,
+    // RGB_TEST,
+};
+
+enum my_keycodes {
+    RGB_TEST = SAFE_RANGE,
 };
 
 typedef enum {
