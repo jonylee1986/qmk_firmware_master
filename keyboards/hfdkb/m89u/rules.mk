@@ -1,7 +1,21 @@
 # Extra module configuration - must be defined first before use
-# /home/lalalademaxiya/Documents/qmk_firmware_master/keyboards/hfdkb/m89u/
-MODULE_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))/async/common
-# MODULE_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))/sync/common
+# Select module variant: async, sync, sync_a1, or sync_a2
+# Can be overridden: make MULTIMODE_VARIANT=async
+MULTIMODE_VARIANT ?= async
+
+KEYBOARD_BASE_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+
+ifeq ($(strip $(MULTIMODE_VARIANT)), async)
+    MODULE_DIR := $(KEYBOARD_BASE_DIR)/async/common
+# else ifeq ($(strip $(MULTIMODE_VARIANT)), sync)
+#     MODULE_DIR := $(KEYBOARD_BASE_DIR)/sync/common
+else ifeq ($(strip $(MULTIMODE_VARIANT)), sync_a1)
+    MODULE_DIR := $(KEYBOARD_BASE_DIR)/sync_a1/common
+else ifeq ($(strip $(MULTIMODE_VARIANT)), sync_a2)
+    MODULE_DIR := $(KEYBOARD_BASE_DIR)/sync_a2/common
+else
+    $(error Invalid MULTIMODE_VARIANT: $(MULTIMODE_VARIANT). Valid options: async, sync_a1, sync_a2)
+endif
 
 ifeq ($(strip $(CONSOLE_ENABLE)), yes)
     KEYBOARD_SHARED_EP = no

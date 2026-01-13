@@ -37,6 +37,8 @@ enum __layers {
 #define KEY_RES KEYBOARD_RESET
 #define BLE_RES BLE_RESET
 
+#define KEY_EQL S(KC_MINS)
+
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
@@ -112,9 +114,9 @@ RGB             single_blink_color = {0};
 
 bool key_eql_pressed = false;
 
-static uint32_t key_eql_numlock_timer = 0;
+// static uint32_t key_eql_numlock_timer = 0;
 
-static uint8_t host_numlock_state = 0;
+// static uint8_t host_numlock_state = 0;
 
 extern uint8_t numpad_keys_pressed_count;
 
@@ -246,29 +248,29 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         }
 
-        case KEY_EQL: {
-            if (get_highest_layer(default_layer_state) == 0) {
-                if (record->event.pressed) {
-                    if (numpad_keys_pressed_count == 0) {
-                        key_eql_pressed = true;
+            // case KEY_EQL: {
+            //     if (get_highest_layer(default_layer_state) == 0) {
+            //         if (record->event.pressed) {
+            //             if (numpad_keys_pressed_count == 0) {
+            //                 key_eql_pressed = true;
 
-                        host_numlock_state = host_keyboard_led_state().num_lock;
+            //                 host_numlock_state = host_keyboard_led_state().num_lock;
 
-                        if (!host_numlock_state) {
-                            register_code(KC_NUM_LOCK);
-                            wait_ms(10);
-                        }
+            //                 if (!host_numlock_state) {
+            //                     register_code(KC_NUM_LOCK);
+            //                     wait_ms(10);
+            //                 }
 
-                        register_code(KC_LALT);
-                        register_code(KC_P6);
-                        register_code(KC_P1);
+            //                 register_code(KC_LALT);
+            //                 register_code(KC_P6);
+            //                 register_code(KC_P1);
 
-                        key_eql_numlock_timer = timer_read32();
-                    }
-                }
-            }
-            return false;
-        }
+            //                 key_eql_numlock_timer = timer_read32();
+            //             }
+            //         }
+            //     }
+            //     return false;
+            // }
 
         case KC_NUM: {
             if (dev_info.devs == DEVS_USB) {
@@ -314,9 +316,19 @@ static void num_lock_indicator(void) {
 
     if (!dev_info.eco_tog_flag && !charge_full) {
         if (dev_info.unsync) {
-            should_show_numlock = (dev_info.num_unsync && (bts_info.bt_info.paired || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE))));
+            // should_show_numlock = (dev_info.num_unsync && (bts_info.bt_info.paired || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE))));
+            // clang-format off
+            should_show_numlock = (dev_info.num_unsync && \
+                                    ((bts_info.bt_info.paired && (dev_info.devs != DEVS_USB)) || \
+                                    ((dev_info.devs == DEVS_USB) && \
+                                    (USB_DRIVER.state != USB_SUSPENDED))));
+            // clang-format on
         } else {
-            should_show_numlock = (host_keyboard_led_state().num_lock && (bts_info.bt_info.paired || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE))));
+            // clang-format off
+            should_show_numlock = (host_keyboard_led_state().num_lock && \
+                                    ((bts_info.bt_info.paired && (dev_info.devs != DEVS_USB)) || \
+                                    ((dev_info.devs == DEVS_USB) && ((USB_DRIVER.state == USB_ACTIVE) || (USB_DRIVER.state != USB_SUSPENDED)))));
+            // clang-format on
         }
     }
 
@@ -331,12 +343,6 @@ bool rgb_matrix_indicators_user(void) {
     if (!rgb_matrix_get_flags() || (dev_info.devs != DEVS_USB && get_low_vol_status() && readPin(MM_CABLE_PIN))) {
         rgb_matrix_set_color_all(RGB_OFF);
     }
-
-    // if (host_keyboard_led_state().num_lock) {
-    //     rgb_matrix_set_color(10, 200, 200, 200);
-    // } else {
-    //     rgb_matrix_set_color(10, 0, 0, 0);
-    // }
 
     num_lock_indicator();
 
@@ -388,26 +394,6 @@ void housekeeping_task_user(void) {
         if (IS_LAYER_ON(WIN_B1)) {
             layer_off(WIN_B1);
         }
-    }
-
-    if (key_eql_numlock_timer && (timer_elapsed32(key_eql_numlock_timer) >= 100)) {
-        unregister_code(KC_LALT);
-        unregister_code(KC_P6);
-        unregister_code(KC_P1);
-
-        if (dev_info.devs) {
-            unregister_code(KC_NUM_LOCK);
-        }
-        if (key_eql_pressed && !host_numlock_state) {
-            register_code(KC_NUM_LOCK);
-            wait_ms(10);
-            unregister_code(KC_NUM_LOCK);
-            wait_ms(10);
-        }
-
-        key_eql_numlock_timer = 0; // Reset timer
-        key_eql_pressed       = false;
-        // numpad_keys_pressed_count = 0;
     }
 }
 

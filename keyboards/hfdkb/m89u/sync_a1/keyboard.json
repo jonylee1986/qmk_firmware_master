@@ -1,7 +1,7 @@
 {
     "usb": {
         "pid": "0x00A0",
-        "device_version": "1.6.5"
+        "device_version": "1.0.0"
     },
     "dynamic_keymap": {
         "layer_count": 5
