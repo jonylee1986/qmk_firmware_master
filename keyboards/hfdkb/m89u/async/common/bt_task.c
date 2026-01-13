@@ -1393,6 +1393,8 @@ static void charging_indicate(void) {
         show_chrg_full        = false;
         show_chrg_full_wakeup = false; // Clear wakeup flag when cable unplugged
 
+        charge_full = false;
+
         is_in_full_power_state = false;
         memset(&charge_complete_warning, 0, sizeof(charge_complete_warning_t));
     }
@@ -1447,19 +1449,20 @@ static bool low_vol_shut_down = false;
 
 bool get_low_vol_status(void) {
     return low_vol_shut_down;
+    // return bts_info.bt_info.low_vol;
 }
 
 static void bt_bat_low_level_warning(void) {
-    if (bts_info.bt_info.pvol < 20) {
+    // if (bts_info.bt_info.pvol < 20) {
+    if (bts_info.bt_info.low_vol) {
         if (!low_vol_shut_down) {
             low_vol_shut_down = true;
         }
     }
-    // else if (bts_info.bt_info.pvol >= 30) {
+    // } else if (bts_info.bt_info.pvol >= 40) {
     //     if (low_vol_shut_down) {
     //         low_vol_shut_down = false;
     //     }
-    // }
 
     // if (bts_info.bt_info.low_vol) {
     if (low_vol_shut_down) {
@@ -1497,12 +1500,13 @@ static void bt_bat_low_level_warning(void) {
                 rgb_matrix_set_color(22, 0, 0, 0);
             }
         }
-    } else {
-        if (is_in_low_power_state) {
-            is_in_low_power_state = false;
-            memset(&low_battery_warning, 0, sizeof(low_battery_warning_t));
-        }
     }
+    // else {
+    //     if (is_in_low_power_state) {
+    //         is_in_low_power_state = false;
+    //         memset(&low_battery_warning, 0, sizeof(low_battery_warning_t));
+    //     }
+    // }
 }
 
 static void bt_bat_low_level_shutdown(void) {
@@ -1606,7 +1610,14 @@ bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
     }
 
     if (!readPin(MM_CABLE_PIN)) {
-        low_vol_shut_down = false;
+        if (low_vol_shut_down) {
+            low_vol_shut_down = false;
+
+            if (is_in_low_power_state) {
+                is_in_low_power_state = false;
+                memset(&low_battery_warning, 0, sizeof(low_battery_warning_t));
+            }
+        }
     }
 
     // 充电状态指示: only call when pvol first reaches 100 in each cycle
