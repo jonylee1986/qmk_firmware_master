@@ -390,7 +390,7 @@ static bool LCD_Sleep_Flag = false;
 
 void suspend_power_down_kb(void) {
 #ifdef RGB_DRIVER_SDB_PIN
-    writePinLow(RGB_DRIVER_SDB_PIN);
+    // writePinLow(RGB_DRIVER_SDB_PIN);
 #endif
     if (!LCD_Sleep_Flag) {
         LCD_Sleep_Flag = true;
@@ -401,7 +401,7 @@ void suspend_power_down_kb(void) {
 void suspend_wakeup_init_kb(void) {
     if (LCD_Sleep_Flag) {
         LCD_Sleep_Flag = false;
-        // LCD_command_update(LCD_BACKLIGHT_WAKE);
+        LCD_command_update(LCD_BACKLIGHT_WAKE);
     }
 }
 
@@ -414,8 +414,8 @@ void housekeeping_task_kb(void) {
 #endif
 
 #ifdef USB_SUSPEND_CHECK_ENABLE
-    // static uint32_t usb_suspend_timer = 0;
-    static uint32_t usb_suspend = false;
+    static uint32_t usb_suspend_timer = 0;
+    static uint32_t usb_suspend       = false;
 
     if (dev_info.devs == DEVS_USB) {
         // if (usb_suspend) {
@@ -449,52 +449,52 @@ void housekeeping_task_kb(void) {
 
         if ((USB_DRIVER.state != USB_ACTIVE) || (USB_DRIVER.state == USB_SUSPENDED)) {
             // if (readPin(BT_CABLE_PIN)) {
-            // if (!usb_suspend_timer) {
-            // usb_suspend_timer = timer_read32();
-            // } else if (timer_elapsed32(usb_suspend_timer) > 5000) {
-            if (!usb_suspend) {
-                usb_suspend = true;
+            if (!usb_suspend_timer) {
+                usb_suspend_timer = timer_read32();
+            } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
+                if (!usb_suspend) {
+                    usb_suspend = true;
 #    ifdef RGB_DRIVER_SDB_PIN
-                writePinLow(RGB_DRIVER_SDB_PIN);
+                    writePinLow(RGB_DRIVER_SDB_PIN);
 #    endif
-                LCD_command_update(LCD_BACKLIGHT_SLEP);
-                // led_deconfig_all();
-                if (!LCD_Sleep_Flag) {
-                    LCD_Sleep_Flag = true;
-                    // uart_sleep_resend_count = 3;
-                    // uart_resend_interval    = timer_read32();
+                    LCD_command_update(LCD_BACKLIGHT_SLEP);
+                    // led_deconfig_all();
+                    if (!LCD_Sleep_Flag) {
+                        LCD_Sleep_Flag = true;
+                        // uart_sleep_resend_count = 3;
+                        // uart_resend_interval    = timer_read32();
+                    }
+
+                    // set_led_state();
                 }
-
-                // set_led_state();
+                usb_suspend_timer = 0;
             }
-            // usb_suspend_timer = 0;
-            // }
         } else {
-            // if (usb_suspend_timer) {
-            // usb_suspend_timer = 0;
-            // if (usb_suspend || !LCD_Sleep_Flag) {
-            if (usb_suspend) {
-                usb_suspend = false;
+            if (usb_suspend_timer) {
+                usb_suspend_timer = 0;
+                // if (usb_suspend || !LCD_Sleep_Flag) {
+                if (usb_suspend) {
+                    usb_suspend = false;
 
 #    ifdef RGB_DRIVER_SDB_PIN
-                writePinHigh(RGB_DRIVER_SDB_PIN);
+                    writePinHigh(RGB_DRIVER_SDB_PIN);
 #    endif
-                LCD_command_update(LCD_BACKLIGHT_WAKE);
+                    LCD_command_update(LCD_BACKLIGHT_WAKE);
 
-                // led_config_all();
-                // if (LCD_Sleep_Flag) {
-                //     LCD_Sleep_Flag = false;
-                // uart_wake_resend_count = 3;
-                // uart_resend_interval   = timer_read32();
-                // }
-                // set_led_state();
+                    // led_config_all();
+                    // if (LCD_Sleep_Flag) {
+                    //     LCD_Sleep_Flag = false;
+                    // uart_wake_resend_count = 3;
+                    // uart_resend_interval   = timer_read32();
+                    // }
+                    // set_led_state();
+                }
             }
         }
-        // }
     } else {
         if (usb_suspend) {
-            // usb_suspend_timer = 0;
-            usb_suspend = false;
+            usb_suspend_timer = 0;
+            usb_suspend       = false;
 #    ifdef RGB_DRIVER_SDB_PIN
             writePinHigh(RGB_DRIVER_SDB_PIN);
 #    endif
