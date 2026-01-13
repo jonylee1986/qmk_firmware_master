@@ -601,6 +601,13 @@ bool bt_process_record(uint16_t keycode, keyrecord_t *record) {
                         bts_process_keys(KC_LGUI, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                 }
                 retval = bts_process_keys(QK_MODS_GET_BASIC_KEYCODE(keycode), record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            } else if (IS_BASIC_KEYCODE(keycode) && (keycode != KC_NUM_LOCK)) {
+                if (record->event.pressed) {
+                    register_code(keycode);
+                } else {
+                    unregister_code(keycode);
+                }
+                retval = false;
             } else {
                 if ((keycode == KC_NUM_LOCK) && dev_info.unsync) {
                     if (record->event.pressed) {
@@ -1547,7 +1554,7 @@ static void bt_bat_query_period(void) {
     static uint32_t query_vol_time = 0;
 
     // Check if we should query battery (avoid querying too frequently)
-    if (!bt_init_time && bts_info.bt_info.paired && !kb_sleep_flag && timer_elapsed32(query_vol_time) > 4000) {
+    if (!kb_sleep_flag && timer_elapsed32(query_vol_time) > 4000) {
         query_vol_time = timer_read32();
 
         // Send appropriate query command based on charge state
