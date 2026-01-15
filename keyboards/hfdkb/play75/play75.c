@@ -419,7 +419,14 @@ void housekeeping_task_kb(void) {
 
     if (dev_info.devs == DEVS_USB) {
         if (usb_suspend) {
-            if (suspend_wakeup_condition()) {
+            bool wakeup = false;
+            for (uint8_t r = 0; r < MATRIX_ROWS; r++) {
+                if (matrix_get_row(r)) {
+                    wakeup = true;
+                    break;
+                }
+            }
+            if (wakeup) {
                 // usbWakeupHost(&USB_DRIVER);
                 // restart_usb_driver(&USB_DRIVER);
                 usb_suspend       = false;
