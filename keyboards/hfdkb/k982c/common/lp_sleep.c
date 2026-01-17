@@ -127,7 +127,7 @@ void _pal_lld_enablepadevent(ioportid_t port, iopadid_t pad, ioeventmode_t mode)
     EXTI->EMR &= ~padmask;
 }
 
-static void pad_enbale_interrupt(ioline_t pin) {
+static void pad_enable_interrupt(ioline_t pin) {
     switch (pin) {
         case 0:
             nvicEnableVector(EXTI0_IRQn, WB32_IRQ_EXTI0_PRIORITY);
@@ -175,14 +175,24 @@ static void exti_init(void) {
             setPinInputHigh(row_pins[row]);
             waitInputPinDelay();
             _pal_lld_enablepadevent(PAL_PORT(row_pins[row]), PAL_PAD(row_pins[row]), PAL_EVENT_MODE_BOTH_EDGES);
-            pad_enbale_interrupt(PAL_PAD(row_pins[row]));
+            pad_enable_interrupt(PAL_PAD(row_pins[row]));
         }
+
+#    if defined(MM_2G4_MODE_PIN) && defined(MM_BT_MODE_PIN)
+        setPinInputHigh(MM_2G4_MODE_PIN);
+        _pal_lld_enablepadevent(PAL_PORT(MM_2G4_MODE_PIN), PAL_PAD(MM_2G4_MODE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
+        pad_enable_interrupt(PAL_PAD(MM_2G4_MODE_PIN));
+
+        setPinInputHigh(MM_BT_MODE_PIN);
+        _pal_lld_enablepadevent(PAL_PORT(MM_BT_MODE_PIN), PAL_PAD(MM_BT_MODE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
+        pad_enable_interrupt(PAL_PAD(MM_BT_MODE_PIN));
+#    endif
 
     } else {
 #    ifdef MM_CABLE_PIN
         setPinInputHigh(MM_CABLE_PIN);
         _pal_lld_enablepadevent(PAL_PORT(MM_CABLE_PIN), PAL_PAD(MM_CABLE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
-        pad_enbale_interrupt(PAL_PAD(MM_CABLE_PIN));
+        pad_enable_interrupt(PAL_PAD(MM_CABLE_PIN));
 #    endif
     }
 }

@@ -5,8 +5,9 @@
 void LCD_IND_update(void) {
     uint8_t IND_data[5] = {0};
 
-    IND_data[1] = 0xAA;
-    IND_data[0] = 0x02;
+    IND_data[0] = 0xAA;
+    IND_data[1] = 0x02;
+
     if (host_keyboard_led_state().num_lock)
         IND_data[2] |= 0x01;
     else
@@ -23,7 +24,8 @@ void LCD_IND_update(void) {
         IND_data[2] |= 0x08;
     else
         IND_data[2] &= ~0x08;
-    if ((get_highest_layer(default_layer_state) == 3))
+
+    if ((get_highest_layer(default_layer_state) == 2))
         IND_data[2] |= 0x10;
     else
         IND_data[2] &= ~0x10;
@@ -92,7 +94,7 @@ void LCD_charge_update(void) {
     uint8_t charge_data[5] = {0};
 
     charge_data[0] = 0xAA;
-    charge_data[0] = 0x04;
+    charge_data[1] = 0x04;
 
     if (!readPin(MM_CABLE_PIN))
         charge_data[2] |= 0x80;

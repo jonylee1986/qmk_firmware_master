@@ -29,10 +29,10 @@ enum mm_keycodes {
 enum custom_keycodes {
     KC_SIRI = QK_KB_5,
     KC_SPOTLIGHT,
-    EN_MODE,
-    LED_TOG,
-    LCD_HOME,
+    ENC_MODE,
+    IND_TOGG,
+    RGB_TEST,
+    LCD_HOME = SAFE_RANGE,
     LCD_PAGE,
-    RGB_TEST = SAFE_RANGE,
     LCD_SW,
 };

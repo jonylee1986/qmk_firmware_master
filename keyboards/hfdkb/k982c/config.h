@@ -49,6 +49,9 @@
 
 /* Others */
 #    define RGB_MATRIX_DRIVER_SDB_PIN A15
+#    define LED_CHRG_LOW_PWR_PIN C15
+#    define KEY_NUM 8
+#    define CAPS_LOCK_LED_PIN D2
 #endif
 
 /* RGB Matrix Driver Configuration */
@@ -76,9 +79,9 @@
 /* Encoder Configuration */
 #define ENCODER_DEFAULT_POS 0x0
 
-#define CHRG_LOW_LED_INDEX 84
+// #define CHRG_LOW_LED_INDEX 84
 /* Enable caps-lock LED */
-#define CAPS_LOCK_LED_INDEX 85
-#define OS_LED_INDEX 86
-#define NUM_LOCK_LED_INDEX 87
-#define GUI_LOCK_LED_INDEX 88
+// #define CAPS_LOCK_LED_INDEX 85
+#define OS_LED_INDEX 84
+// #define NUM_LOCK_LED_INDEX 87
+// #define GUI_LOCK_LED_INDEX 88

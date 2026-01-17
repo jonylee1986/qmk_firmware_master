@@ -21,15 +21,19 @@ typedef union {
         uint8_t devs;
         uint8_t last_devs;
         uint8_t LCD_Page;
-        bool    encoder_mode;
-        bool    ind_toggle;
+        uint8_t color_index : 3;
+        uint8_t encoder_mode : 1;
+        uint8_t ind_toggle : 1;
+        uint8_t rgb_test_en : 1;
     };
 } dev_info_t;
 
 extern dev_info_t dev_info;
 extern bts_info_t bts_info;
 
-bool get_kb_sleep_flag(void);
+bool     get_kb_sleep_flag(void);
+void     set_kb_sleep_flag(bool flag);
+uint32_t get_key_press_time(void);
 
 /**
  * @brief bluetooth 初始化函数

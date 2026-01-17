@@ -20,7 +20,21 @@
 #    include "lcd.h"
 #    include "uart3.h"
 #    include "usb_main.h"
+#    include "uart.h"
 #endif
+
+static void    low_power_indicator(void);
+static uint8_t get_pvol_from_uart(void);
+
+extern void led_config_all(void);
+extern void led_deconfig_all(void);
+
+static bool low_bat_vol     = false;
+static bool low_bat_vol_off = false;
+
+uint8_t pvol = 100;
+
+extern bool low_vol_offed_sleep;
 
 #ifdef DIP_SWITCH_ENABLE
 bool dip_switch_update_kb(uint8_t index, bool active) {
@@ -28,7 +42,7 @@ bool dip_switch_update_kb(uint8_t index, bool active) {
         return false;
     }
     if (index == 0) {
-        default_layer_set(1UL << (active ? 0 : 2));
+        default_layer_set(1UL << (active ? 2 : 0));
         if (get_highest_layer(default_layer_state) == 2) {
             if (keymap_config.no_gui) {
                 keymap_config.no_gui = false;
@@ -40,9 +54,29 @@ bool dip_switch_update_kb(uint8_t index, bool active) {
 }
 #endif
 
-#if defined(RGB_MATRIX_ENABLE) && defined(CAPS_LOCK_LED_INDEX)
+#if defined(RGB_MATRIX_ENABLE)
+
+static uint8_t color_tab[][3] = {
+    {HSV_RED},    // RED
+    {HSV_ORANGE}, // ORANGE
+    {HSV_YELLOW}, // YELLOW
+    {HSV_GREEN},  // GREEN
+    {HSV_CYAN},   // CYAN
+    {HSV_BLUE},   // BLUE
+    {HSV_PURPLE}, // PURPLE
+};
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    if (low_bat_vol_off) {
+        // clear_keyboard();
+        bts_process_keys(keycode, 0, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        bts_task(dev_info.devs);
+        while (bts_is_busy()) {
+            wait_ms(1);
+        }
+        return false;
+    }
+
     switch (keycode) {
 #    ifdef RGB_MATRIX_ENABLE
         case QK_RGB_MATRIX_TOGGLE:
@@ -62,8 +96,31 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 rgb_matrix_enable();
             }
             return false;
-
 #    endif
+        case RM_HUEU:
+            if (record->event.pressed) {
+                dev_info.color_index++;
+                if (dev_info.color_index >= sizeof(color_tab) / sizeof(color_tab[0])) {
+                    dev_info.color_index = 0;
+                }
+                rgb_matrix_config.hsv.h = color_tab[dev_info.color_index][0];
+                eeconfig_update_user(dev_info.raw);
+            }
+            return false;
+        case RM_HUED:
+            if (record->event.pressed) {
+                if (dev_info.color_index == 0) {
+                    dev_info.color_index = sizeof(color_tab) / sizeof(color_tab[0]) - 1;
+                } else {
+                    dev_info.color_index--;
+                }
+                rgb_matrix_config.hsv.h = color_tab[dev_info.color_index][0];
+                eeconfig_update_user(dev_info.raw);
+            }
+            return false;
+
+        default:
+            break;
     }
 
     if (!process_record_user(keycode, record)) {
@@ -79,32 +136,50 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
+// void eeconfig_init_kb(void) {
+//     dev_info.color_index  = 0;
+//     dev_info.encoder_mode = false;
+//     dev_info.ind_toggle   = false;
+//     dev_info.rgb_test_en  = false;
+//     eeconfig_update_user(dev_info.raw);
+
+//     eeconfig_init_user();
+// }
+
+void keyboard_post_init_kb(void) {
+    // Apply the saved color
+#    ifdef RGB_MATRIX_ENABLE
+    rgb_matrix_config.hsv.h = color_tab[dev_info.color_index][0];
+#    endif
+
+    // Call existing initialization
+    LCD_init();
+
+    if (keymap_config.no_gui) {
+        keymap_config.no_gui = false;
+        eeconfig_update_keymap(&keymap_config);
+    }
+}
+
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
-    if (rgb_matrix_get_flags() == LED_FLAG_NONE) {
+    if ((rgb_matrix_get_flags() == LED_FLAG_NONE) || low_bat_vol) {
         rgb_matrix_set_color_all(0, 0, 0);
     }
-    // clang-format off
-    for (uint8_t i = 0; i < 5; i++) {
-        RGB_MATRIX_INDICATOR_SET_COLOR(
-            ((uint8_t[]){CHRG_LOW_LED_INDEX, CAPS_LOCK_LED_INDEX, OS_LED_INDEX, NUM_LOCK_LED_INDEX, GUI_LOCK_LED_INDEX})[i],
-            0, 0, 0);
-    }
-    // clang-format on
 
-    if (host_keyboard_led_state().caps_lock) {
-        RGB_MATRIX_INDICATOR_SET_COLOR(CAPS_LOCK_LED_INDEX, 100, 100, 100);
+    if (dev_info.rgb_test_en) {
+        for (uint8_t i = 0; i <= 83; i++) {
+            rgb_matrix_set_color(i, 100, 100, 100);
+        }
     }
-    // if (host_keyboard_led_state().num_lock) {
-    //     RGB_MATRIX_INDICATOR_SET_COLOR(NUM_LOCK_LED_INDEX, 100, 100, 100);
-    // }
-    // if (keymap_config.no_gui) {
-    //     RGB_MATRIX_INDICATOR_SET_COLOR(GUI_LOCK_LED_INDEX, 100, 100, 100);
-    // }
-    if (get_highest_layer(default_layer_state) == 2) {
-        RGB_MATRIX_INDICATOR_SET_COLOR(OS_LED_INDEX, 100, 100, 100);
+
+    if ((get_highest_layer(default_layer_state) == 2) && (!dev_info.ind_toggle)) {
+        rgb_matrix_set_color(OS_LED_INDEX, 100, 100, 100);
+    } else {
+        rgb_matrix_set_color(OS_LED_INDEX, 0, 0, 0);
     }
+
     if (keymap_config.no_gui) {
-        RGB_MATRIX_INDICATOR_SET_COLOR(73, 100, 100, 100);
+        rgb_matrix_set_color(73, 100, 100, 100);
     }
 
     if (!rgb_matrix_indicators_advanced_user(led_min, led_max)) {
@@ -120,8 +195,6 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
 
 #endif
 
-#ifdef MM_MODE_ENABLE
-
 void set_led_state(void) {
     static uint8_t now_led_stuts = 0;
     static uint8_t old_led_stuts = 0;
@@ -130,6 +203,7 @@ void set_led_state(void) {
 
     IND_data[0] = 0xAA;
     IND_data[1] = 0x02;
+
     if (((dev_info.devs != DEVS_USB) && bts_info.bt_info.paired) || (dev_info.devs == DEVS_USB)) {
         if (host_keyboard_led_state().num_lock) {
             now_led_stuts |= 0x01;
@@ -200,32 +274,107 @@ void set_led_state(void) {
     static uint16_t power_update_time = 0;
     if (timer_elapsed(power_update_time) >= 4000) {
         power_update_time = timer_read();
+
+        pvol = get_pvol_from_uart();
+
         LCD_IND_update();
         LCD_charge_update();
     } else {
-#    if defined(MM_CABLE_PIN)
-        static bool charging_old_satus = 0;
-        static bool charging_now_satus = 0;
+#if defined(MM_CABLE_PIN)
+        static bool     charging_old_satus = 0;
+        static bool     charging_now_satus = 0;
+        static uint32_t chrg_full_time     = 0;
 
-        if (!readPin(MM_CABLE_PIN)) {
-            charging_now_satus = 1;
+        if (!dev_info.ind_toggle) {
+            if (!readPin(MM_CABLE_PIN)) {
+                charging_now_satus = 1;
+
+                low_bat_vol     = false;
+                low_bat_vol_off = false;
+                if (!readPin(MM_CHARGE_PIN)) {
+                    chrg_full_time = timer_read32();
+                    writePinHigh(LED_CHRG_LOW_PWR_PIN);
+                } else {
+                    if (timer_elapsed32(chrg_full_time) >= 2000) {
+                        writePinLow(LED_CHRG_LOW_PWR_PIN);
+                    }
+                }
+            } else {
+                charging_now_satus = 0;
+
+                if (pvol <= 10) {
+                    low_bat_vol = true;
+                }
+                if (pvol < 1) {
+                    low_bat_vol_off = true;
+                }
+
+                low_power_indicator();
+
+                if (charging_old_satus != charging_now_satus) {
+                    charging_old_satus = charging_now_satus;
+                    LCD_charge_update();
+                }
+            }
         } else {
-            charging_now_satus = 0;
+            writePinLow(LED_CHRG_LOW_PWR_PIN);
         }
-        if (charging_old_satus != charging_now_satus) {
-            charging_old_satus = charging_now_satus;
-            LCD_charge_update();
-        }
-#    endif
+#endif
+    }
+
+    if (dev_info.ind_toggle) {
+        writePinLow(CAPS_LOCK_LED_PIN);
+    } else {
+        writePin(CAPS_LOCK_LED_PIN, host_keyboard_led_state().caps_lock);
     }
 }
 
-void keyboard_post_init_kb(void) {
-    LCD_init();
+static uint8_t get_pvol_from_uart(void) {
+    uint8_t uart_data_read[3] = {0};
+    uint8_t uart_data_send[3] = {0};
 
-    if (keymap_config.no_gui) {
-        keymap_config.no_gui = false;
-        eeconfig_update_keymap(&keymap_config);
+    if (uart3_available()) {
+        uart3_receive(uart_data_read, 3);
+    }
+    if ((uart_data_read[0] == 0xA7) && (uart_data_read[2] == ((uart_data_read[0] + uart_data_read[1]) & 0xFF))) {
+        uart_data_send[0] = uart_data_read[0];
+        uart_data_send[1] = uart_data_read[1];
+        uart_data_send[2] = (uart_data_send[0] + uart_data_send[1]) & 0xFF;
+
+        uart_transmit(uart_data_send, 3);
+
+        return uart_data_read[1];
+    }
+
+    return 0;
+}
+
+static void low_power_indicator(void) {
+    static bool     Low_power_bink = false;
+    static uint32_t Low_power_time = 0;
+
+    if (low_bat_vol) {
+        if (timer_elapsed32(Low_power_time) >= 1000) {
+            Low_power_bink = !Low_power_bink;
+            Low_power_time = timer_read32();
+        }
+        if (Low_power_bink) {
+            writePinHigh(LED_CHRG_LOW_PWR_PIN);
+        } else {
+            writePinLow(LED_CHRG_LOW_PWR_PIN);
+        }
+    } else {
+        Low_power_bink = 0;
+        writePinLow(LED_CHRG_LOW_PWR_PIN);
+    }
+
+    if (low_bat_vol_off) {
+        // clear_keyboard();
+        low_vol_offed_sleep = true;
+        if (timer_elapsed32(get_key_press_time()) > 2000) {
+            // kb_sleep_flag = true;
+            set_kb_sleep_flag(true);
+        }
     }
 }
 
@@ -238,8 +387,20 @@ void matrix_init_kb(void) {
 void matrix_scan_kb(void) {
     bt_task();
 
+    // if (low_bat_vol_off) {
+    //     bts_process_keys(KC_NO, 1, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+    //     bts_task(dev_info.devs);
+    //     while (bts_is_busy()) {
+    //         wait_ms(1);
+    //     }
+    // }
+
     matrix_scan_user();
 }
+
+static uint32_t usb_suspend_timer = 0;
+static uint32_t usb_suspend       = false;
+static bool     LCD_Sleep_Flag    = false;
 
 void housekeeping_task_kb(void) {
     extern void housekeeping_task_bt(void);
@@ -249,67 +410,96 @@ void housekeeping_task_kb(void) {
         set_led_state();
     }
 
-#    ifdef USB_SUSPEND_CHECK_ENABLE
-    static uint32_t usb_suspend_timer = 0;
-    static uint32_t usb_suspend       = false;
-
+#ifdef USB_SUSPEND_CHECK_ENABLE
     if (dev_info.devs == DEVS_USB) {
-        if ((USB_DRIVER.state != USB_ACTIVE) || (USB_DRIVER.state == USB_SUSPENDED) || (USB_DRIVER.state == USB_UNINIT)) {
-            // if (readPin(BT_CABLE_PIN)) {
+        if (usb_suspend) {
+            bool wakeup = false;
+            for (uint8_t r = 0; r < MATRIX_ROWS; r++) {
+                if (matrix_get_row(r)) {
+                    wakeup = true;
+                    break;
+                }
+            }
+            if (wakeup) {
+                // usbWakeupHost(&USB_DRIVER);
+                // restart_usb_driver(&USB_DRIVER);
+                usb_suspend       = false;
+                LCD_Sleep_Flag    = false;
+                usb_suspend_timer = 0;
+#    ifdef RGB_MATRIX_DRIVER_SDB_PIN
+                writePinHigh(RGB_MATRIX_DRIVER_SDB_PIN);
+#    endif
+                LCD_command_update(LCD_LIGHT_SLEEP);
+            }
+        }
+
+        if ((USB_DRIVER.state != USB_ACTIVE)) {
             if (!usb_suspend_timer) {
                 usb_suspend_timer = timer_read32();
             } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
                 if (!usb_suspend) {
                     usb_suspend = true;
-#        ifdef RGB_MATRIX_DRIVER_SDB_PIN
+#    ifdef RGB_MATRIX_DRIVER_SDB_PIN
                     writePinLow(RGB_MATRIX_DRIVER_SDB_PIN);
-#        endif
+#    endif
                     LCD_command_update(LCD_LIGHT_SLEEP);
+                    if (!LCD_Sleep_Flag) {
+                        LCD_Sleep_Flag = true;
+                    }
+
+                    // led_deconfig_all();
                 }
                 usb_suspend_timer = 0;
             }
         } else {
-            if (usb_suspend_timer) {
+            if (usb_suspend) {
                 usb_suspend_timer = 0;
-                if (usb_suspend) {
-                    usb_suspend = false;
+                usb_suspend       = false;
+                LCD_Sleep_Flag    = false;
 
-#        ifdef RGB_MATRIX_DRIVER_SDB_PIN
-                    writePinHigh(RGB_MATRIX_DRIVER_SDB_PIN);
-#        endif
-                    LCD_command_update(LCD_LIGHT_WAKEUP);
-                }
+#    ifdef RGB_MATRIX_DRIVER_SDB_PIN
+                writePinHigh(RGB_MATRIX_DRIVER_SDB_PIN);
+#    endif
+                LCD_command_update(LCD_LIGHT_WAKEUP);
+
+                // led_config_all();
             }
         }
     } else {
-        if (usb_suspend_timer) {
+        if (usb_suspend) {
             usb_suspend_timer = 0;
-            if (usb_suspend) {
-                usb_suspend = false;
-#        ifdef RGB_MATRIX_DRIVER_SDB_PIN
-                writePinHigh(RGB_MATRIX_DRIVER_SDB_PIN);
-#        endif
-                LCD_command_update(LCD_LIGHT_WAKEUP);
-            }
+            usb_suspend       = false;
+            LCD_Sleep_Flag    = false;
+#    ifdef RGB_MATRIX_DRIVER_SDB_PIN
+            writePinHigh(RGB_MATRIX_DRIVER_SDB_PIN);
+#    endif
+            LCD_command_update(LCD_LIGHT_WAKEUP);
+
+            // led_config_all();
         }
     }
-#    endif
-}
 #endif
+}
 
 void suspend_power_down_kb(void) {
 #ifdef RGB_MATRIX_DRIVER_SDB_PIN
-    writePinLow(RGB_MATRIX_DRIVER_SDB_PIN);
+    // writePinLow(RGB_MATRIX_DRIVER_SDB_PIN);
 #endif
-    LCD_command_update(LCD_LIGHT_SLEEP);
+    if (!LCD_Sleep_Flag) {
+        LCD_Sleep_Flag = true;
+        LCD_command_update(LCD_LIGHT_SLEEP);
+    }
+
+    // led_deconfig_all();
 }
 
 void suspend_wakeup_init_kb(void) {
 #ifdef RGB_MATRIX_DRIVER_SDB_PIN
-    writePinHigh(RGB_MATRIX_DRIVER_SDB_PIN);
+    // writePinHigh(RGB_MATRIX_DRIVER_SDB_PIN);
 #endif
-
-    LCD_command_update(LCD_LIGHT_WAKEUP);
-
+    if (LCD_Sleep_Flag) {
+        LCD_Sleep_Flag = false;
+        LCD_command_update(LCD_LIGHT_WAKEUP);
+    }
     // LCD_IND_update();
 }
