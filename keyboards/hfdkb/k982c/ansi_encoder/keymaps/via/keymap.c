@@ -100,6 +100,10 @@ static uint32_t enc_blink_time  = 0;
 static bool     is_siri_active = false;
 static uint32_t siri_timer     = 0;
 
+uint8_t get_enc_blink_cnt(void) {
+    return enc_blink_cnt;
+}
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case ENC_MODE:
@@ -122,9 +126,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case IND_TOGG:
             if (record->event.pressed) {
                 if (dev_info.ind_toggle) {
-                    dev_info.ind_toggle = false;
+                    dev_info.ind_toggle = 0;
                 } else {
-                    dev_info.ind_toggle = true;
+                    dev_info.ind_toggle = 1;
                 }
                 eeconfig_update_user(dev_info.raw);
             }
@@ -285,16 +289,14 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         }
         if (enc_blink_cnt % 2) {
             writePinHigh(LED_CHRG_LOW_PWR_PIN);
-            writePinHigh(CAPS_LOCK_LED_PIN);
+            writePinHigh(LED_CAPS_LOCK_IND_PIN);
             rgb_matrix_set_color(enc_blink_index, enc_blink_color.r, enc_blink_color.g, enc_blink_color.b);
 
         } else {
             writePinLow(LED_CHRG_LOW_PWR_PIN);
-            writePinLow(CAPS_LOCK_LED_PIN);
+            writePinLow(LED_CAPS_LOCK_IND_PIN);
             rgb_matrix_set_color(enc_blink_index, 0, 0, 0);
         }
-    } else {
-        writePin(CAPS_LOCK_LED_PIN, host_keyboard_led_state().caps_lock);
     }
 
     if (single_blink_cnt) {

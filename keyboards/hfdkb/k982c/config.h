@@ -50,8 +50,8 @@
 /* Others */
 #    define RGB_MATRIX_DRIVER_SDB_PIN A15
 #    define LED_CHRG_LOW_PWR_PIN C15
+#    define LED_CAPS_LOCK_IND_PIN D2
 #    define KEY_NUM 8
-#    define CAPS_LOCK_LED_PIN D2
 #endif
 
 /* RGB Matrix Driver Configuration */

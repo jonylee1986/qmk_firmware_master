@@ -34,6 +34,7 @@ extern bts_info_t bts_info;
 bool     get_kb_sleep_flag(void);
 void     set_kb_sleep_flag(bool flag);
 uint32_t get_key_press_time(void);
+bool     get_EE_CLR_flag(void);
 
 /**
  * @brief bluetooth 初始化函数

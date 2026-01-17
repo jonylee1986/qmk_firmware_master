@@ -63,7 +63,7 @@ static void close_rgb(void);
 static const uint8_t rgb_index_table[]          = {MM_USB_INDEX, MM_HOST1_INDEX, MM_HOST2_INDEX, MM_HOST3_INDEX, MM_2G4_INDEX, MM_HOST4_INDEX, MM_HOST5_INDEX};
 static const uint8_t rgb_index_color_table[][3] = {{MM_USB_COLOR}, {MM_HOST1_COLOR}, {MM_HOST2_COLOR}, {MM_HOST3_COLOR}, {MM_2G4_COLOR}, {MM_HOST4_COLOR}, {MM_HOST5_COLOR}};
 
-static bool fn_make;
+// static bool fn_make;
 
 // static bool     rgb_status_save;
 static uint32_t USB_switch_time;
@@ -110,13 +110,13 @@ long_pressed_keys_t long_pressed_keys[] = {
 
 void led_config_all(void) {
     if (!led_inited) {
-        writePin(CAPS_LOCK_LED_PIN, host_keyboard_led_state().caps_lock);
+        writePin(LED_CAPS_LOCK_IND_PIN, host_keyboard_led_state().caps_lock);
         led_inited = true;
     }
 }
 void led_deconfig_all(void) {
     if (led_inited) {
-        writePinLow(CAPS_LOCK_LED_PIN);
+        writePinLow(LED_CAPS_LOCK_IND_PIN);
         writePinLow(LED_CHRG_LOW_PWR_PIN);
         led_inited = false;
     }
@@ -132,6 +132,10 @@ void set_kb_sleep_flag(bool flag) {
 
 uint32_t get_key_press_time(void) {
     return key_press_time;
+}
+
+bool get_EE_CLR_flag(void) {
+    return EE_CLR_flag;
 }
 
 /* ========================================== */
@@ -615,8 +619,8 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
             if (reset != false) {
                 indicator_status          = 1;
                 indicator_reset_last_time = true;
-                bts_send_name(DEVS_HOST1);
-                bts_send_vendor(v_host1);
+                // bts_send_name(DEVS_HOST1);
+                // bts_send_vendor(v_host1);
                 bts_send_vendor(v_pair);
             } else {
                 indicator_status          = 2;
@@ -628,8 +632,8 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
             if (reset != false) {
                 indicator_status          = 1;
                 indicator_reset_last_time = 0;
-                bts_send_name(DEVS_HOST2);
-                bts_send_vendor(v_host2);
+                // bts_send_name(DEVS_HOST2);
+                // bts_send_vendor(v_host2);
                 bts_send_vendor(v_pair);
             } else {
                 indicator_status          = 2;
@@ -641,8 +645,8 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
             if (reset != false) {
                 indicator_status          = 1;
                 indicator_reset_last_time = true;
-                bts_send_name(DEVS_HOST3);
-                bts_send_vendor(v_host3);
+                // bts_send_name(DEVS_HOST3);
+                // bts_send_vendor(v_host3);
                 bts_send_vendor(v_pair);
             } else {
                 indicator_status          = 2;
@@ -684,14 +688,6 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
     }
 
     switch (keycode) {
-        case MO(1):
-        case MO(3):
-            if (record->event.pressed) {
-                fn_make = true;
-            } else {
-                fn_make = false;
-            }
-            return true;
         case BT_HOST1: {
             if (record->event.pressed) {
                 if ((dev_info.devs != DEVS_HOST1) && (!readPin(MM_BT_MODE_PIN))) {
@@ -734,9 +730,9 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
         case RGB_TEST: {
             if (record->event.pressed) {
                 if (dev_info.rgb_test_en) {
-                    dev_info.rgb_test_en = false;
+                    dev_info.rgb_test_en = 0;
                 } else {
-                    dev_info.rgb_test_en = true;
+                    dev_info.rgb_test_en = 1;
                 }
                 eeconfig_update_user(dev_info.raw);
             }
@@ -775,7 +771,7 @@ static void long_pressed_keys_cb(uint16_t keycode) {
             if (!EE_CLR_flag) {
                 EE_CLR_flag       = true;
                 EE_CLR_press_time = timer_read32();
-                EE_CLR_press_cnt  = 1;
+                EE_CLR_press_cnt  = 0;
             }
         } break;
         default:
@@ -813,9 +809,9 @@ static void bt_used_pin_init(void) {
     writePinLow(LED_CHRG_LOW_PWR_PIN);
 #    endif
 
-#    ifdef CAPS_LOCK_LED_PIN
-    setPinOutputPushPull(CAPS_LOCK_LED_PIN);
-    writePinLow(CAPS_LOCK_LED_PIN);
+#    ifdef LED_CAPS_LOCK_IND_PIN
+    setPinOutputPushPull(LED_CAPS_LOCK_IND_PIN);
+    writePinLow(LED_CAPS_LOCK_IND_PIN);
 #    endif
 }
 
@@ -888,9 +884,7 @@ static void close_rgb(void) {
 
             if (timer_elapsed32(close_rgb_time) >= ENTRY_STOP_TIMEOUT) {
                 /* Turn off all indicators led */
-                if (led_inited) {
-                    led_deconfig_all();
-                }
+                led_deconfig_all();
 
                 uart3_stop();
                 // setPinOutputPushPull(SD3_TX_PIN);
@@ -941,9 +935,10 @@ static void open_rgb(void) {
             rgb_matrix_enable_noeeprom();
         }
 
-        if (!led_inited) {
-            led_config_all();
-        }
+        LCD_IND_update();
+        LCD_charge_update();
+
+        led_config_all();
 
         sober = true;
     }
@@ -963,6 +958,12 @@ static void factory_reset_indicator(void) {
 
             keymap_config.no_gui = false;
 
+            dev_info.rgb_test_en  = 0;
+            dev_info.ind_toggle   = 0;
+            dev_info.color_index  = 0;
+            dev_info.encoder_mode = 0;
+            eeconfig_update_user(dev_info.raw);
+
             if (dev_info.devs != DEVS_USB) {
                 if (indicator_status != 0) {
                     last_total_time = timer_read32();
@@ -978,15 +979,13 @@ static void factory_reset_indicator(void) {
             dip_switch_read(true);
         }
 
-        if (EE_CLR_press_cnt > 0) {
-            if (EE_CLR_press_cnt % 2) {
-                for (uint8_t i = 0; i <= 83; i++) {
-                    rgb_matrix_set_color_all(100, 100, 100);
-                }
-            } else {
-                for (uint8_t i = 0; i <= 83; i++) {
-                    rgb_matrix_set_color_all(0, 0, 0);
-                }
+        if (EE_CLR_press_cnt % 2) {
+            for (uint8_t i = 0; i <= 83; i++) {
+                rgb_matrix_set_color(i, 100, 100, 100);
+            }
+        } else {
+            for (uint8_t i = 0; i <= 83; i++) {
+                rgb_matrix_set_color(i, 0, 0, 0);
             }
         }
     }

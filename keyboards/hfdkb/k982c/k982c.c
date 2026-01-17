@@ -99,6 +99,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 #    endif
         case RM_HUEU:
             if (record->event.pressed) {
+                dev_info.rgb_test_en = 0;
                 dev_info.color_index++;
                 if (dev_info.color_index >= sizeof(color_tab) / sizeof(color_tab[0])) {
                     dev_info.color_index = 0;
@@ -109,6 +110,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             return false;
         case RM_HUED:
             if (record->event.pressed) {
+                dev_info.rgb_test_en = 0;
                 if (dev_info.color_index == 0) {
                     dev_info.color_index = sizeof(color_tab) / sizeof(color_tab[0]) - 1;
                 } else {
@@ -118,6 +120,12 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 eeconfig_update_user(dev_info.raw);
             }
             return false;
+        case RM_PREV:
+        case RM_NEXT:
+            if (record->event.pressed) {
+                dev_info.rgb_test_en = 0;
+            }
+            return true;
 
         default:
             break;
@@ -159,6 +167,9 @@ void keyboard_post_init_kb(void) {
         keymap_config.no_gui = false;
         eeconfig_update_keymap(&keymap_config);
     }
+
+    LCD_IND_update();
+    LCD_charge_update();
 }
 
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
@@ -179,7 +190,7 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     }
 
     if (keymap_config.no_gui) {
-        rgb_matrix_set_color(73, 100, 100, 100);
+        rgb_matrix_set_color(73, 60, 60, 60);
     }
 
     if (!rgb_matrix_indicators_advanced_user(led_min, led_max)) {
@@ -194,6 +205,8 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
 }
 
 #endif
+
+extern uint8_t get_enc_blink_cnt(void);
 
 void set_led_state(void) {
     static uint8_t now_led_stuts = 0;
@@ -285,47 +298,51 @@ void set_led_state(void) {
         static bool     charging_now_satus = 0;
         static uint32_t chrg_full_time     = 0;
 
-        if (!dev_info.ind_toggle) {
-            if (!readPin(MM_CABLE_PIN)) {
-                charging_now_satus = 1;
+        if (!get_enc_blink_cnt()) {
+            if (!dev_info.ind_toggle) {
+                if (!readPin(MM_CABLE_PIN)) {
+                    charging_now_satus = 1;
 
-                low_bat_vol     = false;
-                low_bat_vol_off = false;
-                if (!readPin(MM_CHARGE_PIN)) {
-                    chrg_full_time = timer_read32();
-                    writePinHigh(LED_CHRG_LOW_PWR_PIN);
+                    low_bat_vol     = false;
+                    low_bat_vol_off = false;
+                    if (!readPin(MM_CHARGE_PIN)) {
+                        chrg_full_time = timer_read32();
+                        writePinHigh(LED_CHRG_LOW_PWR_PIN);
+                    } else {
+                        if (timer_elapsed32(chrg_full_time) >= 2000) {
+                            writePinLow(LED_CHRG_LOW_PWR_PIN);
+                        }
+                    }
                 } else {
-                    if (timer_elapsed32(chrg_full_time) >= 2000) {
-                        writePinLow(LED_CHRG_LOW_PWR_PIN);
+                    charging_now_satus = 0;
+
+                    if (pvol <= 10) {
+                        low_bat_vol = true;
+                    }
+                    if (pvol < 1) {
+                        low_bat_vol_off = true;
+                    }
+
+                    low_power_indicator();
+
+                    if (charging_old_satus != charging_now_satus) {
+                        charging_old_satus = charging_now_satus;
+                        LCD_charge_update();
                     }
                 }
             } else {
-                charging_now_satus = 0;
-
-                if (pvol <= 10) {
-                    low_bat_vol = true;
-                }
-                if (pvol < 1) {
-                    low_bat_vol_off = true;
-                }
-
-                low_power_indicator();
-
-                if (charging_old_satus != charging_now_satus) {
-                    charging_old_satus = charging_now_satus;
-                    LCD_charge_update();
-                }
+                writePinLow(LED_CHRG_LOW_PWR_PIN);
             }
-        } else {
-            writePinLow(LED_CHRG_LOW_PWR_PIN);
         }
 #endif
     }
 
-    if (dev_info.ind_toggle) {
-        writePinLow(CAPS_LOCK_LED_PIN);
-    } else {
-        writePin(CAPS_LOCK_LED_PIN, host_keyboard_led_state().caps_lock);
+    if (!get_enc_blink_cnt()) {
+        if (dev_info.ind_toggle || low_bat_vol_off) {
+            writePinLow(LED_CAPS_LOCK_IND_PIN);
+        } else {
+            writePin(LED_CAPS_LOCK_IND_PIN, host_keyboard_led_state().caps_lock);
+        }
     }
 }
 
@@ -353,7 +370,7 @@ static void low_power_indicator(void) {
     static bool     Low_power_bink = false;
     static uint32_t Low_power_time = 0;
 
-    if (low_bat_vol) {
+    if (low_bat_vol && !low_bat_vol_off) {
         if (timer_elapsed32(Low_power_time) >= 1000) {
             Low_power_bink = !Low_power_bink;
             Low_power_time = timer_read32();
@@ -406,7 +423,7 @@ void housekeeping_task_kb(void) {
     extern void housekeeping_task_bt(void);
     housekeeping_task_bt();
 
-    if (((dev_info.devs != DEVS_USB) && !get_kb_sleep_flag()) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state != USB_SUSPENDED))) {
+    if (((dev_info.devs != DEVS_USB) && !get_kb_sleep_flag() && bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state != USB_SUSPENDED))) {
         set_led_state();
     }
 
