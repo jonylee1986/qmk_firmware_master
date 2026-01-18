@@ -8,11 +8,7 @@
  *  These options are also useful to firmware size reduction.
  */
 
-#define BT_MODE_ENABLE
-
 #ifdef BT_MODE_ENABLE
-#    define NO_USB_STARTUP_CHECK
-#    define ENTRY_STOP_MODE
 #    define BT_CABLE_PIN B8
 #    define BT_CHARGE_PIN B9
 // #    define BT_MODE_SW_PIN C13

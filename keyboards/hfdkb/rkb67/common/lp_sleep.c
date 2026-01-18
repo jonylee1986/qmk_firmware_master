@@ -162,41 +162,41 @@ static void pad_enbale_interrupt(ioline_t pin) {
     }
 }
 
-// bool low_vol_offed_sleep;
+bool low_vol_offed_sleep;
 
 static void exti_init(void) {
-    // if (!low_vol_offed_sleep) {
-    for (int col = 0; col < MATRIX_COLS; col++) {
-        setPinOutputOpenDrain(col_pins[col]);
-        writePinLow(col_pins[col]);
-    }
+    if (!low_vol_offed_sleep) {
+        for (int col = 0; col < MATRIX_COLS; col++) {
+            setPinOutputOpenDrain(col_pins[col]);
+            writePinLow(col_pins[col]);
+        }
 
-    for (int row = 0; row < MATRIX_ROWS; row++) {
-        setPinInputHigh(row_pins[row]);
-        waitInputPinDelay();
-        _pal_lld_enablepadevent(PAL_PORT(row_pins[row]), PAL_PAD(row_pins[row]), PAL_EVENT_MODE_BOTH_EDGES);
-        pad_enbale_interrupt(PAL_PAD(row_pins[row]));
-    }
+        for (int row = 0; row < MATRIX_ROWS; row++) {
+            setPinInputHigh(row_pins[row]);
+            waitInputPinDelay();
+            _pal_lld_enablepadevent(PAL_PORT(row_pins[row]), PAL_PAD(row_pins[row]), PAL_EVENT_MODE_BOTH_EDGES);
+            pad_enbale_interrupt(PAL_PAD(row_pins[row]));
+        }
 
 #    if defined(MM_BT_MODE_PIN) && defined(MM_2G4_MODE_PIN)
-    setPinInputHigh(MM_BT_MODE_PIN);
-    setPinInputHigh(MM_2G4_MODE_PIN);
-    _pal_lld_enablepadevent(PAL_PORT(MM_BT_MODE_PIN), PAL_PAD(MM_BT_MODE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
-    _pal_lld_enablepadevent(PAL_PORT(MM_2G4_MODE_PIN), PAL_PAD(MM_2G4_MODE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
-    pad_enbale_interrupt(PAL_PAD(MM_BT_MODE_PIN));
-    pad_enbale_interrupt(PAL_PAD(MM_2G4_MODE_PIN));
+        setPinInputHigh(MM_BT_MODE_PIN);
+        setPinInputHigh(MM_2G4_MODE_PIN);
+        _pal_lld_enablepadevent(PAL_PORT(MM_BT_MODE_PIN), PAL_PAD(MM_BT_MODE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
+        _pal_lld_enablepadevent(PAL_PORT(MM_2G4_MODE_PIN), PAL_PAD(MM_2G4_MODE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
+        pad_enbale_interrupt(PAL_PAD(MM_BT_MODE_PIN));
+        pad_enbale_interrupt(PAL_PAD(MM_2G4_MODE_PIN));
 
 #    endif
 
-// Enable cable detection for wakeup
+        // Enable cable detection for wakeup
 
-// } else {
+    } else {
 #    ifdef BT_CABLE_PIN
-    //     setPinInputHigh(BT_CABLE_PIN);
-    _pal_lld_enablepadevent(PAL_PORT(BT_CABLE_PIN), PAL_PAD(BT_CABLE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
-    pad_enbale_interrupt(PAL_PAD(BT_CABLE_PIN));
+        //     setPinInputHigh(BT_CABLE_PIN);
+        _pal_lld_enablepadevent(PAL_PORT(BT_CABLE_PIN), PAL_PAD(BT_CABLE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
+        pad_enbale_interrupt(PAL_PAD(BT_CABLE_PIN));
 #    endif
-    // }
+    }
 }
 
 static void stop_mode_entry(void) {
