@@ -100,6 +100,8 @@ static const uint8_t rgb_index_color_table[][3] = {
     {RGB_BLACK}, {RGB_BLUE}, {RGB_BLUE}, {RGB_BLUE}, {RGB_BLACK}, {RGB_BLACK}, {RGB_GREEN},
 };
 
+static bool low_vol_off = false;
+
 // clang-format off
 long_pressed_keys_t long_pressed_keys[] = {
   {.keycode = BT_HOST1, .press_time = 0, .event_cb = long_pressed_keys_cb},
@@ -112,6 +114,10 @@ long_pressed_keys_t long_pressed_keys[] = {
   {.keycode = EE_CLR, .press_time = 0, .event_cb = long_pressed_keys_cb},
 };
 // clang-format on
+
+bool get_low_vol_off(void) {
+    return low_vol_off;
+}
 
 void register_mouse(uint8_t mouse_keycode, bool pressed);
 /** \brief Utilities for actions. (FIXME: Needs better description)
@@ -1077,8 +1083,13 @@ static void show_low_voltage_indication(void) {
         if (bts_info.bt_info.low_vol_offed) {
             extern bool low_vol_offed_sleep;
             low_vol_offed_sleep = true;
-            kb_sleep_flag       = true;
+            if (timer_elapsed32(pressed_time) >= 2000) {
+                kb_sleep_flag = true;
+            }
+            low_vol_off = true;
         }
+    } else {
+        low_vol_off = false;
     }
 }
 

@@ -34,6 +34,17 @@ void led_deconfig_all(void) {
 }
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    if (get_low_vol_off()) {
+        // clear_keyboard();
+        bts_process_keys(keycode, 0, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        // bts_process_keys(0, 1, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        bts_task(dev_info.devs);
+        while (bts_is_busy()) {
+            wait_ms(1);
+        }
+        return false;
+    }
+
     if (process_record_user(keycode, record) != true) {
         return false;
     }
@@ -113,6 +124,71 @@ void housekeeping_task_kb(void) {
 #ifdef CONSOLE_ENABLE
     debug_enable = true;
 #endif
+
+#ifdef USB_SUSPEND_STATE_CHECK
+    static uint32_t usb_suspend_timer = 0;
+    static uint32_t usb_suspend       = false;
+
+    if (dev_info.devs == DEVS_USB) {
+        if (usb_suspend) {
+            bool wakeup = false;
+            for (uint8_t r = 0; r < MATRIX_ROWS; r++) {
+                if (matrix_get_row(r)) {
+                    wakeup = true;
+                    break;
+                }
+            }
+            if (wakeup) {
+                // usbWakeupHost(&USB_DRIVER);
+                // restart_usb_driver(&USB_DRIVER);
+                usb_suspend       = false;
+                usb_suspend_timer = 0;
+#    ifdef RGB_DRIVER_SDB_PIN
+                writePinHigh(RGB_DRIVER_SDB_PIN);
+#    endif
+            }
+        }
+
+        if ((USB_DRIVER.state != USB_ACTIVE)) {
+            if (!usb_suspend_timer) {
+                usb_suspend_timer = timer_read32();
+            } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
+                if (!usb_suspend) {
+                    usb_suspend = true;
+#    ifdef RGB_DRIVER_SDB_PIN
+                    writePinLow(RGB_DRIVER_SDB_PIN);
+#    endif
+                }
+                usb_suspend_timer = 0;
+            }
+        } else {
+            if (usb_suspend) {
+                usb_suspend_timer = 0;
+                usb_suspend       = false;
+
+#    ifdef RGB_DRIVER_SDB_PIN
+                writePinHigh(RGB_DRIVER_SDB_PIN);
+#    endif
+            }
+        }
+    } else {
+        if (usb_suspend) {
+            usb_suspend_timer = 0;
+            usb_suspend       = false;
+#    ifdef RGB_DRIVER_SDB_PIN
+            writePinHigh(RGB_DRIVER_SDB_PIN);
+#    endif
+        }
+    }
+#endif
+
+    // if (get_low_vol_off()) {
+    //     bts_process_keys(0, 1, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+    //     bts_task(dev_info.devs);
+    //     while (bts_is_busy()) {
+    //         wait_ms(1);
+    //     }
+    // }
 }
 
 #ifdef RGB_MATRIX_ENABLE
