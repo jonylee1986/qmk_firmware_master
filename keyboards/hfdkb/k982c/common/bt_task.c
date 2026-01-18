@@ -964,15 +964,11 @@ static void factory_reset_indicator(void) {
             dev_info.encoder_mode = 0;
             eeconfig_update_user(dev_info.raw);
 
-            if (dev_info.devs != DEVS_USB) {
-                if (indicator_status != 0) {
-                    last_total_time = timer_read32();
-                }
-
+            if (dev_info.devs != DEVS_USB && !bts_info.bt_info.paired) {
                 if (dev_info.devs == DEVS_2_4G) {
-                    bt_switch_mode(DEVS_USB, DEVS_2_4G, false);
+                    bt_switch_mode(dev_info.last_devs, DEVS_2_4G, false);
                 } else {
-                    bt_switch_mode(DEVS_USB, dev_info.last_devs, false);
+                    bt_switch_mode(dev_info.last_devs, dev_info.devs, false);
                 }
             }
 

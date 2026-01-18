@@ -15,8 +15,8 @@ void led_config_all(void) {
     if (!led_inited) {
         // Set our LED pins as output
 #ifdef RGB_DRIVER_SDB_PIN
-        setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
-        writePinHigh(RGB_DRIVER_SDB_PIN);
+        // setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
+        // writePinHigh(RGB_DRIVER_SDB_PIN);
 #endif
         led_inited = true;
     }
@@ -26,8 +26,8 @@ void led_deconfig_all(void) {
     if (led_inited) {
         // Set our LED pins as input
 #ifdef RGB_DRIVER_SDB_PIN
-        setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
-        writePinLow(RGB_DRIVER_SDB_PIN);
+        // setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
+        // writePinLow(RGB_DRIVER_SDB_PIN);
 #endif
         led_inited = false;
     }
@@ -112,39 +112,6 @@ void housekeeping_task_kb(void) {
 
 #ifdef CONSOLE_ENABLE
     debug_enable = true;
-#endif
-
-#ifdef USB_SUSPEND_STATE_CHECK
-    static uint32_t usb_suspend_timer = 0;
-    static uint32_t usb_suspend       = false;
-
-    if (dev_info.devs == DEVS_USB) {
-        if (USB_DRIVER.state != USB_ACTIVE || USB_DRIVER.state == USB_SUSPENDED) {
-            if (!usb_suspend_timer) {
-                usb_suspend_timer = timer_read32();
-            } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
-                if (!usb_suspend) {
-                    usb_suspend = true;
-                    led_deconfig_all();
-                }
-                usb_suspend_timer = 0;
-            }
-        } else {
-            if (usb_suspend_timer) {
-                usb_suspend_timer = 0;
-                if (usb_suspend) {
-                    usb_suspend = false;
-                    led_config_all();
-                }
-            }
-        }
-    } else {
-        if (usb_suspend) {
-            usb_suspend_timer = 0;
-            usb_suspend       = false;
-            led_config_all();
-        }
-    }
 #endif
 }
 
