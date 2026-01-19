@@ -809,14 +809,12 @@ static void bt_scan_mode(void) {
             bt_switch_mode(dev_info.devs, dev_info.last_devs, false); // BT mode
             // mcu_reset();
         }
-    }
-    if (!readPin(RF_MODE_SW_PIN) && readPin(BT_MODE_SW_PIN)) {
+    } else if (!readPin(RF_MODE_SW_PIN) && readPin(BT_MODE_SW_PIN)) {
         if (dev_info.devs != DEVS_2_4G) {
             bt_switch_mode(dev_info.devs, DEVS_2_4G, false); // 2_4G mode
             // mcu_reset();
         }
-    }
-    if (readPin(BT_MODE_SW_PIN) && readPin(RF_MODE_SW_PIN)) {
+    } else if (readPin(BT_MODE_SW_PIN) && readPin(RF_MODE_SW_PIN)) {
         if (dev_info.devs != DEVS_USB) bt_switch_mode(dev_info.devs, DEVS_USB, false); // usb mode
     }
 #endif

@@ -36,10 +36,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [WIN_FN] = LAYOUT_ansi_67( /* FN */
         BT_2_4G, BT_HOST1, BT_HOST2, BT_HOST3, _______, _______, _______, _______, _______, _______, _______, _______,    _______, _______, _______,
-        BT_USB,  _______,  _______,  _______,  _______, _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,    _______, RM_NEXT, _______,
-        _______, _______,  SW_OS1,   _______,  _______, _______, _______, KC_INS,  KC_HOME, KC_PGUP, _______, _______,             RM_TOGG, RM_SATU,
-        _______,           KC_MSEL,  KC_VOLD,  KC_VOLU, KC_MUTE, BT_VOL,  _______, KC_DEL,  KC_END,  KC_PGDN, _______,    RM_HUEU, RM_VALU, RM_SATD,
-        KEY_FUN, GU_TOGG,  _______,                              EE_CLR,                             _______, _______,    RM_SPDD, RM_VALD, RM_SPDU),
+        BT_USB,  RM_TOGG,  RM_PREV,  RM_NEXT,  RM_HUEU, RM_HUED, RM_SATU, RM_SATD, RM_VALU, RM_VALD, RM_SPDU, RM_SPDD,    _______, _______, _______,
+        _______, _______,  SW_OS1,   _______,  _______, _______, _______, _______, _______, _______, _______, _______,             _______, _______,
+        _______,           KC_MSEL,  KC_VOLD,  KC_VOLU, KC_MUTE, BT_VOL,  _______, _______, _______, _______, _______,    _______, _______, _______,
+        KEY_FUN, GU_TOGG,  _______,                              EE_CLR,                             _______, _______,    _______, _______, _______),
 
     [WIN_EX] = LAYOUT_ansi_67( /* FN */
         _______, _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______, _______,    _______, _______, _______,
@@ -57,10 +57,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [MAC_FN] = LAYOUT_ansi_67( /* FN */
         BT_2_4G, BT_HOST1, BT_HOST2, BT_HOST3, _______, _______, _______, _______, _______, _______, _______, _______,    _______, _______, _______,
-        BT_USB,  _______,  _______,  _______,  _______, _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,    _______, RM_NEXT, _______,
-        _______, SW_OS1,   _______,  _______,  _______, _______, _______, KC_INS,  KC_HOME, KC_PGUP, _______, _______,             RM_TOGG, _______,
-        _______,           KC_MSEL,  KC_VOLD,  KC_VOLU, KC_MUTE, BT_VOL,  _______, KC_DEL,  KC_END,  KC_PGDN, _______,    RM_HUEU, RM_VALU, _______,
-        KEY_FUN, _______,  _______,                              EE_CLR,                             _______, _______,    RM_SPDD, RM_VALD, RM_SPDU),
+        BT_USB,  RM_TOGG,  RM_PREV,  RM_NEXT,  RM_HUEU, RM_HUED, RM_SATU, RM_SATD, RM_VALU, RM_VALD, RM_SPDU, RM_SPDD,    _______, _______, _______,
+        _______, SW_OS1,   _______,  _______,  _______, _______, _______, _______, _______, _______, _______, _______,             _______, _______,
+        _______,           KC_MSEL,  KC_VOLD,  KC_VOLU, KC_MUTE, BT_VOL,  _______, _______, _______, _______, _______,    _______, _______, _______,
+        KEY_FUN, _______,  _______,                              EE_CLR,                             _______, _______,    _______, _______, _______),
 
     [MAC_EX] = LAYOUT_ansi_67( /* FN */
         _______, _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______, _______,    _______, _______, _______,
