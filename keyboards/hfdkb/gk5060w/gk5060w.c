@@ -12,7 +12,7 @@ void led_config_all(void) {
 // Set our LED pins as output
 #ifdef RGB_DRIVER_SDB_PIN
         // setPinOutput(RGB_DRIVER_SDB_PIN);
-        writePinHigh(RGB_DRIVER_SDB_PIN);
+        // writePinHigh(RGB_DRIVER_SDB_PIN);
 #endif
         led_inited = true;
     }
@@ -23,7 +23,7 @@ void led_deconfig_all(void) {
 // Set our LED pins as input
 #ifdef RGB_DRIVER_SDB_PIN
         // setPinOutput(RGB_DRIVER_SDB_PIN);
-        writePinLow(RGB_DRIVER_SDB_PIN);
+        // writePinLow(RGB_DRIVER_SDB_PIN);
 #endif
         led_inited = false;
     }
@@ -32,6 +32,15 @@ void led_deconfig_all(void) {
 static bool grave_esc_was_shifted = false;
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    if (get_low_vol_off()) {
+        bts_process_keys(keycode, 0, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        bts_task(dev_info.devs);
+        while (bts_is_busy()) {
+            wait_ms(1);
+        }
+        return false;
+    }
+
     switch (keycode) {
         case KC_DICTATION:
             if (dev_info.devs == DEVS_USB) {
@@ -94,14 +103,18 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 if (record->event.pressed) {
                     if (grave_esc_was_shifted) {
                         bts_process_keys(KC_GRV, 1, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                        // bts_process_keys(KC_GRV, 1, dev_info.devs, keymap_config.no_gui);
                     } else {
                         bts_process_keys(KC_ESC, 1, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                        // bts_process_keys(KC_ESC, 1, dev_info.devs, keymap_config.no_gui);
                     }
                 } else {
                     if (grave_esc_was_shifted) {
                         bts_process_keys(KC_GRV, 0, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                        // bts_process_keys(KC_GRV, 0, dev_info.devs, keymap_config.no_gui);
                     } else {
                         bts_process_keys(KC_ESC, 0, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                        // bts_process_keys(KC_ESC, 0, dev_info.devs, keymap_config.no_gui);
                     }
                 }
                 return false;
@@ -126,11 +139,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 }
 
 void matrix_init_kb(void) {
-#ifdef RGB_DRIVER_SDB_PIN
-    setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
-    writePinHigh(RGB_DRIVER_SDB_PIN);
-#endif
-
 #ifdef BT_MODE_ENABLE
     bt_init();
 #endif

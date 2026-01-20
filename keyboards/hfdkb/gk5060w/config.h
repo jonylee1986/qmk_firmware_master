@@ -39,7 +39,7 @@
 #    define BT_USB_COLOR RGB_WHITE     // USB color
 
 /* Others */
-#    define KEY_NUM 8
+#    define KEY_NUM 6
 #    define CW2017_EN
 #endif
 

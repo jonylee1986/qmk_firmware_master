@@ -110,6 +110,12 @@ long_pressed_keys_t long_pressed_keys[] = {
 };
 // clang-format on
 
+static uint8_t shut_down = 0;
+
+bool get_low_vol_off(void) {
+    return shut_down;
+}
+
 void register_mouse(uint8_t mouse_keycode, bool pressed);
 /** \brief Utilities for actions. (FIXME: Needs better description)
  *
@@ -117,7 +123,8 @@ void register_mouse(uint8_t mouse_keycode, bool pressed);
  */
 __attribute__((weak)) void register_code(uint8_t code) {
     if (dev_info.devs) {
-        bts_process_keys(code, 1, dev_info.devs, keymap_config.no_gui, KC_NUM);
+        bts_process_keys(code, 1, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        // bts_process_keys(code, 1, dev_info.devs, keymap_config.no_gui);
         bts_task(dev_info.devs);
         while (bts_is_busy()) {
             wait_ms(1);
@@ -195,7 +202,8 @@ __attribute__((weak)) void register_code(uint8_t code) {
  */
 __attribute__((weak)) void unregister_code(uint8_t code) {
     if (dev_info.devs) {
-        bts_process_keys(code, 0, dev_info.devs, keymap_config.no_gui, KC_NUM);
+        bts_process_keys(code, 0, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        // bts_process_keys(code, 0, dev_info.devs, keymap_config.no_gui);
         bts_task(dev_info.devs);
         while (bts_is_busy()) {
             wait_ms(1);
@@ -259,30 +267,35 @@ extern void do_code16(uint16_t code, void (*f)(uint8_t));
 __attribute__((weak)) void register_code16(uint16_t code) {
     if (dev_info.devs) {
         if (QK_MODS_GET_MODS(code) & 0x1) {
-            if (QK_MODS_GET_MODS(code) & 0x10)
-                bts_process_keys(KC_RCTL, 1, dev_info.devs, keymap_config.no_gui, KC_NUM);
+            if (QK_MODS_GET_MODS(code) & 0x10) bts_process_keys(KC_RCTL, 1, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            // bts_process_keys(KC_RCTL, 1, dev_info.devs, keymap_config.no_gui);
             else
-                bts_process_keys(KC_LCTL, 1, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                bts_process_keys(KC_LCTL, 1, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            // bts_process_keys(KC_LCTL, 1, dev_info.devs, keymap_config.no_gui);
         }
         if (QK_MODS_GET_MODS(code) & 0x2) {
-            if (QK_MODS_GET_MODS(code) & 0x10)
-                bts_process_keys(KC_RSFT, 1, dev_info.devs, keymap_config.no_gui, KC_NUM);
+            if (QK_MODS_GET_MODS(code) & 0x10) bts_process_keys(KC_RSFT, 1, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            // bts_process_keys(KC_RSFT, 1, dev_info.devs, keymap_config.no_gui);
             else
-                bts_process_keys(KC_LSFT, 1, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                bts_process_keys(KC_LSFT, 1, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            // bts_process_keys(KC_LSFT, 1, dev_info.devs, keymap_config.no_gui);
         }
         if (QK_MODS_GET_MODS(code) & 0x4) {
-            if (QK_MODS_GET_MODS(code) & 0x10)
-                bts_process_keys(KC_RALT, 1, dev_info.devs, keymap_config.no_gui, KC_NUM);
+            if (QK_MODS_GET_MODS(code) & 0x10) bts_process_keys(KC_RALT, 1, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            // bts_process_keys(KC_RALT, 1, dev_info.devs, keymap_config.no_gui);
             else
-                bts_process_keys(KC_LALT, 1, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                bts_process_keys(KC_LALT, 1, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            // bts_process_keys(KC_LALT, 1, dev_info.devs, keymap_config.no_gui);
         }
         if (QK_MODS_GET_MODS(code) & 0x8) {
-            if (QK_MODS_GET_MODS(code) & 0x10)
-                bts_process_keys(KC_RGUI, 1, dev_info.devs, keymap_config.no_gui, KC_NUM);
+            if (QK_MODS_GET_MODS(code) & 0x10) bts_process_keys(KC_RGUI, 1, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            // bts_process_keys(KC_RGUI, 1, dev_info.devs, keymap_config.no_gui);
             else
-                bts_process_keys(KC_LGUI, 1, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                bts_process_keys(KC_LGUI, 1, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            // bts_process_keys(KC_LGUI, 1, dev_info.devs, keymap_config.no_gui);
         }
-        bts_process_keys(QK_MODS_GET_BASIC_KEYCODE(code), 1, dev_info.devs, keymap_config.no_gui, KC_NUM);
+        bts_process_keys(QK_MODS_GET_BASIC_KEYCODE(code), 1, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        // bts_process_keys(QK_MODS_GET_BASIC_KEYCODE(code), 1, dev_info.devs, keymap_config.no_gui);
     } else {
         if (IS_MODIFIER_KEYCODE(code) || code == KC_NO) {
             do_code16(code, register_mods);
@@ -297,29 +310,35 @@ __attribute__((weak)) void unregister_code16(uint16_t code) {
     if (dev_info.devs) {
         if (QK_MODS_GET_MODS(code) & 0x1) {
             if (QK_MODS_GET_MODS(code) & 0x10)
-                bts_process_keys(KC_RCTL, 0, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                //  bts_process_keys(KC_RCTL, 0, dev_info.devs, keymap_config.no_gui);
+                bts_process_keys(KC_RCTL, 0, dev_info.devs, keymap_config.no_gui, KEY_NUM);
             else
-                bts_process_keys(KC_LCTL, 0, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                // bts_process_keys(KC_LCTL, 0, dev_info.devs, keymap_config.no_gui);
+                bts_process_keys(KC_LCTL, 0, dev_info.devs, keymap_config.no_gui, KEY_NUM);
         }
         if (QK_MODS_GET_MODS(code) & 0x2) {
-            if (QK_MODS_GET_MODS(code) & 0x10)
-                bts_process_keys(KC_RSFT, 0, dev_info.devs, keymap_config.no_gui, KC_NUM);
+            if (QK_MODS_GET_MODS(code) & 0x10) bts_process_keys(KC_RSFT, 0, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            // bts_process_keys(KC_RSFT, 0, dev_info.devs, keymap_config.no_gui);
             else
-                bts_process_keys(KC_LSFT, 0, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                bts_process_keys(KC_LSFT, 0, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            // bts_process_keys(KC_LSFT, 0, dev_info.devs, keymap_config.no_gui);
         }
         if (QK_MODS_GET_MODS(code) & 0x4) {
-            if (QK_MODS_GET_MODS(code) & 0x10)
-                bts_process_keys(KC_RALT, 0, dev_info.devs, keymap_config.no_gui, KC_NUM);
+            if (QK_MODS_GET_MODS(code) & 0x10) bts_process_keys(KC_RALT, 0, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            // bts_process_keys(KC_RALT, 0, dev_info.devs, keymap_config.no_gui);
             else
-                bts_process_keys(KC_LALT, 0, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                bts_process_keys(KC_LALT, 0, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            // bts_process_keys(KC_LALT, 0, dev_info.devs, keymap_config.no_gui);
         }
         if (QK_MODS_GET_MODS(code) & 0x8) {
-            if (QK_MODS_GET_MODS(code) & 0x10)
-                bts_process_keys(KC_RGUI, 0, dev_info.devs, keymap_config.no_gui, KC_NUM);
+            if (QK_MODS_GET_MODS(code) & 0x10) bts_process_keys(KC_RGUI, 0, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            // bts_process_keys(KC_RGUI, 0, dev_info.devs, keymap_config.no_gui);
             else
-                bts_process_keys(KC_LGUI, 0, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                bts_process_keys(KC_LGUI, 0, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+            // bts_process_keys(KC_LGUI, 0, dev_info.devs, keymap_config.no_gui);
         }
-        bts_process_keys(QK_MODS_GET_BASIC_KEYCODE(code), 0, dev_info.devs, keymap_config.no_gui, KC_NUM);
+        bts_process_keys(QK_MODS_GET_BASIC_KEYCODE(code), 0, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        // bts_process_keys(QK_MODS_GET_BASIC_KEYCODE(code), 0, dev_info.devs, keymap_config.no_gui);
     } else {
         unregister_code(code);
         if (IS_MODIFIER_KEYCODE(code) || code == KC_NO) {
@@ -361,6 +380,9 @@ void bt_init(void) {
 
     bt_scan_mode();
 
+    bts_send_name(DEVS_HOST1);
+    wait_ms(10);
+
     if (dev_info.devs != DEVS_USB) {
         usbDisconnectBus(&USB_DRIVER);
         usbStop(&USB_DRIVER);
@@ -390,8 +412,7 @@ void bt_task(void) {
     if ((bt_init_time != 0) && (timer_elapsed32(bt_init_time) >= 2000)) {
         bt_init_time = 0;
 
-        // bts_send_vendor(v_en_sleep_bt);
-        bts_send_name(DEVS_HOST1);
+        bts_send_vendor(v_en_sleep_bt);
 
         switch (dev_info.devs) {
             case DEVS_HOST1: {
@@ -416,7 +437,7 @@ void bt_task(void) {
             } break;
         }
 
-        bts_send_vendor(v_en_sleep_wl);
+        // bts_send_vendor(v_en_sleep_wl);
     }
 
     /* Execute every 1ms */
@@ -440,6 +461,8 @@ void bt_task(void) {
     long_pressed_keys_hook();
     bt_scan_mode();
 }
+
+uint32_t pressed_time = 0;
 
 bool process_record_bt(uint16_t keycode, keyrecord_t *record) {
     bool retval = true;
@@ -470,6 +493,7 @@ bool process_record_bt(uint16_t keycode, keyrecord_t *record) {
                     bts_info.bt_info.mode_switched,
                     bts_info.bt_info.pvol);
         // clang-format on
+        pressed_time = timer_read32();
 
         // if (!rgb_matrix_config.enable) {
         //     if (rgb_status_save) {
@@ -489,36 +513,48 @@ bool process_record_bt(uint16_t keycode, keyrecord_t *record) {
             while (bts_is_busy()) {
                 wait_ms(1);
             }
+
             if ((keycode > QK_MODS) && (keycode <= QK_MODS_MAX)) {
                 if (QK_MODS_GET_MODS(keycode) & 0x1) {
-                    if (QK_MODS_GET_MODS(keycode) & 0x10)
-                        bts_process_keys(KC_RCTL, record->event.pressed, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                    if (QK_MODS_GET_MODS(keycode) & 0x10) bts_process_keys(KC_RCTL, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+                    // bts_process_keys(KC_RCTL, record->event.pressed, dev_info.devs, keymap_config.no_gui);
                     else
-                        bts_process_keys(KC_LCTL, record->event.pressed, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                        bts_process_keys(KC_LCTL, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+                    // bts_process_keys(KC_LCTL, record->event.pressed, dev_info.devs, keymap_config.no_gui);
                 }
                 if (QK_MODS_GET_MODS(keycode) & 0x2) {
-                    if (QK_MODS_GET_MODS(keycode) & 0x10)
-                        bts_process_keys(KC_RSFT, record->event.pressed, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                    if (QK_MODS_GET_MODS(keycode) & 0x10) bts_process_keys(KC_RSFT, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+                    // bts_process_keys(KC_RSFT, record->event.pressed, dev_info.devs, keymap_config.no_gui);
                     else
-                        bts_process_keys(KC_LSFT, record->event.pressed, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                        bts_process_keys(KC_LSFT, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+                    // bts_process_keys(KC_LSFT, record->event.pressed, dev_info.devs, keymap_config.no_gui);
                 }
                 if (QK_MODS_GET_MODS(keycode) & 0x4) {
-                    if (QK_MODS_GET_MODS(keycode) & 0x10)
-                        bts_process_keys(KC_RALT, record->event.pressed, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                    if (QK_MODS_GET_MODS(keycode) & 0x10) bts_process_keys(KC_RALT, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+                    // bts_process_keys(KC_RALT, record->event.pressed, dev_info.devs, keymap_config.no_gui);
                     else
-                        bts_process_keys(KC_LALT, record->event.pressed, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                        bts_process_keys(KC_LALT, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+                    // bts_process_keys(KC_LALT, record->event.pressed, dev_info.devs, keymap_config.no_gui);
                 }
                 if (QK_MODS_GET_MODS(keycode) & 0x8) {
-                    if (QK_MODS_GET_MODS(keycode) & 0x10)
-                        bts_process_keys(KC_RGUI, record->event.pressed, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                    if (QK_MODS_GET_MODS(keycode) & 0x10) bts_process_keys(KC_RGUI, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+                    // bts_process_keys(KC_RGUI, record->event.pressed, dev_info.devs, keymap_config.no_gui);
                     else
-                        bts_process_keys(KC_LGUI, record->event.pressed, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                        bts_process_keys(KC_LGUI, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+                    // bts_process_keys(KC_LGUI, record->event.pressed, dev_info.devs, keymap_config.no_gui);
                 }
-                retval = bts_process_keys(QK_MODS_GET_BASIC_KEYCODE(keycode), record->event.pressed, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                retval = bts_process_keys(QK_MODS_GET_BASIC_KEYCODE(keycode), record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+                // retval = bts_process_keys(QK_MODS_GET_BASIC_KEYCODE(keycode), record->event.pressed, dev_info.devs, keymap_config.no_gui);
+            } else if (IS_BASIC_KEYCODE(keycode)) {
+                if (record->event.pressed) {
+                    register_code(keycode);
+                } else {
+                    unregister_code(keycode);
+                }
             } else {
-                retval = bts_process_keys(keycode, record->event.pressed, dev_info.devs, keymap_config.no_gui, KC_NUM);
+                retval = bts_process_keys(keycode, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+                // retval = bts_process_keys(keycode, record->event.pressed, dev_info.devs, keymap_config.no_gui);
             }
-            // retval = bts_process_keys(keycode, record->event.pressed, dev_info.devs, keymap_config.no_gui, KC_NUM);
         }
     }
 
@@ -654,7 +690,7 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
             return true;
         case BT_HOST1: {
             if (record->event.pressed) {
-                if (dev_info.devs != DEVS_HOST1) {
+                if (dev_info.devs != DEVS_HOST1 && !readPin(BT_MODE_SW_PIN)) {
                     // if ((dev_info.devs != DEVS_HOST1) && (dev_info.devs != DEVS_USB) && (dev_info.devs != DEVS_2_4G)) {
                     bt_switch_mode(dev_info.devs, DEVS_HOST1, false);
                     // }
@@ -663,7 +699,7 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
         } break;
         case BT_HOST2: {
             if (record->event.pressed) {
-                if (dev_info.devs != DEVS_HOST2) {
+                if (dev_info.devs != DEVS_HOST2 && !readPin(BT_MODE_SW_PIN)) {
                     // if ((dev_info.devs != DEVS_HOST2) && (dev_info.devs != DEVS_USB) && (dev_info.devs != DEVS_2_4G)) {
                     bt_switch_mode(dev_info.devs, DEVS_HOST2, false);
                 }
@@ -671,7 +707,7 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
         } break;
         case BT_HOST3: {
             if (record->event.pressed) {
-                if (dev_info.devs != DEVS_HOST3) {
+                if (dev_info.devs != DEVS_HOST3 && !readPin(BT_MODE_SW_PIN)) {
                     // if ((dev_info.devs != DEVS_HOST3) && (dev_info.devs != DEVS_USB) && (dev_info.devs != DEVS_2_4G)) {
                     bt_switch_mode(dev_info.devs, DEVS_HOST3, false);
                 }
@@ -679,7 +715,7 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
         } break;
         case BT_2_4G: {
             if (record->event.pressed) {
-                if (dev_info.devs != DEVS_2_4G) {
+                if (dev_info.devs != DEVS_2_4G && !readPin(RF_MODE_SW_PIN)) {
                     bt_switch_mode(dev_info.devs, DEVS_2_4G, false);
                 }
             }
@@ -733,22 +769,22 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
 static void long_pressed_keys_cb(uint16_t keycode) {
     switch (keycode) {
         case BT_HOST1: {
-            if (dev_info.devs != DEVS_USB) {
+            if (dev_info.devs == DEVS_HOST1) {
                 bt_switch_mode(dev_info.devs, DEVS_HOST1, true);
             }
         } break;
         case BT_HOST2: {
-            if (dev_info.devs != DEVS_USB) {
+            if (dev_info.devs == DEVS_HOST2) {
                 bt_switch_mode(dev_info.devs, DEVS_HOST2, true);
             }
         } break;
         case BT_HOST3: {
-            if (dev_info.devs != DEVS_USB) {
+            if (dev_info.devs == DEVS_HOST3) {
                 bt_switch_mode(dev_info.devs, DEVS_HOST3, true);
             }
         } break;
         case BT_2_4G: {
-            if (dev_info.devs != DEVS_USB) {
+            if (dev_info.devs == DEVS_2_4G) {
                 bt_switch_mode(dev_info.devs, DEVS_2_4G, true);
             }
         } break;
@@ -783,6 +819,11 @@ static void bt_used_pin_init(void) {
     setPinInputHigh(BT_CABLE_PIN);
     setPinInput(BT_CHARGE_PIN);
 #endif
+
+#ifdef RGB_DRIVER_SDB_PIN
+    setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
+    writePinHigh(RGB_DRIVER_SDB_PIN);
+#endif
 }
 
 /**
@@ -805,31 +846,29 @@ static void bt_scan_mode(void) {
 }
 
 static void close_rgb(void) {
-    static bool standby_blink = false;
+    // static bool standby_blink = false;
 
     if (!key_press_time) {
         key_press_time = timer_read32();
         return;
     }
 
-    if (timer_elapsed32(key_press_time) >= sleep_time[0]) {
-        // if (timer_elapsed32(key_press_time) >= (10 * 1000)) {
-        if (!standby_blink) {
-            standby_blink      = true;
-            single_blink_index = 5;
-            single_blink_color = (RGB){RGB_WHITE};
-            single_blink_cnt   = 4;
-            single_blink_time  = timer_read32();
-        }
-    } else {
-        if (standby_blink) {
-            standby_blink = false;
-        }
-    }
+    // if (timer_elapsed32(key_press_time) >= (sleep_time[0] - 2 * 1000)) {
+    //     if (!standby_blink) {
+    //         standby_blink      = true;
+    //         single_blink_index = 5;
+    //         single_blink_color = (RGB){RGB_WHITE};
+    //         single_blink_cnt   = 4;
+    //         single_blink_time  = timer_read32();
+    //     }
+    // } else {
+    //     if (standby_blink) {
+    //         standby_blink = false;
+    //     }
+    // }
 
     if (sober) {
-        if (kb_sleep_flag || (timer_elapsed32(key_press_time) >= sleep_time[2])) {
-            // if (kb_sleep_flag || (timer_elapsed32(key_press_time) >= 30 * 1000)) {
+        if (kb_sleep_flag || (timer_elapsed32(key_press_time) >= sleep_time[0])) {
             bak_rgb_toggle = rgb_matrix_config.enable;
             sober          = false;
             close_rgb_time = timer_read32();
@@ -844,7 +883,7 @@ static void close_rgb(void) {
             if (timer_elapsed32(close_rgb_time) >= ENTRY_STOP_TIMEOUT) {
                 /* Turn off all indicators led */
                 if (led_inited) {
-                    // led_deconfig_all();
+                    led_deconfig_all();
                 }
 
 #ifdef ENTRY_STOP_MODE
@@ -875,7 +914,7 @@ void open_rgb(void) {
         }
 
         if (!led_inited) {
-            // led_config_all();
+            led_config_all();
         }
 
         sober = true;
@@ -888,11 +927,11 @@ const uint8_t hsv_table[][3] = {
 };
 
 uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
-    static uint32_t query_vol_time    = 0;
-    static bool     Low_power         = false;
-    static uint8_t  shut_down         = 0;
-    uint8_t         uart_data_send[3] = {0};
-    uint8_t         soc               = 0;
+    static uint32_t query_vol_time = 0;
+    static bool     Low_power      = false;
+
+    uint8_t uart_data_send[3] = {0};
+    uint8_t soc               = 0;
 
 #ifdef CONSOLE_ENABLE
     if (timer_elapsed32(query_vol_time) > 10000) {
@@ -918,7 +957,7 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
             cw_update_data();
             soc = cw_bat.capacity;
 
-            if (cw_bat.capacity < 1) {
+            if (cw_bat.capacity < 1 && readPin(BT_CABLE_PIN)) {
                 shut_down = true;
             } else {
                 shut_down = false;
@@ -942,31 +981,36 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
         //     Low_power = false;
         // }
         // Use cw_bat.capacity instead of local soc to check persisted value
-        if ((cw_bat.capacity <= 10) && (cw_bat.capacity > 0) && !Low_power) {
+        // if ((cw_bat.capacity <= 10) && (cw_bat.capacity > 0) && !Low_power) {
+        if ((cw_bat.capacity <= 10) && readPin(BT_CABLE_PIN)) {
             Low_power = true;
-        } else if ((cw_bat.capacity >= 40) && Low_power) {
+        } else {
             Low_power = false;
         }
+        // else if ((cw_bat.capacity >= 40) && Low_power) {
+        //     Low_power = false;
+        // }
 
-        if (readPin(BT_CABLE_PIN)) {
-            if (Low_power) {
-                HSV hsv;
-                hsv.h              = hsv_table[0][0];
-                hsv.s              = hsv_table[0][1];
-                uint8_t time       = scale16by8(g_rgb_timer, qadd8(rgb_matrix_config.speed / 4, 1));
-                uint8_t brightness = scale8(abs8(sin8(time / 2) - 128) * 2, rgb_matrix_get_val());
-                hsv.v              = brightness;
-                RGB rgb            = hsv_to_rgb(hsv);
-                rgb_matrix_set_color(5, rgb.r, rgb.g, rgb.b);
-            }
-
-            if (shut_down) {
-                extern bool low_vol_offed_sleep;
-                kb_sleep_flag       = true;
-                low_vol_offed_sleep = true;
-                // clear_keyboard();
-            }
+        // if (readPin(BT_CABLE_PIN)) {
+        if (Low_power) {
+            HSV hsv;
+            hsv.h              = hsv_table[0][0];
+            hsv.s              = hsv_table[0][1];
+            uint8_t time       = scale16by8(g_rgb_timer, qadd8(rgb_matrix_config.speed / 4, 1));
+            uint8_t brightness = scale8(abs8(sin8(time / 2) - 128) * 2, rgb_matrix_get_val());
+            hsv.v              = brightness;
+            RGB rgb            = hsv_to_rgb(hsv);
+            rgb_matrix_set_color(5, rgb.r, rgb.g, rgb.b);
         }
+
+        if (shut_down) {
+            extern bool low_vol_offed_sleep;
+            if (timer_elapsed32(pressed_time) >= 2000) {
+                kb_sleep_flag = true;
+            }
+            low_vol_offed_sleep = true;
+        }
+        // }
     } else {
         static uint32_t charging_time = 0;
         static uint32_t full_time     = 0;
@@ -1044,7 +1088,6 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
 
                 /* 超时60s退出 */
                 if (timer_elapsed32(last_total_time) >= (30 * 1000)) {
-                    // if (timer_elapsed32(last_total_time) >= (30 * 1000)) {
                     indicator_status = 0;
                     kb_sleep_flag    = true;
                 }
@@ -1133,7 +1176,6 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
         }
     }
 
-    // 全键闪烁
     // if (all_blink_cnt) {
     //     rgb_matrix_set_color_all(0, 0, 0);
     //     if (timer_elapsed32(all_blink_time) > 500) {
@@ -1147,7 +1189,6 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
     //     }
     // }
 
-    // 单键闪烁
     if (single_blink_cnt) {
         // rgb_matrix_set_color(single_blink_index, RGB_ORANGE);
         if (timer_elapsed32(single_blink_time) > 500) {
@@ -1185,7 +1226,6 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
         } else {
             rgb_matrix_set_color(5, 0, 0, 0);
         }
-        // return false;
     }
 
     return true;

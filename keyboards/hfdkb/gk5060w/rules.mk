@@ -4,7 +4,7 @@ endif
 
 I2C_DRIVER_REQUIRED = yes
 
-QUANTUM_LIB_SRC += uart_serial.c
+UART_DRIVER_REQUIRED = yes
 
 SRC += common/bt_task.c
 SRC += common/lp_sleep.c
