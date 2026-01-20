@@ -34,4 +34,4 @@
 #define SLED_END_INDEX 72
 #define SLED_NUM 6
 
-#define KEY_NUM 8
+#define KEY_NUM 6
