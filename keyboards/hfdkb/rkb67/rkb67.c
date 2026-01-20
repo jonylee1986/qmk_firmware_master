@@ -80,18 +80,6 @@ void keyboard_post_init_kb(void) {
     }
 }
 
-void suspend_power_down_kb(void) {
-#ifdef RGB_DRIVER_SDB_PIN
-    // writePinHigh(RGB_DRIVER_SDB_PIN);
-#endif
-}
-
-void suspend_wakeup_init_kb(void) {
-#ifdef RGB_DRIVER_SDB_PIN
-    // writePinLow(RGB_DRIVER_SDB_PIN);
-#endif
-}
-
 void matrix_init_kb(void) {
 #ifdef BT_MODE_ENABLE
     bt_init();

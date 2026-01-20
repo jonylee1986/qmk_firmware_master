@@ -49,6 +49,7 @@ static void long_pressed_keys_cb(uint16_t keycode);
 static bool process_record_other(uint16_t keycode, keyrecord_t *record);
 static void bt_scan_mode(void);
 static void bt_used_pin_init(void);
+
 #ifdef RGB_MATRIX_ENABLE
 void        open_rgb(void);
 static void close_rgb(void);
@@ -925,7 +926,8 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
 
     if (dev_info.devs != DEVS_USB) {
         static uint32_t query_vol_time = 0;
-        if (!bt_init_time && !kb_sleep_flag && (timer_elapsed32(query_vol_time) > 4000)) {
+        // We need to stop querying voltage when wl is unconnected or sleeping
+        if (!bt_init_time && !kb_sleep_flag && bts_info.bt_info.paired && (timer_elapsed32(query_vol_time) > 4000)) {
             query_vol_time = timer_read32();
             bts_send_vendor(v_query_vol);
         }
