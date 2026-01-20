@@ -32,18 +32,11 @@
     },
     "encoder": {
         "enabled": true,
-        "rotary": [
-            {
-                "pin_a": "C14",
-                "pin_b": "C13",
-                "resolution": 2
-            }
+        "rotary": [ { "pin_a": "C14", "pin_b": "C13", "resolution": 2 }
         ]
     },
     "dip_switch": {
-        "pins": [
-            "C11"
-        ]
+        "pins": [ "C11" ]
     },
     "eeprom": {
         "driver": "wear_leveling",
@@ -61,23 +54,57 @@
         "speed_steps": 64,
         "hue_steps": 32,
         "animations": {
+            "none": true,
             "solid_color": true,
+            "alphas_mods": true,
+            "gradient_up_down": true,
+            "gradient_left_right": true,
             "breathing": true,
+            "band_sat": false,
+            "band_val": false,
+            "band_pinwheel_sat": true,
+            "band_pinwheel_val": true,
+            "band_spiral_sat": true,
+            "band_spiral_val": true,
             "cycle_all": true,
             "cycle_left_right": true,
             "cycle_up_down": true,
-            "rainbow_moving_chevron": true,
             "cycle_out_in": true,
             "cycle_out_in_dual": true,
+            "rainbow_moving_chevron": false,
             "cycle_pinwheel": true,
             "cycle_spiral": true,
             "dual_beacon": true,
             "rainbow_beacon": true,
+            "rainbow_pinwheels": true,
+            "flower_blooming": true,
             "raindrops": true,
+            "jellybean_raindrops": true,
+            "hue_breathing": true,
+            "hue_pendulum": true,
+            "hue_wave": true,
+            "pixel_fractal": true,
+            "pixel_flow": true,
+            "pixel_rain": false,
             "typing_heatmap": true,
+            "digital_rain": true,
             "solid_reactive_simple": true,
             "solid_reactive": true,
-            "multisplash": true
+            "solid_reactive_wide": true,
+            "solid_reactive_multiwide": true,
+            "solid_reactive_cross": true,
+            "solid_reactive_multicross": true,
+            "solid_reactive_nexus": true,
+            "solid_reactive_multinexus": true,
+            "splash": true,
+            "multisplash": true,
+            "solid_splash": true,
+            "solid_multisplash": true,
+            "starlight": true,
+            "starlight_smooth": true,
+            "starlight_dual_hue": false,
+            "starlight_dual_sat": false,
+            "riverflow": true
         }
     }
 }

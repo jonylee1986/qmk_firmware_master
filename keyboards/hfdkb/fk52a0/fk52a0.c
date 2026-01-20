@@ -3,6 +3,9 @@
 
 #include QMK_KEYBOARD_H
 
+#include "usb_main.h"
+#include "common/bt_task.h"
+
 bool led_inited = false;
 
 void led_config_all(void) {
@@ -41,6 +44,17 @@ bool dip_switch_update_kb(uint8_t index, bool active) {
 }
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    if (get_low_vol_off()) {
+        // clear_keyboard();
+        bts_process_keys(keycode, 0, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        // bts_process_keys(0, 1, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        bts_task(dev_info.devs);
+        while (bts_is_busy()) {
+            wait_ms(1);
+        }
+        return false;
+    }
+
     if (process_record_user(keycode, record) != true) {
         return false;
     }
@@ -54,11 +68,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 }
 
 void matrix_init_kb(void) {
-#ifdef RGB_DRIVER_SDB_PIN
-    setPinOutputOpenDrain(RGB_DRIVER_SDB_PIN);
-    writePinHigh(RGB_DRIVER_SDB_PIN);
-#endif
-
 #ifdef BT_MODE_ENABLE
     bt_init();
     led_config_all();
@@ -89,19 +98,62 @@ void housekeeping_task_kb(void) {
 #ifdef CONSOLE_ENABLE
     debug_enable = true;
 #endif
-}
 
-void suspend_power_down_kb(void) {
-    // led_deconfig_all();
-#ifdef RGB_DRIVER_SDB_PIN
-    writePinLow(RGB_DRIVER_SDB_PIN);
-#endif
-}
+#ifdef USB_SUSPEND_STATE_CHECK
+    static uint32_t usb_suspend_timer = 0;
+    static uint32_t usb_suspend       = false;
 
-void suspend_wakeup_init_kb(void) {
-    // led_config_all();
-#ifdef RGB_DRIVER_SDB_PIN
-    writePinHigh(RGB_DRIVER_SDB_PIN);
+    if (dev_info.devs == DEVS_USB) {
+        if (usb_suspend) {
+            bool wakeup = false;
+            for (uint8_t r = 0; r < MATRIX_ROWS; r++) {
+                if (matrix_get_row(r)) {
+                    wakeup = true;
+                    break;
+                }
+            }
+            if (wakeup) {
+                // usbWakeupHost(&USB_DRIVER);
+                // restart_usb_driver(&USB_DRIVER);
+                usb_suspend       = false;
+                usb_suspend_timer = 0;
+#    ifdef RGB_DRIVER_SDB_PIN
+                writePinLow(RGB_DRIVER_SDB_PIN);
+#    endif
+            }
+        }
+
+        if ((USB_DRIVER.state != USB_ACTIVE)) {
+            if (!usb_suspend_timer) {
+                usb_suspend_timer = timer_read32();
+            } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
+                if (!usb_suspend) {
+                    usb_suspend = true;
+#    ifdef RGB_DRIVER_SDB_PIN
+                    writePinHigh(RGB_DRIVER_SDB_PIN);
+#    endif
+                }
+                usb_suspend_timer = 0;
+            }
+        } else {
+            if (usb_suspend) {
+                usb_suspend_timer = 0;
+                usb_suspend       = false;
+
+#    ifdef RGB_DRIVER_SDB_PIN
+                writePinLow(RGB_DRIVER_SDB_PIN);
+#    endif
+            }
+        }
+    } else {
+        if (usb_suspend) {
+            usb_suspend_timer = 0;
+            usb_suspend       = false;
+#    ifdef RGB_DRIVER_SDB_PIN
+            writePinLow(RGB_DRIVER_SDB_PIN);
+#    endif
+        }
+    }
 #endif
 }
 
@@ -149,12 +201,12 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
 #    endif
 
     // caps lock red
-    if ((host_keyboard_led_state().caps_lock) && ((bts_info.bt_info.paired) || (dev_info.devs == DEVS_USB))) {
-        RGB_MATRIX_INDICATOR_SET_COLOR(LED_CAPS_IND_INDEX, 60, 60, 60);
+    if (host_keyboard_led_state().caps_lock && (((dev_info.devs != DEVS_USB) && bts_info.bt_info.paired && !get_kb_sleep_flag()) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state != USB_SUSPENDED)))) {
+        rgb_matrix_set_color(LED_CAPS_IND_INDEX, 60, 60, 60);
     }
     // gui lock red
-    if (keymap_config.no_gui && ((bts_info.bt_info.paired) || (dev_info.devs == DEVS_USB)) && (get_highest_layer(default_layer_state) == 0)) {
-        RGB_MATRIX_INDICATOR_SET_COLOR(LED_WIN_IND_INDEX, 60, 60, 60);
+    if (keymap_config.no_gui && (((dev_info.devs != DEVS_USB) && bts_info.bt_info.paired && !get_kb_sleep_flag()) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state != USB_SUSPENDED)))) {
+        rgb_matrix_set_color(LED_WIN_IND_INDEX, 60, 60, 60);
     }
 
     return true;

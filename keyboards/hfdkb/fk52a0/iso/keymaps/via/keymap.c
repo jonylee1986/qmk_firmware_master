@@ -84,7 +84,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KC_W:
             if (W2UP_flag) {
                 if (dev_info.devs) {
-                    bts_process_keys(KC_UP, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                    bts_process_keys(KC_UP, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                 } else {
                     if (record->event.pressed) {
                         register_code(KC_UP);
@@ -98,7 +98,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KC_A:
             if (W2UP_flag) {
                 if (dev_info.devs) {
-                    bts_process_keys(KC_LEFT, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                    bts_process_keys(KC_LEFT, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                 } else {
                     if (record->event.pressed) {
                         register_code(KC_LEFT);
@@ -112,7 +112,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KC_S:
             if (W2UP_flag) {
                 if (dev_info.devs) {
-                    bts_process_keys(KC_DOWN, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                    bts_process_keys(KC_DOWN, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                 } else {
                     if (record->event.pressed) {
                         register_code(KC_DOWN);
@@ -126,7 +126,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KC_D:
             if (W2UP_flag) {
                 if (dev_info.devs) {
-                    bts_process_keys(KC_RGHT, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                    bts_process_keys(KC_RGHT, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                 } else {
                     if (record->event.pressed) {
                         register_code(KC_RGHT);
@@ -140,7 +140,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KC_UP:
             if (W2UP_flag) {
                 if (dev_info.devs) {
-                    bts_process_keys(KC_W, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                    bts_process_keys(KC_W, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                 } else {
                     if (record->event.pressed) {
                         register_code(KC_W);
@@ -154,7 +154,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KC_LEFT:
             if (W2UP_flag) {
                 if (dev_info.devs) {
-                    bts_process_keys(KC_A, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                    bts_process_keys(KC_A, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                 } else {
                     if (record->event.pressed) {
                         register_code(KC_A);
@@ -168,7 +168,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KC_DOWN:
             if (W2UP_flag) {
                 if (dev_info.devs) {
-                    bts_process_keys(KC_S, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                    bts_process_keys(KC_S, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                 } else {
                     if (record->event.pressed) {
                         register_code(KC_S);
@@ -182,7 +182,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KC_RGHT:
             if (W2UP_flag) {
                 if (dev_info.devs) {
-                    bts_process_keys(KC_D, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                    bts_process_keys(KC_D, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                 } else {
                     if (record->event.pressed) {
                         register_code(KC_D);
