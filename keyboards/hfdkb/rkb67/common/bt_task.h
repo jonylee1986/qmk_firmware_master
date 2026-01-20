@@ -27,6 +27,7 @@ extern dev_info_t dev_info;
 extern bts_info_t bts_info;
 
 bool get_low_vol_off(void);
+bool get_kb_sleep_flag(void);
 
 /**
  * @brief bluetooth 初始化函数

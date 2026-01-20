@@ -178,11 +178,11 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     }
 
     if (!readPin(BT_CABLE_PIN)) {
-        for (uint8_t i = SLED_START_INDEX; i <= SLED_END_INDEX; i++) {
-            rgb_matrix_set_color(i, 100, 100, 100);
+        for (uint8_t i = SLED_START_INDEX; i < (SLED_START_INDEX + SLED_NUM); i++) {
+            rgb_matrix_set_color(i, 80, 80, 80);
         }
     } else {
-        for (uint8_t i = SLED_START_INDEX; i <= SLED_END_INDEX; i++) {
+        for (uint8_t i = SLED_START_INDEX; i < (SLED_START_INDEX + SLED_NUM); i++) {
             rgb_matrix_set_color(i, 0, 0, 0);
         }
     }
@@ -198,12 +198,12 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
 #    endif
 
     // caps lock red
-    if ((host_keyboard_led_state().caps_lock) && ((bts_info.bt_info.paired) || (dev_info.devs == DEVS_USB))) {
-        RGB_MATRIX_INDICATOR_SET_COLOR(CAPS_LOCK_LED_INDEX, 100, 100, 100);
+    if (host_keyboard_led_state().caps_lock && (((dev_info.devs != DEVS_USB) && bts_info.bt_info.paired && !get_kb_sleep_flag()) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state != USB_SUSPENDED)))) {
+        rgb_matrix_set_color(CAPS_LOCK_LED_INDEX, 100, 100, 100);
     }
     // GUI lock red
     if (keymap_config.no_gui) {
-        RGB_MATRIX_INDICATOR_SET_COLOR(GUI_LOCK_LED_INDEX, 100, 100, 100);
+        rgb_matrix_set_color(GUI_LOCK_LED_INDEX, 100, 100, 100);
     }
 
     return true;
