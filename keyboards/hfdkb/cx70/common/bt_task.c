@@ -93,11 +93,11 @@ extern bool led_inited;
 extern void led_config_all(void);
 extern void led_deconfig_all(void);
 
-static uint32_t sleep_time[] = {1 * 60 * 1000, 3 * 60 * 1000, 5 * 60 * 1000, 30 * 60 * 1000, 60 * 60 * 1000};
+static uint32_t sleep_time[] = {(1 * 60 - 8) * 1000, (3 * 60 * 1000), (5 * 60 * 1000), (30 * 60 * 1000), (60 * 60 * 1000)};
 
-static const uint8_t rgb_index_table[]          = {255, 26, 25, 24, 255, 255, 23};
+static const uint8_t rgb_index_table[]          = {22, 26, 25, 24, 255, 255, 23};
 static const uint8_t rgb_index_color_table[][3] = {
-    {RGB_BLACK}, {RGB_BLUE}, {RGB_BLUE}, {RGB_BLUE}, {RGB_BLACK}, {RGB_BLACK}, {RGB_GREEN},
+    {RGB_RED}, {RGB_BLUE}, {RGB_BLUE}, {RGB_BLUE}, {RGB_BLACK}, {RGB_BLACK}, {RGB_GREEN},
 };
 
 static bool low_vol_off = false;
@@ -376,7 +376,7 @@ void bt_init(void) {
     if (dev_info.devs != DEVS_USB) {
         usbDisconnectBus(&USB_DRIVER);
         usbStop(&USB_DRIVER);
-        writePinHigh(A12);
+        // writePinHigh(A12);
     }
     if (dev_info.devs == DEVS_USB) {
         writePinLow(A14);
@@ -903,14 +903,14 @@ static void handle_ee_clr_indication(void) {
                 keymap_config.no_gui = false;
             }
 
-            bts_send_vendor(v_clear);
-            wait_ms(1000);
+            if (dev_info.devs > DEVS_USB && dev_info.devs < DEVS_2_4G) {
+                bts_send_vendor(v_clear);
+                wait_ms(1000);
 
-            if (dev_info.devs != DEVS_USB && !bts_info.bt_info.paired) {
+                bt_switch_mode(dev_info.last_devs, DEVS_HOST1, false);
+            } else {
                 if (dev_info.devs == DEVS_2_4G) {
                     bt_switch_mode(dev_info.last_devs, DEVS_2_4G, false);
-                } else {
-                    bt_switch_mode(dev_info.last_devs, dev_info.devs, false);
                 }
             }
         }
@@ -971,7 +971,7 @@ static void handle_bluetooth_indicator(void) {
                 }
 
                 /* 超时60s退出 */
-                if (timer_elapsed32(last_total_time) >= (3 * 60 * 1000)) {
+                if (timer_elapsed32(last_total_time) >= ((3 * 60 - 24) * 1000)) {
                     indicator_status = 0;
                     kb_sleep_flag    = true;
                 }
@@ -1042,15 +1042,15 @@ static void handle_bluetooth_indicator(void) {
                     USB_blink_time = timer_read32();
                 }
                 if (USB_blink) {
-                    rgb_matrix_set_color(rgb_index_table[DEVS_USB], 100, 100, 100);
+                    rgb_matrix_set_color(rgb_index_table[DEVS_USB], rgb_index_color_table[DEVS_USB][0], rgb_index_color_table[DEVS_USB][1], rgb_index_color_table[DEVS_USB][2]);
                 } else {
                     rgb_matrix_set_color(rgb_index_table[DEVS_USB], 0, 0, 0);
                 }
             }
             USB_switch_time = timer_read32();
         } else {
-            if (timer_elapsed32(USB_switch_time) < (3 * 1000)) {
-                rgb_matrix_set_color(rgb_index_table[DEVS_USB], 100, 100, 100);
+            if (timer_elapsed32(USB_switch_time) < (2 * 1000)) {
+                rgb_matrix_set_color(rgb_index_table[DEVS_USB], rgb_index_color_table[DEVS_USB][0], rgb_index_color_table[DEVS_USB][1], rgb_index_color_table[DEVS_USB][2]);
             }
         }
     }
@@ -1095,7 +1095,7 @@ static void show_low_voltage_indication(void) {
 static void show_volume_level_indication(void) {
     if (dev_info.devs != DEVS_USB) {
         static uint32_t query_vol_time = 0;
-        if (!bt_init_time && !kb_sleep_flag && (timer_elapsed32(query_vol_time) > 4000)) {
+        if (!bt_init_time && !kb_sleep_flag && bts_info.bt_info.paired && (timer_elapsed32(query_vol_time) > 4000)) {
             query_vol_time = timer_read32();
             bts_send_vendor(v_query_vol);
         }

@@ -1,7 +1,7 @@
 {
     "usb": {
         "pid": "0x8006",
-        "device_version": "1.0.2"
+        "device_version": "1.0.3"
     },
     "rgb_matrix": {
         "layout": [

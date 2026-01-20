@@ -939,7 +939,7 @@ static void battery_voltage_query(void) {
 // Display battery voltage on LEDs
 static void battery_voltage_display(void) {
     if (readPin(BT_CABLE_PIN)) {
-        uint8_t query_index[] = {67, 68, 69, 70, 71, 72};
+        uint8_t query_index[] = {72, 71, 70, 69, 68, 67};
         uint8_t pvol          = bts_info.bt_info.pvol;
         uint8_t led_count     = 0;
 
@@ -953,7 +953,7 @@ static void battery_voltage_display(void) {
             led_count = 3;
         else if (pvol >= 20)
             led_count = 2;
-        else if (pvol > 0 && !bts_info.bt_info.low_vol)
+        else if (pvol > 0 && bts_info.bt_info.pvol > 10)
             led_count = 1;
 
         RGB color = (RGB){80, 80, 80};
@@ -965,8 +965,16 @@ static void battery_voltage_display(void) {
 
 // Low battery breathing effect & long press to sleep
 static void battery_low_warning(void) {
+    static bool low_vol_warning = false;
     // if (readPin(BT_CABLE_PIN)) {
-    if (bts_info.bt_info.low_vol) {
+    if (bts_info.bt_info.pvol <= 10) {
+        low_vol_warning = true;
+    } else if (bts_info.bt_info.pvol >= 30) {
+        low_vol_warning = false;
+    }
+
+    // if (bts_info.bt_info.low_vol) {
+    if (low_vol_warning) {
         rgb_matrix_set_color_all(0, 0, 0);
 
         HSV     hsv        = {0, 255, 0};
@@ -1122,6 +1130,10 @@ static void indicator_bluetooth_connection(void) {
             rgb_flip = false;
             if (!kb_sleep_flag) {
                 if (!bts_info.bt_info.paired) {
+                    if (!bts_info.bt_info.pairing) {
+                        indicator_status = 2;
+                        break;
+                    }
                     indicator_status = 2;
                     if (!bts_info.bt_info.pairing) {
                         if (dev_info.devs == DEVS_2_4G) {

@@ -35,9 +35,7 @@ void led_deconfig_all(void) {
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     if (get_low_vol_off()) {
-        // clear_keyboard();
         bts_process_keys(keycode, 0, dev_info.devs, keymap_config.no_gui, KEY_NUM);
-        // bts_process_keys(0, 1, dev_info.devs, keymap_config.no_gui, KEY_NUM);
         bts_task(dev_info.devs);
         while (bts_is_busy()) {
             wait_ms(1);
@@ -192,8 +190,6 @@ void housekeeping_task_kb(void) {
 }
 
 #ifdef RGB_MATRIX_ENABLE
-void blink_rgb_advanced(void);
-
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     if (!rgb_matrix_get_flags()) {
         rgb_matrix_set_color_all(RGB_OFF);
@@ -211,11 +207,11 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
 
     // caps lock red
     if ((host_keyboard_led_state().caps_lock) && ((bts_info.bt_info.paired) || (dev_info.devs == DEVS_USB))) {
-        RGB_MATRIX_INDICATOR_SET_COLOR(CAPS_LOCK_LED_INDEX, 100, 100, 100);
+        rgb_matrix_set_color(CAPS_LOCK_LED_INDEX, 100, 100, 100);
     }
     // GUI lock red
     if (keymap_config.no_gui) {
-        RGB_MATRIX_INDICATOR_SET_COLOR(GUI_LOCK_LED_INDEX, 100, 100, 100);
+        rgb_matrix_set_color(GUI_LOCK_LED_INDEX, 100, 100, 100);
     }
 
     return true;
