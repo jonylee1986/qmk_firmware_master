@@ -110,14 +110,14 @@ long_pressed_keys_t long_pressed_keys[] = {
 
 void led_config_all(void) {
     if (!led_inited) {
-        writePin(LED_CAPS_LOCK_IND_PIN, host_keyboard_led_state().caps_lock);
+        // writePin(LED_CAPS_LOCK_IND_PIN, host_keyboard_led_state().caps_lock);
         led_inited = true;
     }
 }
 void led_deconfig_all(void) {
     if (led_inited) {
-        writePinLow(LED_CAPS_LOCK_IND_PIN);
-        writePinLow(LED_CHRG_LOW_PWR_PIN);
+        // writePinLow(LED_CAPS_LOCK_IND_PIN);
+        // writePinLow(LED_CHRG_LOW_PWR_PIN);
         led_inited = false;
     }
 }
@@ -692,6 +692,8 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 if ((dev_info.devs != DEVS_HOST1) && (!readPin(MM_BT_MODE_PIN))) {
                     bt_switch_mode(dev_info.devs, DEVS_HOST1, false);
+                    LCD_IND_update();
+                    LCD_charge_update();
                 }
             }
         } break;
@@ -699,6 +701,8 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 if ((dev_info.devs != DEVS_HOST2) && (!readPin(MM_BT_MODE_PIN))) {
                     bt_switch_mode(dev_info.devs, DEVS_HOST2, false);
+                    LCD_IND_update();
+                    LCD_charge_update();
                 }
             }
         } break;
@@ -706,6 +710,8 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 if ((dev_info.devs != DEVS_HOST3) && (!readPin(MM_BT_MODE_PIN))) {
                     bt_switch_mode(dev_info.devs, DEVS_HOST3, false);
+                    LCD_IND_update();
+                    LCD_charge_update();
                 }
             }
         } break;
@@ -713,6 +719,8 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 if ((dev_info.devs != DEVS_2_4G) && (!readPin(MM_2G4_MODE_PIN))) {
                     bt_switch_mode(dev_info.devs, DEVS_2_4G, false);
+                    LCD_IND_update();
+                    LCD_charge_update();
                 }
             }
         } break;
@@ -822,18 +830,18 @@ static void bt_used_pin_init(void) {
  */
 static void bt_scan_mode(void) {
 #    ifdef MM_BT_MODE_PIN
-    // uint8_t        now_mode;
-    // static uint8_t old_mode;
+    uint8_t        now_mode = 0;
+    static uint8_t old_mode = 0;
     // static bool    first_call = true;
 
     if (readPin(MM_BT_MODE_PIN) && !readPin(MM_2G4_MODE_PIN)) {
-        // now_mode = 0;
+        now_mode = 0;
         if (dev_info.devs != DEVS_2_4G) bt_switch_mode(dev_info.devs, DEVS_2_4G, false); // 2_4G mode
     } else if (readPin(MM_2G4_MODE_PIN) && !readPin(MM_BT_MODE_PIN)) {
-        // now_mode = 1;
+        now_mode = 1;
         if ((dev_info.devs == DEVS_USB) || (dev_info.devs == DEVS_2_4G)) bt_switch_mode(dev_info.devs, dev_info.last_devs, false); // BT mode
     } else {
-        // now_mode = 2;
+        now_mode = 2;
         if (dev_info.devs != DEVS_USB) bt_switch_mode(dev_info.devs, DEVS_USB, false); // usb mode
     }
 
@@ -844,17 +852,18 @@ static void bt_scan_mode(void) {
     //     return;
     // }
 
-//     if ((old_mode != now_mode) && !bts_info.bt_info.low_vol) {
-//         old_mode = now_mode;
+    if (old_mode != now_mode) {
+        old_mode = now_mode;
+        LCD_IND_update();
+        LCD_charge_update();
+        // #        ifdef RGB_MATRIX_DRIVER_SDB_PIN
+        //         writePinLow(RGB_MATRIX_DRIVER_SDB_PIN);
+        //         wait_ms(1);
+        //         writePinHigh(RGB_MATRIX_DRIVER_SDB_PIN);
+        // #        endif
 
-// #        ifdef RGB_MATRIX_DRIVER_SDB_PIN
-//         writePinLow(RGB_MATRIX_DRIVER_SDB_PIN);
-//         wait_ms(1);
-//         writePinHigh(RGB_MATRIX_DRIVER_SDB_PIN);
-// #        endif
-
-//         rgb_matrix_init();
-//     }
+        //         rgb_matrix_init();
+    }
 #    endif
 }
 
@@ -874,6 +883,10 @@ static void close_rgb(void) {
 #    ifdef RGB_MATRIX_DRIVER_SDB_PIN
             writePinLow(RGB_MATRIX_DRIVER_SDB_PIN);
 #    endif
+
+            writePinLow(LED_CAPS_LOCK_IND_PIN);
+            writePinLow(LED_CHRG_LOW_PWR_PIN);
+
             LCD_command_update(LCD_SLEEP);
         }
     } else {
@@ -939,6 +952,8 @@ static void open_rgb(void) {
         LCD_charge_update();
 
         led_config_all();
+
+        writePin(LED_CAPS_LOCK_IND_PIN, host_keyboard_led_state().caps_lock);
 
         sober = true;
     }

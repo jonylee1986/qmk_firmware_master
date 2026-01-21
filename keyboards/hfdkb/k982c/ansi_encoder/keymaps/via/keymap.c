@@ -118,6 +118,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                         tap_code(KC_MUTE);
                     } else {
                         rgb_matrix_step();
+                        if (dev_info.rgb_test_en) {
+                            dev_info.rgb_test_en = 0;
+                            eeconfig_update_user(dev_info.raw);
+                        }
                     }
                 }
             }

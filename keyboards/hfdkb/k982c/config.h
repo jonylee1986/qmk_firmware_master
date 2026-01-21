@@ -20,8 +20,8 @@
 /* Multi mode used pins */
 #    define MM_CABLE_PIN B9
 #    define MM_CHARGE_PIN B8
-#    define MM_BT_MODE_PIN C0
-#    define MM_2G4_MODE_PIN B11
+#    define MM_BT_MODE_PIN B11
+#    define MM_2G4_MODE_PIN C0
 
 /* Indicator index of mm device */
 #    define MM_HOST1_INDEX 15
@@ -51,7 +51,7 @@
 #    define RGB_MATRIX_DRIVER_SDB_PIN A15
 #    define LED_CHRG_LOW_PWR_PIN C15
 #    define LED_CAPS_LOCK_IND_PIN D2
-#    define KEY_NUM 8
+#    define KEY_NUM 6
 #endif
 
 /* RGB Matrix Driver Configuration */

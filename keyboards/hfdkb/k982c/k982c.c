@@ -68,7 +68,6 @@ static uint8_t color_tab[][3] = {
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     if (low_bat_vol_off) {
-        // clear_keyboard();
         bts_process_keys(keycode, 0, dev_info.devs, keymap_config.no_gui, KEY_NUM);
         bts_task(dev_info.devs);
         while (bts_is_busy()) {
@@ -99,7 +98,9 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 #    endif
         case RM_HUEU:
             if (record->event.pressed) {
-                dev_info.rgb_test_en = 0;
+                if (dev_info.rgb_test_en) {
+                    dev_info.rgb_test_en = 0;
+                }
                 dev_info.color_index++;
                 if (dev_info.color_index >= sizeof(color_tab) / sizeof(color_tab[0])) {
                     dev_info.color_index = 0;
@@ -110,7 +111,9 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             return false;
         case RM_HUED:
             if (record->event.pressed) {
-                dev_info.rgb_test_en = 0;
+                if (dev_info.rgb_test_en) {
+                    dev_info.rgb_test_en = 0;
+                }
                 if (dev_info.color_index == 0) {
                     dev_info.color_index = sizeof(color_tab) / sizeof(color_tab[0]) - 1;
                 } else {
@@ -123,7 +126,10 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case RM_PREV:
         case RM_NEXT:
             if (record->event.pressed) {
-                dev_info.rgb_test_en = 0;
+                if (dev_info.rgb_test_en) {
+                    dev_info.rgb_test_en = 0;
+                    eeconfig_update_user(dev_info.raw);
+                }
             }
             return true;
 
