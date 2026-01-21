@@ -189,6 +189,8 @@ mode_t mode = MODE_WORKING;
 // USB related
 static uint32_t USB_switch_time = 0;
 
+static bool Low_power = false;
+
 typedef struct PACKED {
     uint32_t blink_time;
     uint32_t full_time;
@@ -462,6 +464,7 @@ void bt_init(void) {
     if (dev_info.devs != DEVS_USB) {
         usbDisconnectBus(&USB_DRIVER);
         usbStop(&USB_DRIVER);
+        writePinHigh(A12);
     }
 
     setPinOutput(A14);
@@ -612,6 +615,8 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
     // if (!rgb_matrix_config.enable && rgb_status_save) {
     //     rgb_matrix_enable_noeeprom();
     // }
+    extern void wwdg_pause(void);
+    extern void wwdg_resume(void);
 
     // Handle USB driver state changes
     bool usb_sws = !!last_mode ? !now_mode : !!now_mode;
@@ -620,7 +625,9 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
             usbDisconnectBus(&USB_DRIVER);
             usbStop(&USB_DRIVER);
         } else {
+            wwdg_pause();
             init_usb_driver(&USB_DRIVER);
+            wwdg_resume();
         }
     }
 
@@ -878,8 +885,12 @@ static void bt_used_pin_init(void) {
 
 static void bt_scan_mode(void) {
 #if defined(MM_BT_MODE_PIN) && defined(MM_2G4_MODE_PIN)
-    uint8_t        now_mode;
-    static uint8_t old_mode;
+    uint8_t        now_mode   = 0;
+    static uint8_t old_mode   = 0;
+    static bool    first_call = true;
+
+    extern uint16_t time;
+    extern void     WWDG_SetCounter(uint8_t Counter);
 
     if (readPin(MM_BT_MODE_PIN) && !readPin(MM_2G4_MODE_PIN)) {
         now_mode = 0;
@@ -893,11 +904,23 @@ static void bt_scan_mode(void) {
         now_mode = 2;
         if (dev_info.devs != DEVS_USB) bt_switch_mode(dev_info.devs, DEVS_USB, false); // usb mode
     }
-    if (old_mode != now_mode) {
+
+    if (first_call) {
+        old_mode   = now_mode;
+        first_call = false;
+        return;
+    }
+
+    if ((old_mode != now_mode) && !Low_power) {
         old_mode = now_mode;
+
         writePinLow(RGB_MATRIX_SHUTDOWN_PIN);
         wait_ms(1);
         writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
+
+        WWDG_SetCounter(127);
+        time = timer_read();
+
         rgb_matrix_init();
     }
 #endif
@@ -961,8 +984,10 @@ static void close_rgb(void) {
             close_rgb_time = timer_read32();
             rgb_matrix_disable_noeeprom();
 
-            show_chrg      = false;
-            show_chrg_full = false;
+            show_chrg                              = false;
+            show_chrg_full                         = false;
+            charge_complete_warning.completed      = true;
+            charge_complete_warning.full_completed = true;
 
 #ifdef RGB_MATRIX_SHUTDOWN_PIN
             // setPinOutputOpenDrain(RGB_MATRIX_SHUTDOWN_PIN);
@@ -1149,7 +1174,6 @@ static void usb_indicate(void) {
 // ===========================================
 static void bt_bat_low_level_warning(void) {
     // static bool Low_power_bink = false;
-    static bool Low_power = false;
     // static uint32_t Low_power_time = 0;
 
     if ((bts_info.bt_info.pvol <= 20) && !Low_power) {
@@ -1181,17 +1205,19 @@ static void bt_charging_indication(void) {
     extern bool is_charging(void);
     extern bool is_fully_charged(void);
 
+    // if (!readPin(MM_CABLE_PIN)) {
+    // if (!readPin(MM_CHARGE_PIN)) {
     if (is_charging()) {
-        if (is_fully_charged()) {
-            entry_full_time = timer_read32();
+        if (!is_fully_charged()) {
             if (timer_elapsed32(entry_chrg_time) >= 500) {
+                entry_full_time = timer_read32();
                 // show_chrging = true;
                 if (!is_in_charging_state) {
                     is_in_charging_state = true;
                     if (!charge_complete_warning.triggered) {
                         charge_complete_warning.triggered   = true;
                         charge_complete_warning.blink_count = 0;
-                        charge_complete_warning.blink_time  = timer_read32();
+                        // charge_complete_warning.blink_time  = timer_read32();
                         charge_complete_warning.blink_state = false;
                         charge_complete_warning.completed   = false;
 
@@ -1214,7 +1240,7 @@ static void bt_charging_indication(void) {
                     // Count complete on/off cycles (increment on falling edge)
                     if (charge_complete_warning.blink_state) {
                         charge_complete_warning.blink_count++;
-                        if (charge_complete_warning.blink_count > 9) {
+                        if (charge_complete_warning.blink_count > 10) {
                             charge_complete_warning.completed   = true;
                             charge_complete_warning.blink_state = false;
 
@@ -1232,16 +1258,18 @@ static void bt_charging_indication(void) {
                         rgb_matrix_set_color(leds[i], 0, 0, 0);
                     }
                 }
+                // }
             }
         } else {
             // Charge pin indicates full - trigger only if not already displayed
-            entry_chrg_time = timer_read32();
             if (timer_elapsed32(entry_full_time) >= 2000) {
+                entry_chrg_time = timer_read32();
                 // if ((dev_info.devs != DEVS_USB) && (bts_info.bt_info.pvol >= 100)) {
                 if (!is_in_full_power_state) {
                     is_in_full_power_state = true;
                     if (!charge_complete_warning.full_triggered) {
                         charge_complete_warning.full_triggered = true;
+                        charge_complete_warning.full_completed = false;
                         charge_complete_warning.full_time      = timer_read32();
 
                         show_chrg_full = true;
@@ -1265,6 +1293,9 @@ static void bt_charging_indication(void) {
         is_in_charging_state   = false;
         is_in_full_power_state = false;
         memset(&charge_complete_warning, 0, sizeof(charge_complete_warning_t));
+
+        charge_complete_warning.completed      = true;
+        charge_complete_warning.full_completed = true;
 
         entry_chrg_time = timer_read32();
         entry_full_time = timer_read32();
