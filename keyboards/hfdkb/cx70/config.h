@@ -15,6 +15,8 @@
 #    define RF_MODE_SW_PIN C14
 #    define RGB_DRIVER_SDB_PIN B6
 #    define USB_SUSPEND_STATE_CHECK
+#    define USBLINK_Status readPin(BT_CABLE_PIN)
+#    define CHARGE_Status readPin(BT_CHARGE_PIN)
 #endif
 
 /* SPI Config for spi flash*/

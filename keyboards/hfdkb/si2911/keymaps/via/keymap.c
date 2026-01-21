@@ -391,7 +391,6 @@ static uint8_t  f_ChargeFull = 0;
 #    define CHR_DEBOUNCE 100
 
 void Charge_Chat(void) {
-#    if defined(MM_CABLE_PIN) && defined(MM_CHARGE_PIN)
     uint8_t i = 0;
 
     if (USBLINK_Status == 0) i |= 0x01;
@@ -418,7 +417,6 @@ void Charge_Chat(void) {
             }
         }
     }
-#    endif
 }
 
 bool is_charging(void) {

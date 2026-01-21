@@ -1120,8 +1120,11 @@ static void show_volume_level_indication(void) {
 static void show_charging_indication(void) {
     static uint32_t entry_chrg_time = 0;
 
-    if (!readPin(BT_CABLE_PIN)) {
-        if (!readPin(BT_CHARGE_PIN)) {
+    extern bool is_charging(void);
+    extern bool is_fully_charged(void);
+
+    if (is_charging()) {
+        if (!is_fully_charged()) {
             if (timer_elapsed32(entry_chrg_time) > 500) {
                 rgb_matrix_set_color(0, 0, 0, 100);
             }

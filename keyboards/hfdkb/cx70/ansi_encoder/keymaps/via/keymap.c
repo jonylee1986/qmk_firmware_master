@@ -263,6 +263,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 }
 
 void housekeeping_task_user(void) {
+    static uint32_t chrg_check_time = 0;
     // switch (pressed_code_user) {
     //     case KC_W2UP:
     //         if ((timer_elapsed32(pressed_time_user) > 3000) && (pressed_time_user)) {
@@ -272,6 +273,11 @@ void housekeeping_task_user(void) {
     //     default:
     //         break;
     // }
+    extern void Charge_Chat(void);
+    if (timer_elapsed32(chrg_check_time) >= 2) {
+        chrg_check_time = timer_read32();
+        Charge_Chat();
+    }
 }
 
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
@@ -302,3 +308,50 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 
     return true;
 }
+
+#if defined(BT_CABLE_PIN) && defined(BT_CABLE_PIN)
+static uint8_t  rChr_ChkBuf  = 0;
+static uint8_t  rChr_OldBuf  = 0;
+static uint16_t rChr_Cnt     = 0;
+static uint8_t  f_ChargeOn   = 0;
+static uint8_t  f_ChargeFull = 0;
+
+#    define CHR_DEBOUNCE 100
+
+void Charge_Chat(void) {
+    uint8_t i = 0;
+
+    if (USBLINK_Status == 0) i |= 0x01;
+    if (CHARGE_Status == 1 || (dev_info.devs != DEVS_USB && bts_info.bt_info.pvol >= 100)) i |= 0x02;
+
+    if (rChr_ChkBuf != i) {
+        rChr_Cnt    = CHR_DEBOUNCE;
+        rChr_ChkBuf = i;
+    } else {
+        if (rChr_Cnt != 0) {
+            rChr_Cnt--;
+            if (rChr_Cnt == 0) {
+                i = rChr_ChkBuf ^ rChr_OldBuf;
+
+                if (i != 0) {
+                    rChr_OldBuf = rChr_ChkBuf;
+
+                    if (i) {
+                        f_ChargeOn = (rChr_ChkBuf & 0x01) ? 1 : 0;
+
+                        f_ChargeFull = (rChr_ChkBuf & 0x02) ? 1 : 0;
+                    }
+                }
+            }
+        }
+    }
+}
+
+bool is_charging(void) {
+    return f_ChargeOn;
+}
+
+bool is_fully_charged(void) {
+    return f_ChargeFull;
+}
+#endif
