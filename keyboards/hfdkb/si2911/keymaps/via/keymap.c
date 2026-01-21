@@ -234,8 +234,11 @@ bool rgb_matrix_indicators_user(void) {
     return true;
 }
 
+bool show_chrg      = false;
+bool show_chrg_full = false;
+
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
-    if (!backlight_sleep_flag && rgb_matrix_get_flags()) {
+    if (!show_chrg && !show_chrg_full && !backlight_sleep_flag && rgb_matrix_get_flags()) {
         // if (!readPin(MM_CABLE_PIN)) {
         //     bled_task();
         // } else {
@@ -316,6 +319,8 @@ void housekeeping_task_user(void) {
 }
 
 void matrix_scan_user(void) {
+    static uint32_t chrg_check_time = 0;
+
 #ifdef MULTIMODE_ENABLE
     bt_task();
 #endif
@@ -352,6 +357,12 @@ void matrix_scan_user(void) {
         }
     }
 #endif
+
+    extern void Charge_Chat(void);
+    if (timer_elapsed32(chrg_check_time) >= 2) {
+        chrg_check_time = timer_read32();
+        Charge_Chat();
+    }
 }
 
 void matrix_init_user(void) {
@@ -370,3 +381,50 @@ void matrix_init_user(void) {
     led_config_all();
 #endif
 }
+
+#if defined(MM_CABLE_PIN) && defined(MM_CHARGE_PIN)
+static uint8_t  rChr_ChkBuf  = 0;
+static uint8_t  rChr_OldBuf  = 0;
+static uint16_t rChr_Cnt     = 0;
+static uint8_t  f_ChargeOn   = 0;
+static uint8_t  f_ChargeFull = 0;
+
+#    define CHR_DEBOUNCE 100
+
+void Charge_Chat(void) {
+    uint8_t i = 0;
+
+    if (USBLINK_Status == 0) i |= 0x01;
+    if ((CHARGE_Status == 0) || ((dev_info.devs != DEVS_USB) && (bts_info.bt_info.pvol >= 100))) i |= 0x02;
+
+    if (rChr_ChkBuf != i) {
+        rChr_Cnt    = CHR_DEBOUNCE;
+        rChr_ChkBuf = i;
+    } else {
+        if (rChr_Cnt != 0) {
+            rChr_Cnt--;
+            if (rChr_Cnt == 0) {
+                i = rChr_ChkBuf ^ rChr_OldBuf;
+
+                if (i != 0) {
+                    rChr_OldBuf = rChr_ChkBuf;
+
+                    if (i & 0x3) {
+                        f_ChargeOn = (rChr_ChkBuf & 0x01) ? 1 : 0;
+
+                        f_ChargeFull = (rChr_ChkBuf & 0x02) ? 1 : 0;
+                    }
+                }
+            }
+        }
+    }
+}
+
+bool is_charging(void) {
+    return f_ChargeOn;
+}
+
+bool is_fully_charged(void) {
+    return f_ChargeFull;
+}
+#endif

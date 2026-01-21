@@ -138,6 +138,12 @@ static bool kb_sleep_flag  = false;
 
 bool backlight_sleep_flag = false;
 
+static bool is_in_charging_state   = false;
+static bool is_in_full_power_state = false;
+
+// extern bool show_chrg;
+// extern bool show_chrg_full;
+
 // static bool long_pressed_flag = false;
 
 // Device indicator config
@@ -197,9 +203,8 @@ typedef struct PACKED {
 } charge_complete_warning_t;
 static charge_complete_warning_t charge_complete_warning = {0};
 
-// bool show_charging = false;
-// bool show_charged  = false;
-// bool show_low      = false;
+extern bool show_chrg;
+extern bool show_chrg_full;
 
 #include "command.h"
 #include "action.h"
@@ -956,6 +961,9 @@ static void close_rgb(void) {
             close_rgb_time = timer_read32();
             rgb_matrix_disable_noeeprom();
 
+            show_chrg      = false;
+            show_chrg_full = false;
+
 #ifdef RGB_MATRIX_SHUTDOWN_PIN
             // setPinOutputOpenDrain(RGB_MATRIX_SHUTDOWN_PIN);
             writePinLow(RGB_MATRIX_SHUTDOWN_PIN);
@@ -1165,109 +1173,101 @@ static void bt_bat_low_level_warning(void) {
 }
 
 static void bt_charging_indication(void) {
-    static bool show_chrg_full = false;
+    const uint8_t leds[] = {102, 103, 104, 105, 106};
 
-    // This flag persists until system restart - once charge full is displayed, it won't trigger again
-    static bool charge_full_displayed = false;
+    static uint32_t entry_chrg_time = 0;
+    static uint32_t entry_full_time = 0;
 
-    static bool is_in_charging_state   = false;
-    static bool is_in_full_power_state = false;
+    extern bool is_charging(void);
+    extern bool is_fully_charged(void);
 
-    if (!readPin(MM_CABLE_PIN)) {
-        if (!readPin(MM_CHARGE_PIN)) {
-            if (!charge_full_displayed) {
-                charge_complete_warning.entry_full_time = timer_read32();
-                if (timer_elapsed32(charge_complete_warning.entry_chrg_time) >= 1200) {
-                    // show_chrging = true;
-                    if (!is_in_charging_state) {
-                        is_in_charging_state = true;
-                        if (!charge_complete_warning.triggered) {
-                            charge_complete_warning.triggered   = true;
-                            charge_complete_warning.blink_count = 0;
-                            charge_complete_warning.blink_time  = timer_read32();
+    if (is_charging()) {
+        if (is_fully_charged()) {
+            entry_full_time = timer_read32();
+            if (timer_elapsed32(entry_chrg_time) >= 500) {
+                // show_chrging = true;
+                if (!is_in_charging_state) {
+                    is_in_charging_state = true;
+                    if (!charge_complete_warning.triggered) {
+                        charge_complete_warning.triggered   = true;
+                        charge_complete_warning.blink_count = 0;
+                        charge_complete_warning.blink_time  = timer_read32();
+                        charge_complete_warning.blink_state = false;
+                        charge_complete_warning.completed   = false;
+
+                        // chrg_total_time = timer_read32();
+
+                        show_chrg = true;
+                    }
+                }
+            }
+
+            if (!charge_complete_warning.completed) {
+                // if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 11) {
+                // if (!charge_complete_warning.completed && timer_elapsed32(chrg_total_time) < 10000) {
+                // if (timer_elapsed32(charge_complete_warning.chrg_total_time) < 10000) {
+
+                if (timer_elapsed32(charge_complete_warning.blink_time) >= 500) {
+                    charge_complete_warning.blink_time  = timer_read32();
+                    charge_complete_warning.blink_state = !charge_complete_warning.blink_state;
+
+                    // Count complete on/off cycles (increment on falling edge)
+                    if (charge_complete_warning.blink_state) {
+                        charge_complete_warning.blink_count++;
+                        if (charge_complete_warning.blink_count > 9) {
+                            charge_complete_warning.completed   = true;
                             charge_complete_warning.blink_state = false;
-                            charge_complete_warning.completed   = false;
+
+                            show_chrg = false;
                         }
                     }
                 }
 
-                if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 10) {
-                    if (timer_elapsed32(charge_complete_warning.blink_time) >= 1000) {
-                        charge_complete_warning.blink_time  = timer_read32();
-                        charge_complete_warning.blink_state = !charge_complete_warning.blink_state;
-
-                        if (charge_complete_warning.blink_state) {
-                            charge_complete_warning.blink_count++;
-                            if (charge_complete_warning.blink_count >= 10) {
-                                charge_complete_warning.completed   = true;
-                                charge_complete_warning.blink_state = false;
-                            }
-                        }
+                if (charge_complete_warning.blink_state) {
+                    for (uint8_t i = 0; i < 5; i++) {
+                        rgb_matrix_set_color(leds[i], 0, 100, 0);
                     }
-
-                    if (charge_complete_warning.blink_state) {
-                        for (uint8_t i = 102; i <= 106; i++) {
-                            rgb_matrix_set_color(i, RGB_GREEN);
-                        }
-                    } else {
-                        for (uint8_t i = 102; i <= 106; i++) {
-                            rgb_matrix_set_color(i, RGB_OFF);
-                        }
+                } else {
+                    for (uint8_t i = 0; i < 5; i++) {
+                        rgb_matrix_set_color(leds[i], 0, 0, 0);
                     }
                 }
             }
         } else {
             // Charge pin indicates full - trigger only if not already displayed
-            // charge_complete_warning.entry_chrg_time = timer_read32();
-            // if (timer_elapsed32(charge_complete_warning.entry_full_time) >= 1200) {
-            //     if (!charge_full_displayed) {
-            //         show_chrg_full        = true;
-            //         charge_full_displayed = true;
-            //     }
-            // }
-        }
+            entry_chrg_time = timer_read32();
+            if (timer_elapsed32(entry_full_time) >= 2000) {
+                // if ((dev_info.devs != DEVS_USB) && (bts_info.bt_info.pvol >= 100)) {
+                if (!is_in_full_power_state) {
+                    is_in_full_power_state = true;
+                    if (!charge_complete_warning.full_triggered) {
+                        charge_complete_warning.full_triggered = true;
+                        charge_complete_warning.full_time      = timer_read32();
 
-        // Check voltage >= 100% while cable connected - trigger only if not already displayed
-        if ((bts_info.bt_info.pvol >= 100) && !charge_full_displayed) {
-            show_chrg_full        = true;
-            charge_full_displayed = true;
-        }
-
-        if (show_chrg_full) {
-            if (!is_in_full_power_state) {
-                is_in_full_power_state = true;
-                if (!charge_complete_warning.full_triggered) {
-                    charge_complete_warning.full_triggered = true;
-                    charge_complete_warning.full_time      = timer_read32();
+                        show_chrg_full = true;
+                    }
                 }
             }
 
             if (!charge_complete_warning.full_completed) {
                 if (timer_elapsed32(charge_complete_warning.full_time) <= 10000) {
-                    for (uint8_t i = 102; i <= 106; i++) {
-                        rgb_matrix_set_color(i, RGB_GREEN);
+                    for (uint8_t i = 0; i < 5; i++) {
+                        rgb_matrix_set_color(leds[i], 0, 100, 0);
                     }
                 } else {
                     charge_complete_warning.full_completed = true;
-                    show_chrg_full                         = false;
+
+                    show_chrg_full = false;
                 }
             }
         }
     } else {
-        // Cable disconnected - reset charging state but NOT charge_full_displayed
-        charge_full_displayed = false;
-
         is_in_charging_state   = false;
         is_in_full_power_state = false;
-        // memset(&charge_complete_warning, 0, sizeof(charge_complete_warning_t));
-        charge_complete_warning.full_completed = false;
-        charge_complete_warning.completed      = false;
-        charge_complete_warning.full_triggered = false;
-        charge_complete_warning.triggered      = false;
-        charge_complete_warning.blink_count    = 0;
-        charge_complete_warning.blink_state    = false;
-        charge_complete_warning.blink_time     = 0;
-        // charge_complete_warning.full_time      = 0;
+        memset(&charge_complete_warning, 0, sizeof(charge_complete_warning_t));
+
+        entry_chrg_time = timer_read32();
+        entry_full_time = timer_read32();
     }
 }
 
