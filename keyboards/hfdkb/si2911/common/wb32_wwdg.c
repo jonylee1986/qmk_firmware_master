@@ -10,70 +10,20 @@ bool     feed_dog   = false;
 bool     enable_dog = false;
 uint16_t time       = 0;
 
-bool process_record_kb_dg(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-        case KC_Q: {
-            if (record->event.pressed) {
-                Disable_WWDG();
-                feed_dog = false;
-            }
-            return false;
-        }
-        case KC_T: {
-            if (record->event.pressed) {
-                enable_dog = true;
-                return false;
-            }
-        }
-        case KC_R: {
-            if (record->event.pressed) {
-                // RCC->CLRRSTSTAT = RCC_CLRRSTSTAT_CLR;
-
-                setPinOutputOpenDrain(C11);
-                writePinLow(C11);
-                wait_ms(1);
-                writePinHigh(C11);
-                wait_ms(20);
-
-                WWDG_SetCounter(127);
-                time = timer_read();
-
-                rgb_matrix_init();
-                // uprintf("snled27351 reset!!\n");
-
-                // uprintf("%ld\n", RCC->RSTSTAT);
-                // for (uint8_t i = 0; i < SNLED27351_DRIVER_COUNT; i++) {
-                //     // snled27351_sw_return_normal(i);
-                //     snled27351_init(i);
-                // }
-
-                return false;
-            }
-        }
-        case KC_Y: {
-            if (record->event.pressed) {
-                // rgb_matrix_init();
-                // uprintf("%ld\n", RCC->RSTSTAT);
-                // for (uint8_t i = 0; i < SNLED27351_DRIVER_COUNT; i++) {
-                //     // snled27351_sw_return_normal(i);
-                //     snled27351_init(i);
-                // }
-
-                return true;
-            }
-        }
-        case KC_U: {
-            if (record->event.pressed) {
-                // RCC->CLRRSTSTAT = RCC_CLRRSTSTAT_CLR;
-
-                return true;
-            }
-        }
-
-        default:
-            break;
+// Temporarily disable watchdog for long-running operations like flash writes
+void wwdg_pause(void) {
+    if (feed_dog) {
+        Disable_WWDG();
     }
-    return true;
+}
+
+// Re-enable watchdog after operation completes
+void wwdg_resume(void) {
+    if (feed_dog) {
+        Init_WWDG();
+        WWDG_Enable(127);
+        time = timer_read();
+    }
 }
 
 void housekeeping_task_kb(void) {
