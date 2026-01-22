@@ -30,6 +30,8 @@
 #    define BT_USB_COLOR RGB_WHITE   // USB指示灯颜色
 
 #    define USB_SUSPEND_CHECK_ENABLE
+#    define USBLINK_Status readPin(BT_CABLE_PIN)
+#    define CHARGE_Status readPin(BT_CHARGE_PIN)
 #endif
 
 /* RGB Matrix */

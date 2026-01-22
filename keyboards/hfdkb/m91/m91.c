@@ -261,6 +261,8 @@ void matrix_scan_kb(void) {
 }
 
 void housekeeping_task_kb(void) {
+    static uint32_t chrg_check_time = 0;
+
 #ifdef BT_MODE_ENABLE
     extern void housekeeping_task_bt(void);
     housekeeping_task_bt();
@@ -279,6 +281,12 @@ void housekeeping_task_kb(void) {
         } while (nkro_mode != keymap_config.nkro);
     }
 #endif // NKRO_ENABLE
+
+    extern void Charge_Chat(void);
+    if (timer_elapsed32(chrg_check_time) >= 2) {
+        chrg_check_time = timer_read32();
+        Charge_Chat();
+    }
 }
 
 static bool backlight_shut_down = false;
@@ -291,7 +299,7 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
         rgb_matrix_set_color_all(0, 0, 0);
     }
 
-    if (bts_info.bt_info.low_vol && readPin(BT_CABLE_PIN)) {
+    if (bts_info.bt_info.low_vol && !is_charging()) {
         if (!backlight_shut_down) {
             backlight_shut_down = true;
         }
@@ -307,17 +315,18 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
         if (backlight_shut_down) {
             backlight_shut_down = false;
 
-            // writePinLow(RGB_DRIVER_SDB_PIN);
-            // wait_ms(10);
-            // writePinHigh(RGB_DRIVER_SDB_PIN);
-
-            setPinOutputOpenDrain(C11);
-            writePinLow(C11);
+            writePinLow(RGB_DRIVER_SDB_PIN);
+            wait_ms(50);
+            writePinHigh(RGB_DRIVER_SDB_PIN);
             wait_ms(1);
-            writePinHigh(C11);
-            wait_ms(20);
 
-            rgb_matrix_init();
+            // setPinOutputOpenDrain(C11);
+            // writePinLow(C11);
+            // wait_ms(1);
+            // writePinHigh(C11);
+            // wait_ms(20);
+
+            // rgb_matrix_init();
         }
         // if (low_power_exit_time && timer_elapsed32(low_power_exit_time) < 10000) {
         //     // 恢复背光显示
@@ -339,3 +348,50 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
 
     return true;
 }
+
+#if defined(BT_CABLE_PIN) && defined(BT_CABLE_PIN)
+static uint8_t  rChr_ChkBuf  = 0;
+static uint8_t  rChr_OldBuf  = 0;
+static uint16_t rChr_Cnt     = 0;
+static uint8_t  f_ChargeOn   = 0;
+static uint8_t  f_ChargeFull = 0;
+
+#    define CHR_DEBOUNCE 100
+
+void Charge_Chat(void) {
+    uint8_t i = 0;
+
+    if (USBLINK_Status == 0) i |= 0x01;
+    if (CHARGE_Status == 1 || (dev_info.devs != DEVS_USB && bts_info.bt_info.pvol >= 100)) i |= 0x02;
+
+    if (rChr_ChkBuf != i) {
+        rChr_Cnt    = CHR_DEBOUNCE;
+        rChr_ChkBuf = i;
+    } else {
+        if (rChr_Cnt != 0) {
+            rChr_Cnt--;
+            if (rChr_Cnt == 0) {
+                i = rChr_ChkBuf ^ rChr_OldBuf;
+
+                if (i != 0) {
+                    rChr_OldBuf = rChr_ChkBuf;
+
+                    if (i) {
+                        f_ChargeOn = (rChr_ChkBuf & 0x01) ? 1 : 0;
+
+                        f_ChargeFull = (rChr_ChkBuf & 0x02) ? 1 : 0;
+                    }
+                }
+            }
+        }
+    }
+}
+
+bool is_charging(void) {
+    return f_ChargeOn;
+}
+
+bool is_fully_charged(void) {
+    return f_ChargeFull;
+}
+#endif
