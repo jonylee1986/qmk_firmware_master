@@ -46,7 +46,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [WIN_FN] = LAYOUT_100_ansi(
         EE_CLR,            KC_BRID,  KC_BRIU,  WIN_TSK,  KC_MYCM, KC_MAIL, KC_WHOM, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE,  KC_VOLD,  KC_VOLU,  _______,  KC_PSCR, KC_SCRL,  _______,  _______,
         _______, BT_HOST1, BT_HOST2, BT_HOST3, BT_2_4G,  _______, _______, _______, _______, _______, _______, _______,  _______,  RM_TOGG,  _______,  _______, _______,  _______,  _______,
-        RGB_TEST,_______,  _______,  _______,  _______,  _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,  _______,  RM_NEXT,  _______,  _______, _______,  _______,  _______,
+        RGB_TEST,_______,  _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______,  _______,  RM_NEXT,  _______,  _______, _______,  _______,  _______,
         _______, _______,  _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______,            RM_HUEU,  _______,  _______, _______,  _______,
         BLED_MOD,          BLED_HUI, _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, SLED_HUI, SLED_MOD, RM_VALU,            _______, _______,  _______,  _______,
         BLED_SPI,GU_TOGG,  BLED_VAI,                              SLED_SPI,                           SLED_VAI,_______,  RM_SPDD,  RM_VALD,  RM_SPDU,  _______,           _______),
@@ -57,12 +57,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_TAB,  KC_Q,     KC_W,     KC_E,     KC_R,     KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC,  KC_RBRC,  KC_BSLS,  KC_PGUP,  KC_P7,   KC_P8,    KC_P9,    KC_PPLS,
         KC_CAPS, KC_A,     KC_S,     KC_D,     KC_F,     KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,            KC_ENT,   KC_PGDN,  KC_P4,   KC_P5,    KC_P6,
         KC_LSFT,           KC_Z,     KC_X,     KC_C,     KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,  KC_RSFT,  KC_UP,              KC_P1,   KC_P2,    KC_P3,    KC_PENT,
-        KC_LCTL, KC_LOPT,  KC_LCMD,                               KC_SPC,                             KC_ROPT, MO(3),    KC_LEFT,  KC_DOWN,  KC_RGHT,  KC_P0,             KC_PDOT),
+        KC_LCTL, KC_LOPT,  KC_LCMD,                               KC_SPC,                             KC_RCMD, MO(3),    KC_LEFT,  KC_DOWN,  KC_RGHT,  KC_P0,             KC_PDOT),
 
     [MAC_FN] = LAYOUT_100_ansi(
         EE_CLR,            KC_F1,    KC_F2,    KC_F3,    KC_F4,    KC_F5,  KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,   KC_F11,   KC_F12,   _______,  KC_PSCR, KC_SCRL,  _______,  _______,
         _______, BT_HOST1, BT_HOST2, BT_HOST3, BT_2_4G,  _______, _______, _______, _______, _______, _______, _______,  _______,  RM_TOGG,  _______,  _______, _______,  _______,  _______,
-        RGB_TEST,_______,  _______,  _______,  _______,  _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,  _______,  RM_NEXT,  _______,  _______, _______,  _______,  _______,
+        RGB_TEST,_______,  _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______,  _______,  RM_NEXT,  _______,  _______, _______,  _______,  _______,
         _______, _______,  _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______,            RM_HUEU,  _______,  _______, _______,  _______,
         BLED_MOD,          BLED_HUI, _______,  _______,  _______, BT_VOL,  _______, _______, _______, _______, SLED_HUI, SLED_MOD, RM_VALU,            _______, _______,  _______,  _______,
         BLED_SPI,_______,  BLED_VAI,                              SLED_SPI,                           SLED_VAI,_______,  RM_SPDD,  RM_VALD,  RM_SPDU,  _______,           _______),
@@ -209,27 +209,12 @@ void keyboard_post_init_user(void) {
 
 void eeconfig_init_user(void) {
     bled_eeconfig_init();
-    // dev_info.sled_mode      = SLED_MODE_VOL;
-    // sled_mode_before_charge = SLED_MODE_VOL;
-    // eeconfig_update_user(dev_info.raw);
-}
-
-void suspend_power_down_user(void) {
-    led_deconfig_all();
-}
-
-void suspend_wakeup_init_user(void) {
-    led_config_all();
 }
 
 bool rgb_matrix_indicators_user(void) {
     if (!rgb_matrix_get_flags() || backlight_sleep_flag) {
-        rgb_matrix_set_color_all(RGB_OFF);
+        rgb_matrix_set_color_all(0, 0, 0);
     }
-
-    // for (uint8_t i = 100; i <= 106; i++) {
-    //     rgb_matrix_set_color(i, RGB_OFF);
-    // }
 
     return true;
 }
@@ -239,26 +224,8 @@ bool show_chrg_full = false;
 
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     if (!show_chrg && !show_chrg_full && !backlight_sleep_flag && rgb_matrix_get_flags()) {
-        // if (!readPin(MM_CABLE_PIN)) {
-        //     bled_task();
-        // } else {
-        //     for (uint8_t i = 100; i < 102; i++) {
-        //         rgb_matrix_set_color(i, 0, 0, 0);
-        //     }
-        // }
         bled_task();
-        // if (!show_charging && !show_charged) {
-        //     sled_task();
-        // }
-        // if (show_charging) {
-        //     bled_charging_indicate();
-        // } else if (show_charged) {
-        //     bled_charged_indicate();
-        // } else if (show_low) {
-        //     bled_low_indicate();
-        // } else {
         sled_task();
-        // }
     }
 
 #ifdef MULTIMODE_ENABLE
@@ -267,22 +234,11 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     }
 #endif
 
-    if (keymap_config.no_gui) {
-        rgb_matrix_set_color(LED_LWIN_INDEX, 0xC8, 0xC8, 0xC8);
-    }
-
-    if (dev_info.devs == DEVS_USB) {
-        if (!host_keyboard_led_state().num_lock && (get_highest_layer(default_layer_state) != MAC_BASE)) {
-            rgb_matrix_set_color(LED_NUM_INDEX, 0xC8, 0xC8, 0xC8);
-        }
-    } else {
-        if (!host_keyboard_led_state().num_lock && bts_info.bt_info.paired && (get_highest_layer(default_layer_state) != MAC_BASE)) {
-            rgb_matrix_set_color(LED_NUM_INDEX, 0xC8, 0xC8, 0xC8);
-        }
-    }
-
     return true;
 }
+
+extern void wwdg_pause(void);
+extern void wwdg_resume(void);
 
 void housekeeping_task_user(void) {
     static uint32_t chrg_check_time = 0;
@@ -318,6 +274,7 @@ void housekeeping_task_user(void) {
     //         }
     //     }
     // }
+
     extern void Charge_Chat(void);
     if (timer_elapsed32(chrg_check_time) >= 2) {
         chrg_check_time = timer_read32();
@@ -335,30 +292,62 @@ void matrix_scan_user(void) {
     static uint32_t usb_suspend       = false;
 
     if (dev_info.devs == DEVS_USB) {
-        if (USB_DRIVER.state != USB_ACTIVE || USB_DRIVER.state == USB_SUSPENDED) {
+        if (usb_suspend) {
+            bool wakeup = false;
+            for (uint8_t r = 0; r < MATRIX_ROWS; r++) {
+                if (matrix_get_row(r)) {
+                    wakeup = true;
+                    break;
+                }
+            }
+            if (wakeup) {
+                wwdg_resume();
+                // usbWakeupHost(&USB_DRIVER);
+                // restart_usb_driver(&USB_DRIVER);
+                usb_suspend       = false;
+                usb_suspend_timer = 0;
+#    ifdef RGB_MATRIX_SHUTDOWN_PIN
+                writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
+#    endif
+            }
+        }
+
+        if ((USB_DRIVER.state != USB_ACTIVE) || (USB_DRIVER.state == USB_SUSPENDED)) {
             if (!usb_suspend_timer) {
                 usb_suspend_timer = timer_read32();
             } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
                 if (!usb_suspend) {
+                    wwdg_pause();
+
                     usb_suspend = true;
-                    led_deconfig_all();
+#    ifdef RGB_MATRIX_SHUTDOWN_PIN
+                    writePinLow(RGB_MATRIX_SHUTDOWN_PIN);
+#    endif
                 }
+
                 usb_suspend_timer = 0;
             }
         } else {
-            if (usb_suspend_timer) {
+            if (usb_suspend) {
+                wwdg_resume();
+
                 usb_suspend_timer = 0;
-                if (usb_suspend) {
-                    usb_suspend = false;
-                    led_config_all();
-                }
+                usb_suspend       = false;
+
+#    ifdef RGB_MATRIX_SHUTDOWN_PIN
+                writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
+#    endif
             }
         }
     } else {
         if (usb_suspend) {
+            wwdg_resume();
+
             usb_suspend_timer = 0;
             usb_suspend       = false;
-            led_config_all();
+#    ifdef RGB_MATRIX_SHUTDOWN_PIN
+            writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
+#    endif
         }
     }
 #endif

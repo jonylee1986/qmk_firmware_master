@@ -166,7 +166,7 @@ static const uint8_t rgb_test_color_table[][3] = {
     {90, 100, 100},
 };
 // static uint8_t  rgb_test_index  = 0;
-static bool rgb_test_en = false;
+// static bool rgb_test_en = false;
 // static uint32_t rgb_test_time   = 0;
 bool query_vol_flag = false;
 
@@ -207,6 +207,15 @@ static charge_complete_warning_t charge_complete_warning = {0};
 
 extern bool show_chrg;
 extern bool show_chrg_full;
+
+static bool low_vol_off = false;
+
+extern void wwdg_pause(void);
+extern void wwdg_resume(void);
+
+bool get_low_vol_off(void) {
+    return low_vol_off;
+}
 
 #include "command.h"
 #include "action.h"
@@ -536,6 +545,8 @@ void bt_task(void) {
 // ===========================================
 // Key processing function
 // ===========================================
+uint32_t pressed_time = 0;
+
 bool bt_process_record(uint16_t keycode, keyrecord_t *record) {
     bool retval = true;
 
@@ -559,6 +570,11 @@ bool bt_process_record(uint16_t keycode, keyrecord_t *record) {
         //         rgb_matrix_enable_noeeprom();
         //     }
         // }
+        pressed_time = timer_read32();
+
+        if (indicator_status != INDICATOR_OFF) {
+            last_total_time = timer_read32();
+        }
     }
 
     retval = bt_process_record_other(keycode, record);
@@ -615,8 +631,6 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
     // if (!rgb_matrix_config.enable && rgb_status_save) {
     //     rgb_matrix_enable_noeeprom();
     // }
-    extern void wwdg_pause(void);
-    extern void wwdg_resume(void);
 
     // Handle USB driver state changes
     bool usb_sws = !!last_mode ? !now_mode : !!now_mode;
@@ -798,18 +812,20 @@ static bool bt_process_record_other(uint16_t keycode, keyrecord_t *record) {
 
         case RGB_TEST: {
             if (record->event.pressed) {
-                if (!rgb_test_en) {
-                    rgb_test_en = true;
+                if (!dev_info.rgb_test_en) {
+                    dev_info.rgb_test_en = true;
                 } else {
-                    rgb_test_en = false;
+                    dev_info.rgb_test_en = false;
                 }
+                eeconfig_update_user(dev_info.raw);
             }
         } break;
 
         case RM_NEXT: {
             if (!record->event.pressed) {
-                if (rgb_test_en) {
-                    rgb_test_en = false;
+                if (dev_info.rgb_test_en) {
+                    dev_info.rgb_test_en = false;
+                    eeconfig_update_user(dev_info.raw);
                     return false;
                 }
             }
@@ -839,10 +855,10 @@ static void bt_long_pressed_keys_cb(uint16_t keycode) {
 
         case EE_CLR: {
             if (!EE_CLR_flag) {
-                rgb_test_en       = false;
-                EE_CLR_flag       = true;
-                EE_CLR_press_time = timer_read32();
-                EE_CLR_press_cnt  = 1;
+                dev_info.rgb_test_en = false;
+                EE_CLR_flag          = true;
+                EE_CLR_press_time    = timer_read32();
+                EE_CLR_press_cnt     = 0;
                 rgb_matrix_enable_noeeprom();
             }
         } break;
@@ -880,6 +896,11 @@ static void bt_used_pin_init(void) {
 #if defined(MM_CABLE_PIN) && defined(MM_CHARGE_PIN)
     setPinInputHigh(MM_CABLE_PIN);
     setPinInput(MM_CHARGE_PIN);
+#endif
+
+#ifdef RGB_MATRIX_SHUTDOWN_PIN
+    setPinOutputPushPull(RGB_MATRIX_SHUTDOWN_PIN);
+    writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
 #endif
 }
 
@@ -933,7 +954,7 @@ void led_config_all(void) {
     if (!led_inited) {
 #ifdef RGB_MATRIX_SHUTDOWN_PIN
         // setPinOutputPushPull(RGB_MATRIX_SHUTDOWN_PIN);
-        writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
+        // writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
 #endif
         setPinOutputPushPull(LED_CAPS_LOCK_PIN);
         if (host_keyboard_led_state().caps_lock) {
@@ -948,7 +969,7 @@ void led_deconfig_all(void) {
     if (led_inited) {
 #ifdef RGB_MATRIX_SHUTDOWN_PIN
         // setPinOutputOpenDrain(RGB_MATRIX_SHUTDOWN_PIN);
-        writePinLow(RGB_MATRIX_SHUTDOWN_PIN);
+        // writePinLow(RGB_MATRIX_SHUTDOWN_PIN);
 #endif
         // gpio_write_pin(LED_CAPS_LOCK_PIN, 0);
         setPinOutputOpenDrain(LED_CAPS_LOCK_PIN);
@@ -979,6 +1000,8 @@ static void close_rgb(void) {
 
     if (sober) {
         if (kb_sleep_flag || (timer_elapsed32(key_press_time) >= ENTRY_SLEEP_TIMEOUT_MS)) {
+            wwdg_pause();
+
             bak_rgb_toggle = rgb_matrix_config.enable;
             sober          = false;
             close_rgb_time = timer_read32();
@@ -1021,6 +1044,8 @@ static void open_rgb(void) {
     }
 
     if (!sober) {
+        wwdg_resume();
+
         if (bak_rgb_toggle) {
             kb_sleep_flag       = false;
             low_vol_offed_sleep = false;
@@ -1304,8 +1329,11 @@ static void bt_charging_indication(void) {
 
 static void bt_bat_low_level_shutdown(void) {
     if (bts_info.bt_info.low_vol_offed) {
-        kb_sleep_flag       = true;
+        if (timer_elapsed32(pressed_time) >= 2000) {
+            kb_sleep_flag = true;
+        }
         low_vol_offed_sleep = true;
+        low_vol_off         = true;
     }
 }
 
@@ -1398,7 +1426,7 @@ static void factory_reset_indicate(void) {
             EE_CLR_press_time = timer_read32();
             EE_CLR_press_cnt++;
         }
-        if (EE_CLR_press_cnt >= 7) {
+        if (EE_CLR_press_cnt > 6) {
             EE_CLR_press_cnt  = 0;
             EE_CLR_press_time = 0;
             EE_CLR_flag       = false;
@@ -1409,9 +1437,12 @@ static void factory_reset_indicate(void) {
             mode = MODE_WORKING;
             dip_switch_read(true);
 
-            if (dev_info.devs != DEVS_USB) {
-                last_total_time  = 0;
-                indicator_status = INDICATOR_CONNECTING;
+            if (dev_info.devs != DEVS_USB && !bts_info.bt_info.paired) {
+                if (dev_info.devs == DEVS_2_4G) {
+                    bt_switch_mode(dev_info.last_devs, DEVS_2_4G, false);
+                } else {
+                    bt_switch_mode(dev_info.last_devs, dev_info.devs, false);
+                }
             }
         }
         if (EE_CLR_press_cnt & 0x1) {
@@ -1426,7 +1457,7 @@ static void factory_reset_indicate(void) {
 // Main RGB indicator functions
 // ===========================================
 bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
-    if (rgb_test_en && rgb_matrix_get_flags()) {
+    if (dev_info.rgb_test_en && rgb_matrix_get_flags()) {
         for (uint8_t i = 0; i < 100; i++) {
             rgb_matrix_set_color(i, rgb_test_color_table[3][0], rgb_test_color_table[3][1], rgb_test_color_table[3][2]);
         }
@@ -1445,6 +1476,8 @@ bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
         bt_indicate();
         if (readPin(MM_CABLE_PIN)) {
             bt_bat_low_level_shutdown();
+        } else {
+            low_vol_off = false;
         }
     }
 
@@ -1453,26 +1486,22 @@ bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
     // Charging status indicator
     bt_charging_indication();
 
+    if (keymap_config.no_gui) {
+        rgb_matrix_set_color(LED_LWIN_INDEX, 0xC8, 0xC8, 0xC8);
+    }
+
+    if (dev_info.devs == DEVS_USB) {
+        if (!host_keyboard_led_state().num_lock && (USB_DRIVER.state != USB_SUSPENDED) && (get_highest_layer(default_layer_state) == 0)) {
+            rgb_matrix_set_color(LED_NUM_INDEX, 0xC8, 0xC8, 0xC8);
+        }
+    } else {
+        if (!host_keyboard_led_state().num_lock && bts_info.bt_info.paired && (get_highest_layer(default_layer_state) == 0)) {
+            rgb_matrix_set_color(LED_NUM_INDEX, 0xC8, 0xC8, 0xC8);
+        }
+    }
+
     // Factory reset
     factory_reset_indicate();
-
-    // rgb test
-    // if (rgb_test_en && rgb_matrix_get_flags()) {
-    // if (timer_elapsed32(rgb_test_time) >= 1000) {
-    //     rgb_test_time = timer_read32();
-    //     rgb_test_index++;
-    //     if (rgb_test_index > 4) {
-    //         rgb_test_index = 1;
-    //     }
-    // }
-
-    // for (uint8_t i = led_min; i < led_max; i++) {
-    //     rgb_matrix_set_color(i, rgb_test_color_table[rgb_test_index - 1][0], rgb_test_color_table[rgb_test_index - 1][1], rgb_test_color_table[rgb_test_index - 1][2]);
-    // }
-    //     for (uint8_t i = 0; i < 100; i++) {
-    //         rgb_matrix_set_color(i, rgb_test_color_table[3][0], rgb_test_color_table[3][1], rgb_test_color_table[3][2]);
-    //     }
-    // }
 
     return true;
 }
