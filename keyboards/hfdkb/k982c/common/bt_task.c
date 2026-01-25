@@ -812,9 +812,9 @@ static void bt_used_pin_init(void) {
     writePinHigh(RGB_MATRIX_DRIVER_SDB_PIN);
 #    endif
 
-#    ifdef LED_CHRG_LOW_PWR_PIN
-    setPinOutputPushPull(LED_CHRG_LOW_PWR_PIN);
-    writePinLow(LED_CHRG_LOW_PWR_PIN);
+#    ifdef LED_MAC_OS_IND_PIN
+    setPinOutputPushPull(LED_MAC_OS_IND_PIN);
+    writePinLow(LED_MAC_OS_IND_PIN);
 #    endif
 
 #    ifdef LED_CAPS_LOCK_IND_PIN
@@ -885,35 +885,23 @@ static void close_rgb(void) {
 #    endif
 
             writePinLow(LED_CAPS_LOCK_IND_PIN);
-            writePinLow(LED_CHRG_LOW_PWR_PIN);
+            writePinLow(LED_MAC_OS_IND_PIN);
 
             LCD_command_update(LCD_SLEEP);
         }
     } else {
         if (!rgb_matrix_config.enable) {
-            // if (low_vol_offed_sleep) {
-            //     clear_keyboard();
-            // }
-
             if (timer_elapsed32(close_rgb_time) >= ENTRY_STOP_TIMEOUT) {
                 /* Turn off all indicators led */
                 led_deconfig_all();
 
                 uart3_stop();
-                // setPinOutputPushPull(SD3_TX_PIN);
-                // setPinOutputPushPull(SD3_TX_PIN);
-                // writePinLow(SD3_TX_PIN);
-
-                // extern bool low_vol_offed_sleep;
-                // if (low_vol_offed_sleep) {
-                //     clear_keyboard();
-                // }
 
 #    ifdef ENTRY_STOP_MODE
                 lp_system_sleep();
 #    endif
 
-                setPinOutputPushPull(SD3_TX_PIN);
+                setPinOutputOpenDrain(SD3_TX_PIN);
                 for (uint8_t i = 0; i < 5; i++) {
                     writePinHigh(SD3_TX_PIN);
                     wait_ms(5);
@@ -955,6 +943,11 @@ static void open_rgb(void) {
 
         writePin(LED_CAPS_LOCK_IND_PIN, host_keyboard_led_state().caps_lock);
 
+        if (get_highest_layer(default_layer_state) == 2)
+            writePin(LED_MAC_OS_IND_PIN, 1);
+        else
+            writePin(LED_MAC_OS_IND_PIN, 0);
+
         sober = true;
     }
 }
@@ -973,10 +966,13 @@ static void factory_reset_indicator(void) {
 
             keymap_config.no_gui = false;
 
-            dev_info.rgb_test_en  = 0;
-            dev_info.ind_toggle   = 0;
-            dev_info.color_index  = 0;
-            dev_info.encoder_mode = 0;
+            dev_info.LCD_Page = 0;
+            LCD_Page_update(dev_info.LCD_Page);
+            dev_info.rgb_test_en       = 0;
+            dev_info.ind_toggle        = 0;
+            dev_info.color_index       = 0;
+            dev_info.encoder_mode      = 0;
+            dev_info.encoder_lsat_mode = 0;
             eeconfig_update_user(dev_info.raw);
 
             if (dev_info.devs != DEVS_USB && !bts_info.bt_info.paired) {

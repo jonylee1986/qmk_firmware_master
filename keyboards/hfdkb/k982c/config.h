@@ -49,9 +49,12 @@
 
 /* Others */
 #    define RGB_MATRIX_DRIVER_SDB_PIN A15
-#    define LED_CHRG_LOW_PWR_PIN C15
+#    define LED_MAC_OS_IND_PIN C15
 #    define LED_CAPS_LOCK_IND_PIN D2
 #    define KEY_NUM 6
+
+#    define USBLINK_Status readPin(MM_CABLE_PIN)
+#    define CHARGE_Status readPin(MM_CHARGE_PIN)
 #endif
 
 /* RGB Matrix Driver Configuration */
@@ -82,6 +85,6 @@
 // #define CHRG_LOW_LED_INDEX 84
 /* Enable caps-lock LED */
 // #define CAPS_LOCK_LED_INDEX 85
-#define OS_LED_INDEX 84
+#define LED_PWR_LOW_INDEX 84
 // #define NUM_LOCK_LED_INDEX 87
 // #define GUI_LOCK_LED_INDEX 88

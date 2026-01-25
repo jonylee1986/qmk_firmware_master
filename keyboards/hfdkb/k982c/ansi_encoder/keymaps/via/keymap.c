@@ -47,7 +47,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_LCTL,  KC_LCMD,  KC_LALT,                                KC_SPC,                       KC_RALT,  MO(WIN_FN), KC_RCTL,  KC_LEFT,  KC_DOWN,  KC_RGHT),
 
     [WIN_FN] = LAYOUT_ansi(
-        EE_CLR,             KC_MYCM,  KC_WHOM,  KC_MAIL,  KC_CALC,  KC_MSEL,  KC_MSTP,  KC_MPRV,  KC_MPLY,  KC_MNXT,    KC_MUTE,  KC_VOLD,  KC_VOLU,  _______,
+        EE_CLR,             KC_MYCM,  KC_WHOM,  KC_MAIL,  KC_CALC,  KC_MSEL,  KC_MSTP,  KC_MPRV,  KC_MPLY,  KC_MNXT,    KC_MUTE,  KC_VOLD,  KC_VOLU,  LCD_MODE,
         _______,  BT_1,     BT_2,     BT_3,     WL_2G4,   _______,  _______,  _______,  _______,  _______,  _______,    _______,  _______,  RM_TOGG,  KC_PSCR,
         RGB_TEST, _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,    _______,  _______,  RM_NEXT,  KC_SCRL,
         _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,    _______,            RM_HUEU,  _______,
@@ -63,7 +63,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_LCTL,  KC_LOPT,  KC_LCMD,                                KC_SPC,                       KC_RCMD,  MO(MAC_FN), KC_RCTL,  KC_LEFT,  KC_DOWN,  KC_RGHT),
 
     [MAC_FN] = LAYOUT_ansi(
-        EE_CLR,             KC_F1,    KC_F2,    KC_F3,    KC_F4,    KC_F5,    KC_F6,    KC_F7,    KC_F8,    KC_F9,      KC_F10,   KC_F11,   KC_F12,   _______,
+        EE_CLR,             KC_F1,    KC_F2,    KC_F3,    KC_F4,    KC_F5,    KC_F6,    KC_F7,    KC_F8,    KC_F9,      KC_F10,   KC_F11,   KC_F12,   LCD_MODE,
         _______,  BT_1,     BT_2,     BT_3,     WL_2G4,   _______,  _______,  _______,  _______,  _______,  _______,    _______,  _______,  RM_TOGG,  KC_PSCR,
         RGB_TEST, _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,    _______,  _______,  RM_NEXT,  KC_SCRL,
         _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,    _______,            RM_HUEU,  _______,
@@ -75,9 +75,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 #if defined(ENCODER_MAP_ENABLE)
 const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
     [WIN_BASE] = { ENCODER_CCW_CW(KC_VOLD, KC_VOLU)},
-    [WIN_FN]   = { ENCODER_CCW_CW(RM_VALD, _______)},
+    [WIN_FN]   = { ENCODER_CCW_CW(RM_VALD, RM_VALU)},
     [MAC_BASE] = { ENCODER_CCW_CW(KC_VOLD, KC_VOLU)},
-    [MAC_FN]   = { ENCODER_CCW_CW(RM_VALD, _______)},
+    [MAC_FN]   = { ENCODER_CCW_CW(RM_VALD, RM_VALU)},
 };
 #endif // ENCODER_MAP_ENABLE
 
@@ -86,6 +86,9 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 static bool     mode_long_pressed_flag = false;
 static uint32_t mode_long_pressed_time = 0;
 
+static uint8_t  all_blink_cnt      = 0;
+static RGB      all_blink_color    = {0};
+static uint32_t all_blink_time     = 0;
 static uint8_t  single_blink_cnt   = 0;
 static uint8_t  single_blink_index = 0;
 static RGB      single_blink_color = {0};
@@ -124,6 +127,37 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                         }
                     }
                 }
+            }
+            return false;
+
+        case LCD_MODE:
+            if (record->event.pressed) {
+                if (dev_info.encoder_mode != 2) {
+                    dev_info.encoder_lsat_mode = dev_info.encoder_mode;
+                    dev_info.encoder_mode      = 2;
+                    for (int layer = 0; layer < DYNAMIC_KEYMAP_LAYER_COUNT; layer += 2) {
+                        dynamic_keymap_set_encoder(layer, 0, true, LCD_PAGE);
+                        dynamic_keymap_set_encoder(layer, 0, false, LCD_HOME);
+                    }
+                } else {
+                    if (dev_info.encoder_lsat_mode == 0) {
+                        dev_info.encoder_mode = 0;
+                        for (int layer = 0; layer < DYNAMIC_KEYMAP_LAYER_COUNT; layer += 2) {
+                            dynamic_keymap_set_encoder(layer, 0, true, KC_VOLU);
+                            dynamic_keymap_set_encoder(layer, 0, false, KC_VOLD);
+                        }
+                    } else {
+                        dev_info.encoder_mode = 1;
+                        for (int layer = 0; layer < DYNAMIC_KEYMAP_LAYER_COUNT; layer += 2) {
+                            dynamic_keymap_set_encoder(layer, 0, true, RM_VALU);
+                            dynamic_keymap_set_encoder(layer, 0, false, RM_VALD);
+                        }
+                    }
+                }
+                eeconfig_update_user(dev_info.raw);
+                all_blink_cnt   = 6;
+                all_blink_color = (RGB){100, 100, 100};
+                all_blink_time  = timer_read32();
             }
             return false;
 
@@ -243,9 +277,12 @@ void housekeeping_task_user(void) {
     if (mode_long_pressed_time && (timer_elapsed32(mode_long_pressed_time) >= 5000)) {
         mode_long_pressed_time = 0;
         mode_long_pressed_flag = true;
+
+        if (dev_info.encoder_mode == 2) {
+            dev_info.encoder_mode = dev_info.encoder_lsat_mode;
+        }
         if (dev_info.encoder_mode == 0) {
             dev_info.encoder_mode = 1;
-            eeconfig_update_user(dev_info.raw);
 
             for (int layer = 0; layer < DYNAMIC_KEYMAP_LAYER_COUNT; layer += 2) {
                 dynamic_keymap_set_encoder(layer, 0, true, RM_VALU);
@@ -255,11 +292,10 @@ void housekeeping_task_user(void) {
             enc_blink_time = timer_read32();
             // enc_blink_index[0] = CHRG_LOW_LED_INDEX;
             // enc_blink_index[1] = CAPS_LOCK_LED_INDEX;
-            enc_blink_index = OS_LED_INDEX;
+            enc_blink_index = LED_PWR_LOW_INDEX;
             enc_blink_color = (RGB){100, 100, 100};
         } else {
             dev_info.encoder_mode = 0;
-            eeconfig_update_user(dev_info.raw);
 
             for (int layer = 0; layer < DYNAMIC_KEYMAP_LAYER_COUNT; layer += 2) {
                 dynamic_keymap_set_encoder(layer, 0, true, KC_VOLU);
@@ -269,9 +305,10 @@ void housekeeping_task_user(void) {
             enc_blink_time = timer_read32();
             // enc_blink_index[0] = CHRG_LOW_LED_INDEX;
             // enc_blink_index[1] = CAPS_LOCK_LED_INDEX;
-            enc_blink_index = OS_LED_INDEX;
+            enc_blink_index = LED_PWR_LOW_INDEX;
             enc_blink_color = (RGB){100, 100, 100};
         }
+        eeconfig_update_user(dev_info.raw);
     }
 #endif
 
@@ -292,12 +329,12 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
             enc_blink_cnt--;
         }
         if (enc_blink_cnt % 2) {
-            writePinHigh(LED_CHRG_LOW_PWR_PIN);
+            writePinHigh(LED_MAC_OS_IND_PIN);
             writePinHigh(LED_CAPS_LOCK_IND_PIN);
             rgb_matrix_set_color(enc_blink_index, enc_blink_color.r, enc_blink_color.g, enc_blink_color.b);
 
         } else {
-            writePinLow(LED_CHRG_LOW_PWR_PIN);
+            writePinLow(LED_MAC_OS_IND_PIN);
             writePinLow(LED_CAPS_LOCK_IND_PIN);
             rgb_matrix_set_color(enc_blink_index, 0, 0, 0);
         }
@@ -312,6 +349,17 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
             rgb_matrix_set_color(single_blink_index, single_blink_color.r, single_blink_color.g, single_blink_color.b);
         } else {
             rgb_matrix_set_color(single_blink_index, 0, 0, 0);
+        }
+    }
+    if (all_blink_cnt) {
+        if (timer_elapsed32(all_blink_time) > 500) {
+            all_blink_time = timer_read32();
+            all_blink_cnt--;
+        }
+        if (all_blink_cnt % 2) {
+            rgb_matrix_set_color_all(all_blink_color.r, all_blink_color.g, all_blink_color.b);
+        } else {
+            rgb_matrix_set_color_all(0, 0, 0);
         }
     }
 

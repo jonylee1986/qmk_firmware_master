@@ -19,5 +19,5 @@ void WWDG_Init(void);
 void WWDG_Deinit(void);
 void Init_WWDG(void);
 void Disable_WWDG(void);
-void wwdg_pause(void);
-void wwdg_resume(void);
+void wwdg_disable(void);
+void wwdg_enable(void);

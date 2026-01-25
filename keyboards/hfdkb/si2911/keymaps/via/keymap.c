@@ -19,9 +19,10 @@
 #    include "bt_task.h"
 #endif
 #include "dynamic_keymap.h"
-#include "bled/bled.h"
+#include "bled.h"
 #include "lib/lib8tion/lib8tion.h"
 #include "usb_main.h"
+#include "wwdg.h"
 
 enum _layers {
     WIN_BASE,
@@ -187,13 +188,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
-void keyboard_pre_init_user(void) {
-    // #ifdef RGB_MATRIX_SHUTDOWN_PIN
-    //     setPinOutputPushPull(RGB_MATRIX_SHUTDOWN_PIN);
-    //     writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
-    // #endif
-}
-
 void keyboard_post_init_user(void) {
     if (keymap_config.no_gui) {
         keymap_config.no_gui = 0;
@@ -203,8 +197,8 @@ void keyboard_post_init_user(void) {
 
     bled_init();
 
-    extern void snled27351_reset(void);
-    snled27351_reset();
+    // extern void snled27351_reset(void);
+    // snled27351_reset();
 }
 
 void eeconfig_init_user(void) {
@@ -237,54 +231,18 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     return true;
 }
 
-extern void wwdg_pause(void);
-extern void wwdg_resume(void);
+// void suspend_power_down_user(void) {
+//     wwdg_disable();
+// }
+// void suspend_wakeup_init_user(void) {
+// wwdg_enable();
+// }
 
 void housekeeping_task_user(void) {
     static uint32_t chrg_check_time = 0;
 
 #ifdef MULTIMODE_ENABLE
     bt_housekeeping_task();
-#endif
-
-    // if (mode_long_pressed_time && (timer_elapsed32(mode_long_pressed_time) >= 3000)) {
-    //     mode_long_pressed_time = 0;
-    //     mode_long_pressed_flag = true;
-    //     if (mode == MODE_WORKING) {
-    //         mode = MODE_GAMING;
-    //         for (int layer = 0; layer < DYNAMIC_KEYMAP_LAYER_COUNT; layer += 1) {
-    //             if (dynamic_keymap_get_encoder(layer, 0, true) != RGB_VAI || dynamic_keymap_get_encoder(layer, 0, false) != RGB_VAD) {
-    //                 dynamic_keymap_set_encoder(layer, 0, true, RGB_VAI);
-    //                 dynamic_keymap_set_encoder(layer, 0, false, RGB_VAD);
-    //             }
-    //             if (dynamic_keymap_get_keycode(layer, MODE_ROW, MODE_COLUMN) != RGB_MOD) {
-    //                 dynamic_keymap_set_keycode(layer, MODE_ROW, MODE_COLUMN, RGB_MOD);
-    //             }
-    //         }
-    //     } else {
-    //         mode = MODE_WORKING;
-    //         for (int layer = 0; layer < DYNAMIC_KEYMAP_LAYER_COUNT; layer += 1) {
-    //             if (dynamic_keymap_get_encoder(layer, 0, true) != KC_VOLU || dynamic_keymap_get_encoder(layer, 0, false) != KC_VOLD) {
-    //                 dynamic_keymap_set_encoder(layer, 0, true, KC_VOLU);
-    //                 dynamic_keymap_set_encoder(layer, 0, false, KC_VOLD);
-    //             }
-    //             if (dynamic_keymap_get_keycode(layer, MODE_ROW, MODE_COLUMN) != KC_MUTE) {
-    //                 dynamic_keymap_set_keycode(layer, MODE_ROW, MODE_COLUMN, KC_MUTE);
-    //             }
-    //         }
-    //     }
-    // }
-
-    extern void Charge_Chat(void);
-    if (timer_elapsed32(chrg_check_time) >= 2) {
-        chrg_check_time = timer_read32();
-        Charge_Chat();
-    }
-}
-
-void matrix_scan_user(void) {
-#ifdef MULTIMODE_ENABLE
-    bt_task();
 #endif
 
 #ifdef USB_SUSPEND_CHECK_ENABLE
@@ -301,7 +259,6 @@ void matrix_scan_user(void) {
                 }
             }
             if (wakeup) {
-                wwdg_resume();
                 // usbWakeupHost(&USB_DRIVER);
                 // restart_usb_driver(&USB_DRIVER);
                 usb_suspend       = false;
@@ -317,8 +274,6 @@ void matrix_scan_user(void) {
                 usb_suspend_timer = timer_read32();
             } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
                 if (!usb_suspend) {
-                    wwdg_pause();
-
                     usb_suspend = true;
 #    ifdef RGB_MATRIX_SHUTDOWN_PIN
                     writePinLow(RGB_MATRIX_SHUTDOWN_PIN);
@@ -329,8 +284,6 @@ void matrix_scan_user(void) {
             }
         } else {
             if (usb_suspend) {
-                wwdg_resume();
-
                 usb_suspend_timer = 0;
                 usb_suspend       = false;
 
@@ -341,8 +294,6 @@ void matrix_scan_user(void) {
         }
     } else {
         if (usb_suspend) {
-            wwdg_resume();
-
             usb_suspend_timer = 0;
             usb_suspend       = false;
 #    ifdef RGB_MATRIX_SHUTDOWN_PIN
@@ -351,11 +302,22 @@ void matrix_scan_user(void) {
         }
     }
 #endif
+
+    extern void Charge_Chat(void);
+    if (timer_elapsed32(chrg_check_time) >= 2) {
+        chrg_check_time = timer_read32();
+        Charge_Chat();
+    }
+}
+
+void matrix_scan_user(void) {
+#ifdef MULTIMODE_ENABLE
+    bt_task();
+#endif
 }
 
 void matrix_init_user(void) {
-    extern bool enable_dog;
-    enable_dog = true;
+    // wwdg_enable();
 
 #ifdef RGB_MATRIX_SHUTDOWN_PIN
     setPinOutputPushPull(RGB_MATRIX_SHUTDOWN_PIN);
@@ -382,8 +344,8 @@ static uint8_t  f_ChargeFull = 0;
 void Charge_Chat(void) {
     uint8_t i = 0;
 
-    if (USBLINK_Status == 0) i |= 0x01;
-    if (CHARGE_Status == 1 || (dev_info.devs != DEVS_USB && bts_info.bt_info.pvol >= 100)) i |= 0x02;
+    if (USBLINK_Status == 0 && CHARGE_Status == 0) i |= 0x01;
+    if ((USBLINK_Status == 0) && (CHARGE_Status == 1 || bts_info.bt_info.pvol >= 100)) i |= 0x02;
 
     if (rChr_ChkBuf != i) {
         rChr_Cnt    = CHR_DEBOUNCE;

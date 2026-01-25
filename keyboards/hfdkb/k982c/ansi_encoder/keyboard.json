@@ -1,7 +1,7 @@
 {
     "usb": {
         "pid": "0x0082",
-        "device_version": "1.0.3"
+        "device_version": "1.0.7"
     },
     "layouts": {
         "LAYOUT_ansi": {

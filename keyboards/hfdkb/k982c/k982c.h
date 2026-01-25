@@ -30,9 +30,10 @@ enum custom_keycodes {
     KC_SIRI = QK_KB_5,
     KC_SPOTLIGHT,
     ENC_MODE,
+    LCD_MODE,
     IND_TOGG,
     RGB_TEST,
-    LCD_HOME = SAFE_RANGE,
+    LCD_HOME,
     LCD_PAGE,
-    LCD_SW,
+    LCD_SW = SAFE_RANGE,
 };

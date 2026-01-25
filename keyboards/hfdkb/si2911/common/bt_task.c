@@ -14,7 +14,10 @@
 #include "uart.h"
 #include "usb_main.h"
 #include "dynamic_keymap.h"
-#include "bled/bled.h"
+#include "bled.h"
+#ifdef WWDG_ENABLE
+#    include "wwdg.h"
+#endif
 
 #ifdef BT_DEBUG_MODE
 #    define BT_DEBUG_INFO(fmt, ...) dprintf(fmt, ##__VA_ARGS__)
@@ -210,8 +213,8 @@ extern bool show_chrg_full;
 
 static bool low_vol_off = false;
 
-extern void wwdg_pause(void);
-extern void wwdg_resume(void);
+extern void iwdg_pause(void);
+extern void iwdg_resume(void);
 
 bool get_low_vol_off(void) {
     return low_vol_off;
@@ -639,9 +642,13 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
             usbDisconnectBus(&USB_DRIVER);
             usbStop(&USB_DRIVER);
         } else {
-            wwdg_pause();
+#ifdef WWDG_ENABLE
+            wwdg_disable();
+#endif
             init_usb_driver(&USB_DRIVER);
-            wwdg_resume();
+#ifdef WWDG_ENABLE
+            wwdg_enable();
+#endif
         }
     }
 
@@ -829,6 +836,7 @@ static bool bt_process_record_other(uint16_t keycode, keyrecord_t *record) {
                     return false;
                 }
             }
+            return true;
         }
 
         default:
@@ -910,9 +918,6 @@ static void bt_scan_mode(void) {
     static uint8_t old_mode   = 0;
     static bool    first_call = true;
 
-    extern uint16_t time;
-    extern void     WWDG_SetCounter(uint8_t Counter);
-
     if (readPin(MM_BT_MODE_PIN) && !readPin(MM_2G4_MODE_PIN)) {
         now_mode = 0;
         if (dev_info.devs != DEVS_2_4G) bt_switch_mode(dev_info.devs, DEVS_2_4G, false); // 2_4G mode
@@ -938,9 +943,6 @@ static void bt_scan_mode(void) {
         writePinLow(RGB_MATRIX_SHUTDOWN_PIN);
         wait_ms(1);
         writePinHigh(RGB_MATRIX_SHUTDOWN_PIN);
-
-        WWDG_SetCounter(127);
-        time = timer_read();
 
         rgb_matrix_init();
     }
@@ -1000,8 +1002,6 @@ static void close_rgb(void) {
 
     if (sober) {
         if (kb_sleep_flag || (timer_elapsed32(key_press_time) >= ENTRY_SLEEP_TIMEOUT_MS)) {
-            wwdg_pause();
-
             bak_rgb_toggle = rgb_matrix_config.enable;
             sober          = false;
             close_rgb_time = timer_read32();
@@ -1044,8 +1044,6 @@ static void open_rgb(void) {
     }
 
     if (!sober) {
-        wwdg_resume();
-
         if (bak_rgb_toggle) {
             kb_sleep_flag       = false;
             low_vol_offed_sleep = false;
@@ -1233,59 +1231,60 @@ static void bt_charging_indication(void) {
     // if (!readPin(MM_CABLE_PIN)) {
     // if (!readPin(MM_CHARGE_PIN)) {
     if (is_charging()) {
-        if (!is_fully_charged()) {
-            if (timer_elapsed32(entry_chrg_time) >= 500) {
-                entry_full_time = timer_read32();
-                // show_chrging = true;
-                if (!is_in_charging_state) {
-                    is_in_charging_state = true;
-                    if (!charge_complete_warning.triggered) {
-                        charge_complete_warning.triggered   = true;
-                        charge_complete_warning.blink_count = 0;
-                        // charge_complete_warning.blink_time  = timer_read32();
-                        charge_complete_warning.blink_state = false;
-                        charge_complete_warning.completed   = false;
+        // if (!is_fully_charged()) {
+        if (timer_elapsed32(entry_chrg_time) >= 500) {
+            entry_full_time = timer_read32();
+            // show_chrging = true;
+            if (!is_in_charging_state) {
+                is_in_charging_state = true;
+                if (!charge_complete_warning.triggered) {
+                    charge_complete_warning.triggered   = true;
+                    charge_complete_warning.blink_count = 0;
+                    // charge_complete_warning.blink_time  = timer_read32();
+                    charge_complete_warning.blink_state = false;
+                    charge_complete_warning.completed   = false;
 
-                        // chrg_total_time = timer_read32();
+                    // chrg_total_time = timer_read32();
 
-                        show_chrg = true;
-                    }
+                    show_chrg = true;
                 }
             }
+        }
 
-            if (!charge_complete_warning.completed) {
-                // if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 11) {
-                // if (!charge_complete_warning.completed && timer_elapsed32(chrg_total_time) < 10000) {
-                // if (timer_elapsed32(charge_complete_warning.chrg_total_time) < 10000) {
+        if (!charge_complete_warning.completed) {
+            // if (!charge_complete_warning.completed && charge_complete_warning.blink_count < 11) {
+            // if (!charge_complete_warning.completed && timer_elapsed32(chrg_total_time) < 10000) {
+            // if (timer_elapsed32(charge_complete_warning.chrg_total_time) < 10000) {
 
-                if (timer_elapsed32(charge_complete_warning.blink_time) >= 500) {
-                    charge_complete_warning.blink_time  = timer_read32();
-                    charge_complete_warning.blink_state = !charge_complete_warning.blink_state;
+            if (timer_elapsed32(charge_complete_warning.blink_time) >= 500) {
+                charge_complete_warning.blink_time  = timer_read32();
+                charge_complete_warning.blink_state = !charge_complete_warning.blink_state;
 
-                    // Count complete on/off cycles (increment on falling edge)
-                    if (charge_complete_warning.blink_state) {
-                        charge_complete_warning.blink_count++;
-                        if (charge_complete_warning.blink_count > 10) {
-                            charge_complete_warning.completed   = true;
-                            charge_complete_warning.blink_state = false;
-
-                            show_chrg = false;
-                        }
-                    }
-                }
-
+                // Count complete on/off cycles (increment on falling edge)
                 if (charge_complete_warning.blink_state) {
-                    for (uint8_t i = 0; i < 5; i++) {
-                        rgb_matrix_set_color(leds[i], 0, 100, 0);
-                    }
-                } else {
-                    for (uint8_t i = 0; i < 5; i++) {
-                        rgb_matrix_set_color(leds[i], 0, 0, 0);
+                    charge_complete_warning.blink_count++;
+                    if (charge_complete_warning.blink_count > 10) {
+                        charge_complete_warning.completed   = true;
+                        charge_complete_warning.blink_state = false;
+
+                        show_chrg = false;
                     }
                 }
-                // }
             }
-        } else {
+
+            if (charge_complete_warning.blink_state) {
+                for (uint8_t i = 0; i < 5; i++) {
+                    rgb_matrix_set_color(leds[i], 0, 100, 0);
+                }
+            } else {
+                for (uint8_t i = 0; i < 5; i++) {
+                    rgb_matrix_set_color(leds[i], 0, 0, 0);
+                }
+            }
+        }
+        // }
+    } else {
+        if (is_fully_charged()) {
             // Charge pin indicates full - trigger only if not already displayed
             if (timer_elapsed32(entry_full_time) >= 2000) {
                 entry_chrg_time = timer_read32();
@@ -1313,17 +1312,18 @@ static void bt_charging_indication(void) {
                     show_chrg_full = false;
                 }
             }
+
+        } else {
+            is_in_charging_state   = false;
+            is_in_full_power_state = false;
+            memset(&charge_complete_warning, 0, sizeof(charge_complete_warning_t));
+
+            charge_complete_warning.completed      = true;
+            charge_complete_warning.full_completed = true;
+
+            entry_chrg_time = timer_read32();
+            entry_full_time = timer_read32();
         }
-    } else {
-        is_in_charging_state   = false;
-        is_in_full_power_state = false;
-        memset(&charge_complete_warning, 0, sizeof(charge_complete_warning_t));
-
-        charge_complete_warning.completed      = true;
-        charge_complete_warning.full_completed = true;
-
-        entry_chrg_time = timer_read32();
-        entry_full_time = timer_read32();
     }
 }
 

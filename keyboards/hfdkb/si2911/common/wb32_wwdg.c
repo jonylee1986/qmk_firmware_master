@@ -6,24 +6,19 @@
 #include <stdlib.h>
 #include "wwdg.h"
 
-bool     feed_dog   = false;
-bool     enable_dog = false;
-uint16_t time       = 0;
+static bool     feed_dog   = false;
+static bool     enable_dog = false;
+static uint16_t time       = 0;
 
-// Temporarily disable watchdog for long-running operations like flash writes
-void wwdg_pause(void) {
+void wwdg_disable(void) {
     if (feed_dog) {
         Disable_WWDG();
+        feed_dog = false;
     }
 }
 
-// Re-enable watchdog after operation completes
-void wwdg_resume(void) {
-    if (feed_dog) {
-        Init_WWDG();
-        WWDG_Enable(127);
-        time = timer_read();
-    }
+void wwdg_enable(void) {
+    enable_dog = true;
 }
 
 void housekeeping_task_kb(void) {
@@ -47,10 +42,17 @@ void snled27351_reset(void) {
     writePinLow(C11);
     wait_ms(1);
     writePinHigh(C11);
-    wait_ms(20);
+    // wait_ms(20);
 
     WWDG_SetCounter(127);
     time = timer_read();
 
     rgb_matrix_init();
 }
+
+// void keyboard_pre_init_kb(void) {
+//     feed_dog = true;
+//     Init_WWDG();
+//     WWDG_Enable(127);
+//     time = timer_read();
+// }

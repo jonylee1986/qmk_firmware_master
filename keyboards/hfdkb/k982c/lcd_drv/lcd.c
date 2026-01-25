@@ -1,6 +1,7 @@
 #include "quantum.h"
 #include "common/bt_task.h"
 #include "lcd.h"
+#include "usb_main.h"
 
 void LCD_IND_update(void) {
     uint8_t IND_data[5] = {0};
@@ -13,7 +14,11 @@ void LCD_IND_update(void) {
     else
         IND_data[2] &= ~0x01;
     if (host_keyboard_led_state().caps_lock)
-        IND_data[2] |= 0x02;
+        if (dev_info.devs == DEVS_USB && USB_DRIVER.state != USB_ACTIVE) {
+            IND_data[2] &= ~0x02;
+        } else {
+            IND_data[2] |= 0x02;
+        }
     else
         IND_data[2] &= ~0x02;
     if (host_keyboard_led_state().scroll_lock)
@@ -90,16 +95,26 @@ void LCD_vol_update(bool vol_inc) {
     uart3_transmit(vol_data, 5);
 }
 
+extern bool is_charging(void);
+extern bool is_fully_charged(void);
+
 void LCD_charge_update(void) {
     uint8_t charge_data[5] = {0};
 
     charge_data[0] = 0xAA;
     charge_data[1] = 0x04;
 
-    if (!readPin(MM_CABLE_PIN))
+    // if (!readPin(MM_CABLE_PIN))
+    if (is_charging()) {
         charge_data[2] |= 0x80;
-    else
-        charge_data[2] &= ~0x80;
+    } else {
+        if (is_fully_charged()) {
+            charge_data[2] |= 0xC0;
+        } else {
+            charge_data[2] &= ~0xC0;
+        }
+    }
+
     charge_data[3] = charge_data[1] + charge_data[2];
     charge_data[4] = 0xBB;
     uart3_transmit(charge_data, 5);

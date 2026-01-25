@@ -676,17 +676,8 @@ wear_leveling_status_t wear_leveling_erase(void) {
  * Writes logical data into the backing store. Skips writes if there are no changes to values.
  */
 wear_leveling_status_t wear_leveling_write(const uint32_t address, const void *value, size_t length) {
-#ifdef WWDG_ENABLE
-    extern void wwdg_pause(void);
-    extern void wwdg_resume(void);
-    wwdg_pause();
-#endif
-
     wl_assert(address + length <= (WEAR_LEVELING_LOGICAL_SIZE));
     if (address + length > (WEAR_LEVELING_LOGICAL_SIZE)) {
-#ifdef WWDG_ENABLE
-        wwdg_resume();
-#endif
         return WEAR_LEVELING_FAILED;
     }
 
@@ -695,9 +686,6 @@ wear_leveling_status_t wear_leveling_write(const uint32_t address, const void *v
 
     // Skip write if there's no change compared to the current cached value
     if (memcmp(value, &wear_leveling.cache[address], length) == 0) {
-#ifdef WWDG_ENABLE
-        wwdg_resume();
-#endif
         return true;
     }
 
@@ -708,9 +696,6 @@ wear_leveling_status_t wear_leveling_write(const uint32_t address, const void *v
     backing_store_lock_status_t lock_status = wear_leveling_unlock();
     if (lock_status == STATUS_FAILURE) {
         wear_leveling_lock();
-#ifdef WWDG_ENABLE
-        wwdg_resume();
-#endif
         return WEAR_LEVELING_FAILED;
     }
 
@@ -738,10 +723,6 @@ wear_leveling_status_t wear_leveling_write(const uint32_t address, const void *v
             status = WEAR_LEVELING_FAILED;
         }
     }
-
-#ifdef WWDG_ENABLE
-    wwdg_resume();
-#endif
 
     return status;
 }
