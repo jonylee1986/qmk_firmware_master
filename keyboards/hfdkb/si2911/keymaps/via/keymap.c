@@ -217,9 +217,9 @@ bool show_chrg      = false;
 bool show_chrg_full = false;
 
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
-    if (!show_chrg && !show_chrg_full && !backlight_sleep_flag && rgb_matrix_get_flags()) {
+    if (!backlight_sleep_flag && rgb_matrix_get_flags()) {
         bled_task();
-        sled_task();
+        if (!show_chrg && !show_chrg_full) sled_task();
     }
 
 #ifdef MULTIMODE_ENABLE

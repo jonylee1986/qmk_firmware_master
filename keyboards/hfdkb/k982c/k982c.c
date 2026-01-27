@@ -37,9 +37,15 @@ extern uint8_t get_enc_blink_cnt(void);
 static bool low_bat_vol     = false;
 static bool low_bat_vol_off = false;
 
-uint8_t pvol = 94;
+uint8_t pvol = 0;
 
 extern bool low_vol_offed_sleep;
+
+static uint8_t  rChr_ChkBuf = 0;
+static uint8_t  rChr_OldBuf = 0;
+static uint16_t rChr_Cnt    = 0;
+static uint8_t  f_ChargeOn  = 0;
+static uint8_t  f_Charged   = 0;
 
 #ifdef DIP_SWITCH_ENABLE
 bool dip_switch_update_kb(uint8_t index, bool active) {
@@ -181,8 +187,9 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     rgb_matrix_set_color(LED_PWR_LOW_INDEX, 0, 0, 0);
 
     if (dev_info.rgb_test_en) {
+        uint8_t brightness = rgb_matrix_get_val();
         for (uint8_t i = 0; i <= 83; i++) {
-            rgb_matrix_set_color(i, 100, 100, 100);
+            rgb_matrix_set_color(i, brightness, brightness, brightness);
         }
     }
 
@@ -190,33 +197,65 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
         rgb_matrix_set_color(73, 60, 60, 60);
     }
 
+    // static uint32_t full_charged_time = 0;
+
+    // if (!get_enc_blink_cnt()) {
+    //     if (!dev_info.ind_toggle) {
+    //         if (is_charging()) {
+    //             low_bat_vol     = false;
+    //             low_bat_vol_off = false;
+
+    //             rgb_matrix_set_color(LED_PWR_LOW_INDEX, 100, 0, 0);
+    //             full_charged_time = timer_read32();
+    //         } else {
+    //             if (is_fully_charged()) {
+    //                 if (timer_elapsed32(full_charged_time) < 5000) {
+    //                     rgb_matrix_set_color(LED_PWR_LOW_INDEX, 0, 100, 0);
+    //                 }
+    //             } else {
+    //                 if (pvol <= 10) {
+    //                     low_bat_vol = true;
+    //                 }
+    //                 if (pvol < 1) {
+    //                     low_bat_vol_off = true;
+    //                 }
+
+    //                 low_power_indicator();
+    //             }
+    //         }
+    //     }
+    // }
+
     static uint32_t full_charged_time = 0;
+    static uint32_t entry_full_time   = 0;
 
-    if (!get_enc_blink_cnt()) {
-        if (!dev_info.ind_toggle) {
-            if (is_charging()) {
-                low_bat_vol     = false;
-                low_bat_vol_off = false;
+    if (f_ChargeOn) {
+        low_bat_vol     = false;
+        low_bat_vol_off = false;
 
-                rgb_matrix_set_color(LED_PWR_LOW_INDEX, 100, 0, 0);
-                full_charged_time = timer_read32();
-            } else {
-                if (is_fully_charged()) {
-                    if (timer_elapsed32(full_charged_time) < 5000) {
-                        rgb_matrix_set_color(LED_PWR_LOW_INDEX, 0, 100, 0);
-                    }
-                } else {
-                    if (pvol <= 10) {
-                        low_bat_vol = true;
-                    }
-                    if (pvol < 1) {
-                        low_bat_vol_off = true;
-                    }
-
-                    low_power_indicator();
+        if (f_Charged && pvol < 100) {
+            entry_full_time   = timer_read32();
+            full_charged_time = timer_read32();
+            rgb_matrix_set_color(LED_PWR_LOW_INDEX, 100, 0, 0);
+        } else {
+            if (timer_elapsed32(entry_full_time) >= 2000) {
+                if (timer_elapsed32(full_charged_time) < 5000) {
+                    rgb_matrix_set_color(LED_PWR_LOW_INDEX, 0, 100, 0);
                 }
             }
         }
+    } else {
+        entry_full_time   = timer_read32();
+        full_charged_time = timer_read32();
+
+        if (pvol <= 10) {
+            low_bat_vol = true;
+        }
+        if (pvol < 1) {
+            low_bat_vol_off = true;
+        }
+
+        if (dev_info.devs != DEVS_USB) low_power_indicator();
     }
 
     if (!rgb_matrix_indicators_advanced_user(led_min, led_max)) {
@@ -322,7 +361,61 @@ void set_led_state(void) {
     } else {
 #if defined(MM_CABLE_PIN)
 
+        static bool charging_old_satus = false;
+        static bool charging_now_satus = false;
+
         // static uint32_t full_charged_time = 0;
+        // static uint32_t entry_full_time = 0;
+        // static uint32_t full_pvol_time    = 0;
+
+        // if (!readPin(MM_CABLE_PIN)) {
+        if (f_ChargeOn) {
+            charging_now_satus = 1;
+
+            // low_bat_vol     = false;
+            // low_bat_vol_off = false;
+
+            // if (pvol >= 100) {
+            //     if (timer_elapsed32(full_pvol_time) < 5000) {
+            //         rgb_matrix_set_color(LED_PWR_LOW_INDEX, 0, 100, 0);
+            //     }
+            // } else {
+            //     full_pvol_time = timer_read32();
+            // }
+            // if (!readPin(MM_CHARGE_PIN)) {
+            // if (f_Charged && pvol < 100) {
+            //     entry_full_time   = timer_read32();
+            //     full_charged_time = timer_read32();
+            //     rgb_matrix_set_color(LED_PWR_LOW_INDEX, 100, 0, 0);
+            // } else {
+            //     if (timer_elapsed32(entry_full_time) >= 2000) {
+            //         if (timer_elapsed32(full_charged_time) < 5000) {
+            //             rgb_matrix_set_color(LED_PWR_LOW_INDEX, 0, 100, 0);
+            //         }
+            //     }
+            // }
+        } else {
+            charging_now_satus = 0;
+
+            // entry_full_time   = timer_read32();
+            // full_charged_time = timer_read32();
+
+            // if (pvol <= 10) {
+            //     low_bat_vol = true;
+            // }
+            // if (pvol < 1) {
+            //     low_bat_vol_off = true;
+            // }
+
+            // low_power_indicator();
+        }
+        if (charging_old_satus != charging_now_satus) {
+            charging_old_satus = charging_now_satus;
+            LCD_charge_update();
+        }
+
+        // static uint32_t full_charged_time = 0;
+        // static uint32_t entry_full_time   = 0;
 
         // if (!get_enc_blink_cnt()) {
         //     if (!dev_info.ind_toggle) {
@@ -332,10 +425,13 @@ void set_led_state(void) {
 
         //             rgb_matrix_set_color(LED_PWR_LOW_INDEX, 100, 0, 0);
         //             full_charged_time = timer_read32();
+        //             entry_full_time   = timer_read32();
         //         } else {
         //             if (is_fully_charged()) {
-        //                 if (timer_elapsed32(full_charged_time) < 5000) {
-        //                     rgb_matrix_set_color(LED_PWR_LOW_INDEX, 0, 100, 0);
+        //                 if (timer_elapsed32(entry_full_time) >= 2000) {
+        //                     if (timer_elapsed32(full_charged_time) < 5000) {
+        //                         rgb_matrix_set_color(LED_PWR_LOW_INDEX, 0, 100, 0);
+        //                     }
         //                 }
         //             } else {
         //                 if (pvol <= 10) {
@@ -490,6 +586,7 @@ void housekeeping_task_kb(void) {
 #    endif
 
                     writePinLow(LED_CAPS_LOCK_IND_PIN);
+                    writePinLow(LED_MAC_OS_IND_PIN);
 
                     LCD_command_update(LCD_LIGHT_SLEEP);
                     if (!LCD_Sleep_Flag) {
@@ -540,7 +637,7 @@ void suspend_power_down_kb(void) {
     }
 
     writePinLow(LED_CAPS_LOCK_IND_PIN);
-
+    writePinLow(LED_MAC_OS_IND_PIN);
     // led_deconfig_all();
 }
 
@@ -553,25 +650,21 @@ void suspend_wakeup_init_kb(void) {
         LCD_command_update(LCD_LIGHT_WAKEUP);
     }
 
-    writePin(LED_CAPS_LOCK_IND_PIN, host_keyboard_led_state().caps_lock);
+    // writePin(LED_CAPS_LOCK_IND_PIN, host_keyboard_led_state().caps_lock);
 
     // LCD_IND_update();
 }
 
 #if defined(MM_CABLE_PIN) && defined(MM_CHARGE_PIN)
-static uint8_t  rChr_ChkBuf  = 0;
-static uint8_t  rChr_OldBuf  = 0;
-static uint16_t rChr_Cnt     = 0;
-static uint8_t  f_ChargeOn   = 0;
-static uint8_t  f_ChargeFull = 0;
+
 
 #    define CHR_DEBOUNCE 100
 
 void Charge_Chat(void) {
     uint8_t i = 0;
 
-    if (USBLINK_Status == 0 && CHARGE_Status == 0) i |= 0x01;
-    if ((USBLINK_Status == 0) && (CHARGE_Status == 1 || (get_pvol_from_uart() >= 100))) i |= 0x02;
+    if (USBLINK_Status == 0) i |= 0x01;
+    if (CHARGE_Status == 0)  i |= 0x02;
 
     if (rChr_ChkBuf != i) {
         rChr_Cnt    = CHR_DEBOUNCE;
@@ -585,22 +678,13 @@ void Charge_Chat(void) {
                 if (i != 0) {
                     rChr_OldBuf = rChr_ChkBuf;
 
-                    if (i) {
+                    if (i & 0x3) {
                         f_ChargeOn = (rChr_ChkBuf & 0x01) ? 1 : 0;
-
-                        f_ChargeFull = (rChr_ChkBuf & 0x02) ? 1 : 0;
+                        f_Charged = (rChr_ChkBuf & 0x02) ? 1 : 0;
                     }
                 }
             }
         }
     }
-}
-
-bool is_charging(void) {
-    return f_ChargeOn;
-}
-
-bool is_fully_charged(void) {
-    return f_ChargeFull;
 }
 #endif

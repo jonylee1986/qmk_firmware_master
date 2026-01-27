@@ -104,15 +104,14 @@ void LCD_charge_update(void) {
     charge_data[0] = 0xAA;
     charge_data[1] = 0x04;
 
-    // if (!readPin(MM_CABLE_PIN))
-    if (is_charging()) {
-        charge_data[2] |= 0x80;
-    } else {
-        if (is_fully_charged()) {
-            charge_data[2] |= 0xC0;
+    if (!readPin(MM_CABLE_PIN)) {
+        if (readPin(MM_CHARGE_PIN)) {
+            charge_data[2] &= ~0x80;
         } else {
-            charge_data[2] &= ~0xC0;
+            charge_data[2] |= 0x80;
         }
+    } else {
+        charge_data[2] &= ~0x80;
     }
 
     charge_data[3] = charge_data[1] + charge_data[2];

@@ -1463,8 +1463,17 @@ bool bt_indicators_advanced(uint8_t led_min, uint8_t led_max) {
         }
     }
 
+    // static bool cable_in_out = false;
+
     if ((dev_info.devs != DEVS_USB) && (readPin(MM_CABLE_PIN))) {
         bt_bat_low_level_warning();
+        // cable_in_out = true;
+    } else {
+        Low_power = false;
+        // if (cable_in_out) {
+        //     cable_in_out = false;
+        //     rgb_matrix_init();
+        // }
     }
 
     // Show the current keyboard state
