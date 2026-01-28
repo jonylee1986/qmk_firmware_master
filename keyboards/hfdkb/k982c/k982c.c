@@ -371,6 +371,9 @@ void set_led_state(void) {
         if (!readPin(MM_CABLE_PIN)) {
             charging_now_satus = 1;
 
+            low_bat_vol     = false;
+            low_bat_vol_off = false;
+
             if (!readPin(MM_CHARGE_PIN) && pvol < 100) {
                 // if (timer_elapsed(entry_charge_time) > 500) {
                 entry_full_time   = timer_read32();
@@ -392,14 +395,20 @@ void set_led_state(void) {
             entry_full_time   = timer_read32();
             full_charged_time = timer_read32();
 
-            if (pvol <= 10) {
-                low_bat_vol = true;
-            }
-            if (pvol < 1) {
-                low_bat_vol_off = true;
-            }
+            if (dev_info.devs != DEVS_USB) {
+                if (pvol <= 10) {
+                    low_bat_vol = true;
+                } else {
+                    low_bat_vol = false;
+                }
+                if (pvol < 1) {
+                    low_bat_vol_off = true;
+                } else {
+                    low_bat_vol_off = false;
+                }
 
-            if (dev_info.devs != DEVS_USB) low_power_indicator();
+                low_power_indicator();
+            }
         }
         if (charging_old_satus != charging_now_satus) {
             charging_old_satus = charging_now_satus;

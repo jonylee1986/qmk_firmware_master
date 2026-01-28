@@ -584,7 +584,7 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
         if (!!now_mode) {
             usbDisconnectBus(&USB_DRIVER);
             usbStop(&USB_DRIVER);
-            // writePinHigh(A12);
+            writePinHigh(A12);
         } else {
             init_usb_driver(&USB_DRIVER);
         }
