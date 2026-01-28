@@ -37,7 +37,7 @@ extern uint8_t get_enc_blink_cnt(void);
 static bool low_bat_vol     = false;
 static bool low_bat_vol_off = false;
 
-uint8_t pvol = 0;
+uint8_t pvol = 100;
 
 extern bool low_vol_offed_sleep;
 
