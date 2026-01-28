@@ -830,9 +830,9 @@ static void bt_used_pin_init(void) {
  */
 static void bt_scan_mode(void) {
 #    ifdef MM_BT_MODE_PIN
-    uint8_t        now_mode = 0;
-    static uint8_t old_mode = 0;
-    // static bool    first_call = true;
+    uint8_t        now_mode   = 0;
+    static uint8_t old_mode   = 0;
+    static bool    first_call = true;
 
     if (readPin(MM_BT_MODE_PIN) && !readPin(MM_2G4_MODE_PIN)) {
         now_mode = 0;
@@ -846,23 +846,24 @@ static void bt_scan_mode(void) {
     }
 
     // Skip RGB reinit on first call (during bt_init) - RGB is already initialized during boot
-    // if (first_call) {
-    //     old_mode   = now_mode;
-    //     first_call = false;
-    //     return;
-    // }
+    if (first_call) {
+        old_mode   = now_mode;
+        first_call = false;
+        return;
+    }
 
     if (old_mode != now_mode) {
         old_mode = now_mode;
         LCD_IND_update();
         LCD_charge_update();
-        // #        ifdef RGB_MATRIX_DRIVER_SDB_PIN
-        //         writePinLow(RGB_MATRIX_DRIVER_SDB_PIN);
-        //         wait_ms(1);
-        //         writePinHigh(RGB_MATRIX_DRIVER_SDB_PIN);
-        // #        endif
 
-        //         rgb_matrix_init();
+#        ifdef RGB_MATRIX_DRIVER_SDB_PIN
+        writePinLow(RGB_MATRIX_DRIVER_SDB_PIN);
+        wait_ms(1);
+        writePinHigh(RGB_MATRIX_DRIVER_SDB_PIN);
+#        endif
+
+        rgb_matrix_init();
     }
 #    endif
 }
@@ -883,17 +884,18 @@ static void close_rgb(void) {
 #    ifdef RGB_MATRIX_DRIVER_SDB_PIN
             writePinLow(RGB_MATRIX_DRIVER_SDB_PIN);
 #    endif
-
-            writePinLow(LED_CAPS_LOCK_IND_PIN);
-            writePinLow(LED_MAC_OS_IND_PIN);
-
             LCD_command_update(LCD_SLEEP);
         }
     } else {
         if (!rgb_matrix_config.enable) {
             if (timer_elapsed32(close_rgb_time) >= ENTRY_STOP_TIMEOUT) {
                 /* Turn off all indicators led */
-                led_deconfig_all();
+                if (led_inited) {
+                    led_deconfig_all();
+                }
+
+                writePinLow(LED_CAPS_LOCK_IND_PIN);
+                writePinLow(LED_MAC_OS_IND_PIN);
 
                 uart3_stop();
 

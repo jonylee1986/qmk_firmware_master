@@ -376,7 +376,7 @@ void bt_init(void) {
     if (dev_info.devs != DEVS_USB) {
         usbDisconnectBus(&USB_DRIVER);
         usbStop(&USB_DRIVER);
-        // writePinHigh(A12);
+        writePinHigh(A12);
     }
     if (dev_info.devs == DEVS_USB) {
         writePinLow(A14);
@@ -556,7 +556,7 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
         if (!!now_mode) {
             usbDisconnectBus(&USB_DRIVER);
             usbStop(&USB_DRIVER);
-            // writePinHigh(A12);
+            writePinHigh(A12);
         } else {
             init_usb_driver(&USB_DRIVER);
         }
@@ -856,6 +856,7 @@ static void close_rgb(void) {
 #ifdef ENTRY_STOP_MODE
                 lp_system_sleep();
 #endif
+
                 extern void open_rgb(void);
                 open_rgb();
             }
@@ -872,10 +873,11 @@ static void open_rgb(void) {
         writePinHigh(RGB_DRIVER_SDB_PIN);
 #endif
 
+        kb_sleep_flag = false;
+        extern bool low_vol_offed_sleep;
+        low_vol_offed_sleep = false;
+
         if (bak_rgb_toggle) {
-            kb_sleep_flag = false;
-            // extern bool low_vol_offed_sleep;
-            // low_vol_offed_sleep = false;
             rgb_matrix_enable_noeeprom();
         }
 

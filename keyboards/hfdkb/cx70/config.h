@@ -33,4 +33,4 @@
 /* Enable GUI Lock LED */
 #define GUI_LOCK_LED_INDEX 79
 
-#define KEY_NUM 8
+#define KEY_NUM 6

@@ -23,7 +23,8 @@ static const uint32_t pre_lp_code[] = {553863175u, 554459777u, 1208378049u, 4026
 static const uint32_t post_lp_code[] = {553863177u, 554459777u, 1208509121u, 51443856u, 4026550535u, 1745485839u, 3489677954u, 536895496u, 673389632u, 1198578684u, 1073807360u, 536866816u, 1073808388u};
 #    define POST_LP() ((void (*)(void))((unsigned int)(post_lp_code) | 0x01))()
 
-void        lp_recovery_hook(void);
+void lp_recovery_hook(void);
+
 static void stop_mode_entry(void);
 static void exti_init(void);
 #    ifdef WAKEUP_RESET
@@ -180,23 +181,14 @@ static void exti_init(void) {
 
 #    if defined(BT_MODE_SW_PIN)
         // setPinInputHigh(BT_MODE_SW_PIN);
-        // waitInputPinDelay();
-        // setPinInputHigh(RF_MODE_SW_PIN);
-        // waitInputPinDelay();
         _pal_lld_enablepadevent(PAL_PORT(BT_MODE_SW_PIN), PAL_PAD(BT_MODE_SW_PIN), PAL_EVENT_MODE_BOTH_EDGES);
-        // _pal_lld_enablepadevent(PAL_PORT(RF_MODE_SW_PIN), PAL_PAD(RF_MODE_SW_PIN), PAL_EVENT_MODE_BOTH_EDGES);
         pad_enbale_interrupt(PAL_PAD(BT_MODE_SW_PIN));
-        // pad_enbale_interrupt(PAL_PAD(RF_MODE_SW_PIN));
 #    endif
 
 #    ifdef ENCODER_ENABLE
-        // static ioline_t encoder_pins[] = {B12, B13};
-        // for (uint8_t i = 0; i < 2; i++) {
-        // setPinInputHigh(encoder_pins[i]);
-        // waitInputPinDelay();
+        // setPinInputHigh(B12);
         _pal_lld_enablepadevent(PAL_PORT(B12), PAL_PAD(B12), PAL_EVENT_MODE_BOTH_EDGES);
         pad_enbale_interrupt(PAL_PAD(B12));
-        // }
 #    endif
     } else {
 #    ifdef BT_CABLE_PIN

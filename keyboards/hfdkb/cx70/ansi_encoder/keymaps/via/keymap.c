@@ -337,8 +337,7 @@ void Charge_Chat(void) {
                     rChr_OldBuf = rChr_ChkBuf;
 
                     if (i) {
-                        f_ChargeOn = (rChr_ChkBuf & 0x01) ? 1 : 0;
-
+                        f_ChargeOn   = (rChr_ChkBuf & 0x01) ? 1 : 0;
                         f_ChargeFull = (rChr_ChkBuf & 0x02) ? 1 : 0;
                     }
                 }
