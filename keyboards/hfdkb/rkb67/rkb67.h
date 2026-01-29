@@ -11,7 +11,7 @@ enum bt_keycodes {
     BT_HOST3,
     BT_2_4G,
     BT_USB,
-    // BT_VOL,
+    BT_VOL,
     SW_OS1,
     KEY_FUN,
 };

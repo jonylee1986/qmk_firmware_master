@@ -12,7 +12,7 @@
 #    define BT_CABLE_PIN B8
 #    define BT_CHARGE_PIN B9
 #    define RGB_DRIVER_SDB_PIN B7
-#    define USB_SUSPEND_STATE_CHECK
+// #    define USB_SUSPEND_STATE_CHECK
 #endif
 
 /* SPI Config for spi flash*/

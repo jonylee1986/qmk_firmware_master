@@ -362,10 +362,9 @@ void bt_init(void) {
 
     chThdCreateStatic(waThread1, sizeof(waThread1), HIGHPRIO, Thread1, NULL);
 
-    bt_scan_mode();
-
     bts_send_name(DEVS_HOST1);
     wait_ms(10);
+    bt_scan_mode();
 
     if (dev_info.devs != DEVS_USB) {
         usbDisconnectBus(&USB_DRIVER);
@@ -550,7 +549,7 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
         if (!!now_mode) {
             usbDisconnectBus(&USB_DRIVER);
             usbStop(&USB_DRIVER);
-            // writePinHigh(A12);
+            writePinHigh(A12);
         } else {
             init_usb_driver(&USB_DRIVER);
         }
@@ -694,14 +693,14 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
                 }
             }
         } break;
-        // case BT_VOL: {
-        //     if (record->event.pressed) {
-        //         bts_send_vendor(v_query_vol);
-        //         query_vol_flag = true;
-        //     } else {
-        //         query_vol_flag = false;
-        //     }
-        // } break;
+        case BT_VOL: {
+            if (record->event.pressed) {
+                bts_send_vendor(v_query_vol);
+                query_vol_flag = true;
+            } else {
+                query_vol_flag = false;
+            }
+        } break;
         case EE_CLR: {
         } break;
         case SW_OS1: { // OS switch key
@@ -814,6 +813,20 @@ static void bt_scan_mode(void) {
         if (dev_info.devs != DEVS_USB) bt_switch_mode(dev_info.devs, DEVS_USB, false); // usb mode
     }
 #endif
+    // if (!readPin(BT_CABLE_PIN)) {
+    //     if (dev_info.devs != DEVS_USB) {
+    //         // Save current wireless mode before switching to USB
+    //         if ((dev_info.devs != DEVS_USB)) {
+    //             dev_info.last_devs = dev_info.devs;
+    //             eeconfig_update_user(dev_info.raw);
+    //         }
+    //         bt_switch_mode(dev_info.devs, DEVS_USB, false); // usb mode
+    //     }
+    // } else {
+    //     if (dev_info.devs == DEVS_USB) {
+    //         bt_switch_mode(dev_info.devs, dev_info.last_devs, false); // last mode
+    //     }
+    // }
 }
 
 // #ifdef RGB_MATRIX_ENABLE
@@ -938,8 +951,13 @@ static void battery_voltage_query(void) {
 
 // Display battery voltage on LEDs
 static void battery_voltage_display(void) {
-    if (readPin(BT_CABLE_PIN)) {
-        uint8_t query_index[] = {72, 71, 70, 69, 68, 67};
+    // if (readPin(BT_CABLE_PIN)) {
+    if (query_vol_flag) {
+        for (uint8_t i = SLED_START_INDEX; i <= SLED_END_INDEX; i++) {
+            rgb_matrix_set_color(i, 0, 0, 0);
+        }
+
+        uint8_t query_index[] = {67, 68, 69, 70, 71, 72};
         uint8_t pvol          = bts_info.bt_info.pvol;
         uint8_t led_count     = 0;
 
@@ -956,7 +974,7 @@ static void battery_voltage_display(void) {
         else if (pvol > 0 && bts_info.bt_info.pvol > 10)
             led_count = 1;
 
-        RGB color = (RGB){80, 80, 80};
+        RGB color = (RGB){20, 20, 20};
         for (uint8_t i = 0; i < led_count; i++) {
             rgb_matrix_set_color(query_index[i], color.r, color.g, color.b);
         }
@@ -983,7 +1001,7 @@ static void battery_low_warning(void) {
         hsv.v              = brightness;
         RGB rgb            = hsv_to_rgb(hsv);
 
-        rgb_matrix_set_color(SLED_END_INDEX, rgb.r, rgb.g, rgb.b);
+        rgb_matrix_set_color(SLED_START_INDEX, rgb.r, rgb.g, rgb.b);
     }
 
     if (bts_info.bt_info.low_vol_offed) {
@@ -995,9 +1013,6 @@ static void battery_low_warning(void) {
         low_vol_offed_sleep = true;
         low_vol_off         = true;
     }
-    // } else {
-    //     low_vol_off = false;
-    // }
 }
 
 // All indicator blink

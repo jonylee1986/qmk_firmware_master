@@ -6,6 +6,7 @@
 #    include "common/bt_task.h"
 #    include "usb_main.h"
 #endif
+#include "lib/lib8tion/lib8tion.h"
 
 bool led_inited = false;
 
@@ -177,14 +178,20 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
         rgb_matrix_set_color_all(0, 0, 0);
     }
 
-    if (!readPin(BT_CABLE_PIN)) {
-        for (uint8_t i = SLED_START_INDEX; i < (SLED_START_INDEX + SLED_NUM); i++) {
-            rgb_matrix_set_color(i, 80, 80, 80);
-        }
-    } else {
-        for (uint8_t i = SLED_START_INDEX; i < (SLED_START_INDEX + SLED_NUM); i++) {
-            rgb_matrix_set_color(i, 0, 0, 0);
-        }
+    // if (!readPin(BT_CABLE_PIN)) {
+    //     for (uint8_t i = SLED_START_INDEX; i < (SLED_START_INDEX + SLED_NUM); i++) {
+    //         rgb_matrix_set_color(i, 20, 20, 20);
+    //     }
+    // } else {
+    //     for (uint8_t i = SLED_START_INDEX; i < (SLED_START_INDEX + SLED_NUM); i++) {
+    //         rgb_matrix_set_color(i, 0, 0, 0);
+    //     }
+    // }
+    uint8_t time = scale16by8(g_rgb_timer, qadd8(rgb_matrix_config.speed / 4, 1));
+    for (uint8_t i = SLED_START_INDEX; i <= SLED_END_INDEX; i++) {
+        HSV hsv = {g_led_config.point[i].x - time, 255, rgb_matrix_config.hsv.v / 2};
+        RGB rgb = hsv_to_rgb(hsv);
+        rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
     }
 
     if (rgb_matrix_indicators_advanced_user(led_min, led_max) != true) {
