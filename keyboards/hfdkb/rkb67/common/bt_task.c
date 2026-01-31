@@ -974,7 +974,7 @@ static void battery_voltage_display(void) {
         else if (pvol > 0 && bts_info.bt_info.pvol > 10)
             led_count = 1;
 
-        RGB color = (RGB){20, 20, 20};
+        RGB color = (RGB){14, 14, 14};
         for (uint8_t i = 0; i < led_count; i++) {
             rgb_matrix_set_color(query_index[i], color.r, color.g, color.b);
         }
@@ -997,7 +997,7 @@ static void battery_low_warning(void) {
 
         HSV     hsv        = {0, 255, 0};
         uint8_t time       = scale16by8(g_rgb_timer, qadd8(rgb_matrix_config.speed / 4, 1));
-        uint8_t brightness = scale8(abs8(sin8(time / 2) - 128) * 2, rgb_matrix_config.hsv.v);
+        uint8_t brightness = scale8(abs8(sin8(time / 2) - 128) * 2, rgb_matrix_config.hsv.v / 2);
         hsv.v              = brightness;
         RGB rgb            = hsv_to_rgb(hsv);
 

@@ -95,9 +95,6 @@ void LCD_vol_update(bool vol_inc) {
     uart3_transmit(vol_data, 5);
 }
 
-extern bool is_charging(void);
-extern bool is_fully_charged(void);
-
 void LCD_charge_update(void) {
     uint8_t charge_data[5] = {0};
 

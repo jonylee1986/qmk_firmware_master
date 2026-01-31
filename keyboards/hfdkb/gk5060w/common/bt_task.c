@@ -60,7 +60,7 @@ bts_info_t bts_info     = {
 
 static const uint8_t rgb_index_table[]          = {BT_USB_INDEX, BT_HOST1_INDEX, BT_HOST2_INDEX, BT_HOST3_INDEX, BT_2G4_INDEX};
 static const uint8_t rgb_index_color_table[][3] = {
-    {RGB_WHITE}, {RGB_BLUE}, {RGB_CYAN}, {RGB_MAGENTA}, {RGB_WHITE},
+    {RGB_WHITE}, {RGB_CYAN}, {RGB_CYAN}, {RGB_CYAN}, {RGB_CYAN},
 };
 
 // static bool     rgb_status_save;
@@ -378,15 +378,15 @@ void bt_init(void) {
 
     chThdCreateStatic(waThread1, sizeof(waThread1), HIGHPRIO, Thread1, NULL);
 
-    bt_scan_mode();
-
     bts_send_name(DEVS_HOST1);
     wait_ms(10);
+
+    bt_scan_mode();
 
     if (dev_info.devs != DEVS_USB) {
         usbDisconnectBus(&USB_DRIVER);
         usbStop(&USB_DRIVER);
-        // writePinHigh(A12);
+        writePinHigh(A12);
     }
 
     setPinOutput(A14);
@@ -576,7 +576,7 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
         if (!!now_mode) {
             usbDisconnectBus(&USB_DRIVER);
             usbStop(&USB_DRIVER);
-            // writePinHigh(A12);
+            writePinHigh(A12);
         } else {
             init_usb_driver(&USB_DRIVER);
         }
@@ -611,8 +611,8 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
             if (reset != false) {
                 indicator_status          = 1;
                 indicator_reset_last_time = true;
-                // bts_send_name(DEVS_HOST1);
-                // bts_send_vendor(v_host1);
+                bts_send_name(DEVS_HOST1);
+                bts_send_vendor(v_host1);
                 bts_send_vendor(v_pair);
             } else {
                 indicator_status          = 2;
@@ -624,8 +624,8 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
             if (reset != false) {
                 indicator_status          = 1;
                 indicator_reset_last_time = 0;
-                // bts_send_name(DEVS_HOST2);
-                // bts_send_vendor(v_host2);
+                bts_send_name(DEVS_HOST2);
+                bts_send_vendor(v_host2);
                 bts_send_vendor(v_pair);
             } else {
                 indicator_status          = 2;
@@ -637,8 +637,8 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
             if (reset != false) {
                 indicator_status          = 1;
                 indicator_reset_last_time = true;
-                // bts_send_name(DEVS_HOST3);
-                // bts_send_vendor(v_host3);
+                bts_send_name(DEVS_HOST3);
+                bts_send_vendor(v_host3);
                 bts_send_vendor(v_pair);
             } else {
                 indicator_status          = 2;
@@ -734,18 +734,18 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 if (get_highest_layer(default_layer_state) == 0) { // MAC_BASE
                     set_single_persistent_default_layer(3);
-                    SW_OS1_ind_hold_time = timer_read32();
-                    SW_OS1_ind_color     = (RGB){RGB_BLUE};
                 }
+                SW_OS1_ind_hold_time = timer_read32();
+                SW_OS1_ind_color     = (RGB){RGB_BLUE};
             }
         } break;
         case SW_MAC: {
             if (record->event.pressed) {
                 if (get_highest_layer(default_layer_state) == 3) { // WIN_BASE
                     set_single_persistent_default_layer(0);
-                    SW_OS1_ind_hold_time = timer_read32();
-                    SW_OS1_ind_color     = (RGB){RGB_PURPLE};
                 }
+                SW_OS1_ind_hold_time = timer_read32();
+                SW_OS1_ind_color     = (RGB){RGB_PURPLE};
             }
         } break;
 
@@ -889,6 +889,12 @@ static void close_rgb(void) {
 #ifdef ENTRY_STOP_MODE
                 lp_system_sleep();
 #endif
+
+                if (dev_info.devs != DEVS_2_4G)
+                    bt_switch_mode(DEVS_USB, dev_info.last_devs, false);
+                else
+                    bt_switch_mode(DEVS_USB, DEVS_2_4G, false);
+
                 extern void open_rgb(void);
                 open_rgb();
             }

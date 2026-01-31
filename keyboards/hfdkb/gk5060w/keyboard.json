@@ -1,6 +1,6 @@
 {
     "manufacturer": " ",
-    "keyboard_name": "Metafor Air - wire",
+    "keyboard_name": "metafor formless - wired",
     "maintainer": "jonylee@hfd",
     "url": "https://github.com/jonylee1986/qmk_firmware_master/tree/hfdkb_playground",
     "processor": "WB32FQ95",
@@ -8,7 +8,7 @@
     "usb": {
         "vid": "0xFFFE",
         "pid": "0x0024",
-        "device_version": "1.0.5",
+        "device_version": "1.0.6",
         "suspend_wakeup_delay": 1000
     },
     "host": {

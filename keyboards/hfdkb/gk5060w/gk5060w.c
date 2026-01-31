@@ -89,35 +89,44 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case KC_LSFT:
+            if (dev_info.devs) {
+                if (record->event.pressed) {
+                    add_mods(KC_LSFT);
+                } else {
+                    del_mods(KC_LSFT);
+                }
+            }
+            break;
         case KC_RSFT:
             if (dev_info.devs) {
                 if (record->event.pressed) {
-                    grave_esc_was_shifted = true;
+                    add_mods(KC_RSFT);
                 } else {
-                    grave_esc_was_shifted = false;
+                    del_mods(KC_RSFT);
                 }
             }
             break;
         case QK_GESC:
             if (dev_info.devs) {
+                const uint8_t mods = get_mods();
+
+                uint8_t shifted = mods & MOD_MASK_SG;
+
                 if (record->event.pressed) {
-                    if (grave_esc_was_shifted) {
-                        bts_process_keys(KC_GRV, 1, dev_info.devs, keymap_config.no_gui, KC_NUM);
-                        // bts_process_keys(KC_GRV, 1, dev_info.devs, keymap_config.no_gui);
+                    grave_esc_was_shifted = shifted;
+                    // if ((get_mods() & MOD_MASK_SG)) {
+                    if (shifted) {
+                        bts_process_keys(KC_GRAVE, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                     } else {
-                        bts_process_keys(KC_ESC, 1, dev_info.devs, keymap_config.no_gui, KC_NUM);
-                        // bts_process_keys(KC_ESC, 1, dev_info.devs, keymap_config.no_gui);
+                        bts_process_keys(KC_ESCAPE, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                     }
                 } else {
-                    if (grave_esc_was_shifted) {
-                        bts_process_keys(KC_GRV, 0, dev_info.devs, keymap_config.no_gui, KC_NUM);
-                        // bts_process_keys(KC_GRV, 0, dev_info.devs, keymap_config.no_gui);
+                    if (shifted) {
+                        bts_process_keys(KC_GRAVE, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                     } else {
-                        bts_process_keys(KC_ESC, 0, dev_info.devs, keymap_config.no_gui, KC_NUM);
-                        // bts_process_keys(KC_ESC, 0, dev_info.devs, keymap_config.no_gui);
+                        bts_process_keys(KC_ESCAPE, record->event.pressed, dev_info.devs, keymap_config.no_gui, KEY_NUM);
                     }
                 }
-                return false;
             }
             break;
 

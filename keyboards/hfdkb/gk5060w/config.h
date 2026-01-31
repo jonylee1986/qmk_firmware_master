@@ -9,9 +9,9 @@
  */
 
 #ifdef BT_MODE_ENABLE
-#    define BT_HOST1_NAME "Metafor Air - BT$"
-#    define BT_HOST2_NAME "Metafor Air - BT$"
-#    define BT_HOST3_NAME "Metafor Air - BT$"
+#    define BT_HOST1_NAME "metafor #$"
+#    define BT_HOST2_NAME "metafor #$"
+#    define BT_HOST3_NAME "metafor #$"
 
 /* Multi mode used pins */
 #    define BT_CABLE_PIN B8

@@ -189,7 +189,7 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     // }
     uint8_t time = scale16by8(g_rgb_timer, qadd8(rgb_matrix_config.speed / 4, 1));
     for (uint8_t i = SLED_START_INDEX; i <= SLED_END_INDEX; i++) {
-        HSV hsv = {g_led_config.point[i].x - time, 255, rgb_matrix_config.hsv.v / 2};
+        HSV hsv = {g_led_config.point[i].x - time, 255, rgb_matrix_config.hsv.v / 3};
         RGB rgb = hsv_to_rgb(hsv);
         rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
     }
