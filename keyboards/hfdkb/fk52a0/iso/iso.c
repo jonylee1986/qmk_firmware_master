@@ -1,0 +1,127 @@
+// Copyright 2023 JoyLee (@itarze)
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+#include QMK_KEYBOARD_H
+// clang-format off
+
+#ifdef RGB_MATRIX_ENABLE
+const snled27351_led_t PROGMEM g_snled27351_leds[SNLED27351_LED_COUNT] = {
+/* Refer to IS31 manual for these locations
+ *   driver
+ *   |   R location
+ *   |   |     G location
+ *   |   |     |     B location
+ *   |   |     |     | */
+    {1, CB2_CA1,   CB1_CA1,   CB3_CA1},
+    {1, CB2_CA3,   CB1_CA3,   CB3_CA3},
+    {1, CB2_CA4,   CB1_CA4,   CB3_CA4},
+    {1, CB2_CA5,   CB1_CA5,   CB3_CA5},
+    {1, CB2_CA6,   CB1_CA6,   CB3_CA6},
+    {1, CB2_CA7,   CB1_CA7,   CB3_CA7},
+    {1, CB2_CA8,   CB1_CA8,   CB3_CA8},
+    {1, CB2_CA9,   CB1_CA9,   CB3_CA9},
+    {1, CB2_CA10,  CB1_CA10,  CB3_CA10},
+    {1, CB2_CA11,  CB1_CA11,  CB3_CA11},
+    {1, CB2_CA12,  CB1_CA12,  CB3_CA12},
+    {1, CB2_CA13,  CB1_CA13,  CB3_CA13},
+    {1, CB2_CA14,  CB1_CA14,  CB3_CA14},
+    {1, CB2_CA15,  CB1_CA15,  CB3_CA15},
+    {1, CB5_CA11,  CB4_CA11,  CB6_CA11},
+    {1, CB5_CA12,  CB4_CA12,  CB6_CA12},
+    {1, CB5_CA13,  CB4_CA13,  CB6_CA13},
+    {1, CB5_CA14,  CB4_CA14,  CB6_CA14},
+
+    {0, CB2_CA1,   CB1_CA1,   CB3_CA1},
+    {0, CB2_CA2,   CB1_CA2,   CB3_CA2},
+    {0, CB2_CA3,   CB1_CA3,   CB3_CA3},
+    {0, CB2_CA4,   CB1_CA4,   CB3_CA4},
+    {0, CB2_CA5,   CB1_CA5,   CB3_CA5},
+    {0, CB2_CA6,   CB1_CA6,   CB3_CA6},
+    {0, CB2_CA7,   CB1_CA7,   CB3_CA7},
+    {0, CB2_CA8,   CB1_CA8,   CB3_CA8},
+    {0, CB2_CA9,   CB1_CA9,   CB3_CA9},
+    {0, CB2_CA10,  CB1_CA10,  CB3_CA10},
+    {0, CB2_CA11,  CB1_CA11,  CB3_CA11},
+    {0, CB2_CA12,  CB1_CA12,  CB3_CA12},
+    {0, CB2_CA13,  CB1_CA13,  CB3_CA13},
+    {0, CB2_CA14,  CB1_CA14,  CB3_CA14},
+    {1, CB5_CA3,   CB4_CA3,   CB6_CA3},
+    {1, CB5_CA4,   CB4_CA4,   CB6_CA4},
+    {1, CB5_CA5,   CB4_CA5,   CB6_CA5},
+    {1, CB5_CA6,   CB4_CA6,   CB6_CA6},
+    {1, CB5_CA7,   CB4_CA7,   CB6_CA7},
+
+    {0, CB5_CA1,   CB4_CA1,   CB6_CA1},
+    {0, CB5_CA2,   CB4_CA2,   CB6_CA2},
+    {0, CB5_CA3,   CB4_CA3,   CB6_CA3},
+    {0, CB5_CA4,   CB4_CA4,   CB6_CA4},
+    {0, CB5_CA5,   CB4_CA5,   CB6_CA5},
+    {0, CB5_CA6,   CB4_CA6,   CB6_CA6},
+    {0, CB5_CA7,   CB4_CA7,   CB6_CA7},
+    {0, CB5_CA8,   CB4_CA8,   CB6_CA8},
+    {0, CB5_CA9,   CB4_CA9,   CB6_CA9},
+    {0, CB5_CA10,  CB4_CA10,  CB6_CA10},
+    {0, CB5_CA11,  CB4_CA11,  CB6_CA11},
+    {0, CB5_CA12,  CB4_CA12,  CB6_CA12},
+    {0, CB5_CA13,  CB4_CA13,  CB6_CA13},
+    {1, CB5_CA8,   CB4_CA8,   CB6_CA8},
+    {1, CB5_CA9,   CB4_CA9,   CB6_CA9},
+    {1, CB5_CA10,  CB4_CA10,  CB6_CA10},
+    {1, CB5_CA15,  CB4_CA15,  CB6_CA15},
+
+    {0, CB8_CA1,   CB7_CA1,   CB9_CA1},
+    {0, CB8_CA2,   CB7_CA2,   CB9_CA2},
+    {0, CB8_CA3,   CB7_CA3,   CB9_CA3},
+    {0, CB8_CA4,   CB7_CA4,   CB9_CA4},
+    {0, CB8_CA5,   CB7_CA5,   CB9_CA5},
+    {0, CB8_CA6,   CB7_CA6,   CB9_CA6},
+    {0, CB8_CA7,   CB7_CA7,   CB9_CA7},
+    {0, CB8_CA8,   CB7_CA8,   CB9_CA8},
+    {0, CB8_CA9,   CB7_CA9,   CB9_CA9},
+    {0, CB8_CA10,  CB7_CA10,  CB9_CA10},
+    {0, CB8_CA11,  CB7_CA11,  CB9_CA11},
+    {0, CB8_CA12,  CB7_CA12,  CB9_CA12},
+    {0, CB8_CA13,  CB7_CA13,  CB9_CA13},
+    {0, CB5_CA14,  CB4_CA14,  CB6_CA14}, // Enter
+    {1, CB8_CA3,   CB7_CA3,   CB9_CA3},
+    {1, CB8_CA4,   CB7_CA4,   CB9_CA4},
+    {1, CB8_CA5,   CB7_CA5,   CB9_CA5},
+    {1, CB8_CA6,   CB7_CA6,   CB9_CA6},
+    {1, CB5_CA16,  CB4_CA16,  CB6_CA16},
+
+    {0, CB11_CA1,  CB10_CA1,  CB12_CA1},
+    {0, CB11_CA2,  CB10_CA2,  CB12_CA2},
+    {0, CB11_CA3,  CB10_CA3,  CB12_CA3},
+    {0, CB11_CA4,  CB10_CA4,  CB12_CA4},
+    {0, CB11_CA5,  CB10_CA5,  CB12_CA5},
+    {0, CB11_CA6,  CB10_CA6,  CB12_CA6},
+    {0, CB11_CA7,  CB10_CA7,  CB12_CA7},
+    {0, CB11_CA8,  CB10_CA8,  CB12_CA8},
+    {0, CB11_CA9,  CB10_CA9,  CB12_CA9},
+    {0, CB11_CA10, CB10_CA10, CB12_CA10},
+    {0, CB11_CA11, CB10_CA11, CB12_CA11},
+    {0, CB11_CA12, CB10_CA12, CB12_CA12},
+    {0, CB11_CA13, CB10_CA13, CB12_CA13},
+    {1, CB11_CA4,  CB10_CA4,  CB12_CA4},
+    {1, CB11_CA6,  CB10_CA6,  CB12_CA6},
+    {1, CB11_CA8,  CB10_CA8,  CB12_CA8},
+    {1, CB11_CA9,  CB10_CA9,  CB12_CA9},
+
+    {0, CB5_CA15,  CB4_CA15,  CB6_CA15},
+    {0, CB11_CA14, CB10_CA14, CB12_CA14},
+    {0, CB11_CA15, CB10_CA15, CB12_CA15},
+    {0, CB11_CA16, CB10_CA16, CB12_CA16},
+    {0, CB8_CA14,  CB7_CA14,  CB9_CA14},
+    {0, CB8_CA15,  CB7_CA15,  CB9_CA15},
+    {0, CB8_CA16,  CB7_CA16,  CB9_CA16},
+    {1, CB11_CA1,  CB10_CA1,  CB12_CA1},
+    {1, CB11_CA2,  CB10_CA2,  CB12_CA2},
+    {1, CB11_CA3,  CB10_CA3,  CB12_CA3},
+    {1, CB11_CA5,  CB10_CA5,  CB12_CA5},
+    {1, CB11_CA10, CB10_CA10, CB12_CA10},
+
+    {1, CB8_CA7,   CB7_CA7,   CB9_CA7}, // logo1
+    {1, CB8_CA8,   CB7_CA8,   CB9_CA8}, // logo2
+    {1, CB8_CA9,   CB7_CA9,   CB9_CA9}, // logo3
+};
+#endif

@@ -23,7 +23,8 @@ static const uint32_t pre_lp_code[] = {553863175u, 554459777u, 1208378049u, 4026
 static const uint32_t post_lp_code[] = {553863177u, 554459777u, 1208509121u, 51443856u, 4026550535u, 1745485839u, 3489677954u, 536895496u, 673389632u, 1198578684u, 1073807360u, 536866816u, 1073808388u};
 #    define POST_LP() ((void (*)(void))((unsigned int)(post_lp_code) | 0x01))()
 
-void        lp_recovery_hook(void);
+void lp_recovery_hook(void);
+
 static void stop_mode_entry(void);
 static void exti_init(void);
 #    ifdef WAKEUP_RESET
@@ -162,50 +163,40 @@ static void pad_enbale_interrupt(ioline_t pin) {
     }
 }
 
-// bool low_vol_offed_sleep;
+bool low_vol_offed_sleep;
 
 static void exti_init(void) {
-    // if (!low_vol_offed_sleep) {
-    for (int col = 0; col < MATRIX_COLS; col++) {
-        setPinOutputOpenDrain(col_pins[col]);
-        writePinLow(col_pins[col]);
-    }
+    if (!low_vol_offed_sleep) {
+        for (int col = 0; col < MATRIX_COLS; col++) {
+            setPinOutputOpenDrain(col_pins[col]);
+            writePinLow(col_pins[col]);
+        }
 
-    for (int row = 0; row < MATRIX_ROWS; row++) {
-        setPinInputHigh(row_pins[row]);
-        waitInputPinDelay();
-        _pal_lld_enablepadevent(PAL_PORT(row_pins[row]), PAL_PAD(row_pins[row]), PAL_EVENT_MODE_BOTH_EDGES);
-        pad_enbale_interrupt(PAL_PAD(row_pins[row]));
-    }
+        for (int row = 0; row < MATRIX_ROWS; row++) {
+            setPinInputHigh(row_pins[row]);
+            waitInputPinDelay();
+            _pal_lld_enablepadevent(PAL_PORT(row_pins[row]), PAL_PAD(row_pins[row]), PAL_EVENT_MODE_BOTH_EDGES);
+            pad_enbale_interrupt(PAL_PAD(row_pins[row]));
+        }
 
-#    if defined(BT_MODE_SW_PIN) && defined(RF_MODE_SW_PIN)
-    // setPinInputHigh(BT_MODE_SW_PIN);
-    // waitInputPinDelay();
-    // setPinInputHigh(RF_MODE_SW_PIN);
-    // waitInputPinDelay();
-    _pal_lld_enablepadevent(PAL_PORT(BT_MODE_SW_PIN), PAL_PAD(BT_MODE_SW_PIN), PAL_EVENT_MODE_BOTH_EDGES);
-    _pal_lld_enablepadevent(PAL_PORT(RF_MODE_SW_PIN), PAL_PAD(RF_MODE_SW_PIN), PAL_EVENT_MODE_BOTH_EDGES);
-    pad_enbale_interrupt(PAL_PAD(BT_MODE_SW_PIN));
-    pad_enbale_interrupt(PAL_PAD(RF_MODE_SW_PIN));
+#    if defined(BT_MODE_SW_PIN)
+        // setPinInputHigh(BT_MODE_SW_PIN);
+        _pal_lld_enablepadevent(PAL_PORT(BT_MODE_SW_PIN), PAL_PAD(BT_MODE_SW_PIN), PAL_EVENT_MODE_BOTH_EDGES);
+        pad_enbale_interrupt(PAL_PAD(BT_MODE_SW_PIN));
 #    endif
 
 #    ifdef ENCODER_ENABLE
-    static ioline_t encoder_pins[] = {B12, B13};
-    for (uint8_t i = 0; i < 2; i++) {
-        // setPinInputHigh(encoder_pins[i]);
-        // waitInputPinDelay();
-        _pal_lld_enablepadevent(PAL_PORT(encoder_pins[i]), PAL_PAD(encoder_pins[i]), PAL_EVENT_MODE_BOTH_EDGES);
-        pad_enbale_interrupt(PAL_PAD(encoder_pins[i]));
-    }
+        // setPinInputHigh(B12);
+        _pal_lld_enablepadevent(PAL_PORT(B12), PAL_PAD(B12), PAL_EVENT_MODE_BOTH_EDGES);
+        pad_enbale_interrupt(PAL_PAD(B12));
 #    endif
-// } else {
+    } else {
 #    ifdef BT_CABLE_PIN
-    // setPinInputHigh(BT_CABLE_PIN);
-    // waitInputPinDelay();
-    _pal_lld_enablepadevent(PAL_PORT(BT_CABLE_PIN), PAL_PAD(BT_CABLE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
-    pad_enbale_interrupt(PAL_PAD(BT_CABLE_PIN));
+        // setPinInputHigh(BT_CABLE_PIN);
+        _pal_lld_enablepadevent(PAL_PORT(BT_CABLE_PIN), PAL_PAD(BT_CABLE_PIN), PAL_EVENT_MODE_BOTH_EDGES);
+        pad_enbale_interrupt(PAL_PAD(BT_CABLE_PIN));
 #    endif
-    // }
+    }
 }
 
 static void stop_mode_entry(void) {

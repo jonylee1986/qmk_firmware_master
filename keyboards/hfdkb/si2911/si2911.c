@@ -16,6 +16,8 @@
 
 #include QMK_KEYBOARD_H
 
+#include "common/bt_task.h"
+
 // clang-format off
 #ifdef RGB_MATRIX_ENABLE
 const snled27351_led_t PROGMEM g_snled27351_leds[SNLED27351_LED_COUNT] = {
@@ -144,6 +146,15 @@ const snled27351_led_t PROGMEM g_snled27351_leds[SNLED27351_LED_COUNT] = {
 #endif
 // clang-format on
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    if (get_low_vol_off()) {
+        bts_process_keys(keycode, 0, dev_info.devs, keymap_config.no_gui);
+        bts_task(dev_info.devs);
+        while (bts_is_busy()) {
+            wait_ms(1);
+        }
+        return false;
+    }
+
     if (!process_record_user(keycode, record)) {
         return false;
     }
