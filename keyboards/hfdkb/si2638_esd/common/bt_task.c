@@ -15,6 +15,7 @@
 #include "report.h"
 #include "usb_main.h"
 #include "common/bt_task.h"
+#include "common/wb32_wwdg.h"
 
 #define NUM_LONG_PRESS_KEYS (sizeof(long_pressed_keys) / sizeof(long_pressed_keys_t))
 
@@ -205,6 +206,28 @@ static THD_FUNCTION(Thread1, arg) {
     while (true) {
         bts_task(dev_info.devs);
         chThdSleepMilliseconds(1);
+    }
+}
+
+static uint32_t wwdg_flag = 0;
+static THD_WORKING_AREA(wwdgThread, 128);
+static THD_FUNCTION(ThreadWWDG, arg) {
+    (void)arg;
+
+    chRegSetThreadName("wwdg");
+
+    while (true) {
+        if (!wwdg_flag) {
+            wb32_wwdg_start();
+            wwdg_flag = 1;
+            continue;
+        }
+
+        chThdSleepMilliseconds(10);
+
+        if ((wwdg_flag == 1) && (wb32_wwdg_started())) {
+            WWDG_SetCounter(127);
+        }
     }
 }
 
@@ -1446,3 +1469,21 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
     return true;
 }
 #endif
+
+static void snled27351_reset(void) {
+    setPinOutputOpenDrain(C15);
+    writePinLow(C15);
+    wait_ms(1);
+    writePinHigh(C15);
+    wait_ms(10);
+
+    rgb_matrix_init();
+}
+
+void keyboard_post_init_kb(void) {
+    snled27351_reset();
+
+    chThdCreateStatic(wwdgThread, sizeof(wwdgThread), HIGHPRIO, ThreadWWDG, NULL);
+
+    keyboard_post_init_user();
+}

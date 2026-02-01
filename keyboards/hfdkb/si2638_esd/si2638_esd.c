@@ -4,6 +4,7 @@
 #include QMK_KEYBOARD_H
 #include "common/bt_task.h"
 #include "usb_main.h"
+#include "common/wb32_wwdg.h"
 // clang-format off
 
 #ifdef RGB_MATRIX_ENABLE
@@ -209,11 +210,13 @@ void set_led_state(void) {
 void suspend_power_down_user(void) {
     // code will run multiple times while keyboard is suspended
     led_deconfig_all();
+    wb32_wwdg_stop();
 }
 
 void suspend_wakeup_init_user(void) {
     // code will run on keyboard wakeup
     led_config_all();
+    wb32_wwdg_start();
 }
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
@@ -310,11 +313,13 @@ void housekeeping_task_kb(void) {
                 writePinHigh(RGB_DRIVER_SDB_PIN);
                 // rgb_matrix_init();
 #    endif
+                wb32_wwdg_start();
             }
         }
 
         if ((USB_DRIVER.state != USB_ACTIVE)) {
             if (!usb_suspend_timer) {
+                wb32_wwdg_stop();
                 usb_suspend_timer = timer_read32();
             } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
                 if (!usb_suspend) {
@@ -334,6 +339,7 @@ void housekeeping_task_kb(void) {
                 writePinHigh(RGB_DRIVER_SDB_PIN);
                 // rgb_matrix_init();
 #    endif
+                wb32_wwdg_start();
             }
         }
     } else {
@@ -344,6 +350,7 @@ void housekeeping_task_kb(void) {
             writePinHigh(RGB_DRIVER_SDB_PIN);
             // rgb_matrix_init();
 #    endif
+            wb32_wwdg_start();
         }
     }
 #endif

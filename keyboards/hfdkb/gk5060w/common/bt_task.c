@@ -1117,7 +1117,7 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
                 }
 
                 /* 超时30s退出 */
-                if (timer_elapsed32(last_total_time) >= (15 * 1000)) {
+                if (timer_elapsed32(last_total_time) >= (30 * 1000)) {
                     indicator_status = 0;
                     kb_sleep_flag    = true;
                 }
