@@ -155,6 +155,42 @@ void led_deconfig_all(void) {
     }
 }
 
+#define CHR_DEBOUNCE 100
+
+static uint8_t  rChr_ChkBuf = 0;
+static uint8_t  rChr_OldBuf = 0;
+static uint16_t rChr_Cnt    = 0;
+// static uint8_t  f_ChargeOn  = 0;
+static uint8_t f_Charged = 0;
+
+void Charge_Chat(void) {
+    uint8_t i = 0;
+
+    // if (!readPin(BT_CABLE_PIN)) i |= 0x01;
+    if (!readPin(BT_CHARGE_PIN)) i |= 0x02;
+
+    if (rChr_ChkBuf != i) {
+        rChr_Cnt    = CHR_DEBOUNCE;
+        rChr_ChkBuf = i;
+    } else {
+        if (rChr_Cnt != 0) {
+            rChr_Cnt--;
+            if (rChr_Cnt == 0) {
+                i = rChr_ChkBuf ^ rChr_OldBuf;
+
+                if (i != 0) {
+                    rChr_OldBuf = rChr_ChkBuf;
+
+                    if (i & 0x3) {
+                        // f_ChargeOn = (rChr_ChkBuf & 0x01) ? 1 : 0;
+                        f_Charged = (rChr_ChkBuf & 0x02) ? 1 : 0;
+                    }
+                }
+            }
+        }
+    }
+}
+
 bool low_vol_off = false;
 
 void set_led_state(void) {
@@ -168,7 +204,8 @@ void set_led_state(void) {
         static uint16_t Low_power_time;
 
         if (!readPin(BT_CABLE_PIN)) {
-            if (!readPin(BT_CHARGE_PIN)) {
+            if (f_Charged) {
+                // if (!readPin(BT_CHARGE_PIN)) {
                 writePinHigh(INDLED_POWER_PIN);
                 charging_time = timer_read32();
             } else {
@@ -176,6 +213,13 @@ void set_led_state(void) {
                     writePinLow(INDLED_POWER_PIN);
                 }
             }
+
+            // if (charging_time && timer_elapsed(charging_time) > 500) {
+            //     writePinLow(INDLED_POWER_PIN);
+            // } else {
+            //     charging_time = 0;
+            // }
+
             if (low_vol_off) low_vol_off = false;
         } else {
             if ((bts_info.bt_info.low_vol) && readPin(BT_CABLE_PIN)) {
@@ -273,6 +317,13 @@ void matrix_scan_kb(void) {
     bt_task();
     set_led_state();
 #endif
+
+    static uint32_t charg_chat_time = 0;
+    if (timer_elapsed32(charg_chat_time) >= 2) {
+        charg_chat_time = timer_read32();
+        Charge_Chat();
+    }
+
     matrix_scan_user();
 }
 

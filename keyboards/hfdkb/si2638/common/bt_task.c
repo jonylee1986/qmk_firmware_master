@@ -1122,7 +1122,7 @@ static void bt_used_pin_init(void) {
 #endif
 
 #if defined(BT_CABLE_PIN) && defined(BT_CHARGE_PIN)
-    setPinInputHigh(BT_CABLE_PIN);
+    setPinInput(BT_CABLE_PIN);
     setPinInput(BT_CHARGE_PIN);
 #endif
 }
