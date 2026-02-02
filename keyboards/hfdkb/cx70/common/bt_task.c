@@ -368,10 +368,10 @@ void bt_init(void) {
 
     chThdCreateStatic(waThread1, sizeof(waThread1), HIGHPRIO, Thread1, NULL);
 
-    bt_scan_mode();
+    // bt_scan_mode();
 
-    bts_send_name(DEVS_HOST1);
-    wait_ms(10);
+    // bts_send_name(DEVS_HOST1);
+    // wait_ms(10);
 
     if (dev_info.devs != DEVS_USB) {
         usbDisconnectBus(&USB_DRIVER);
@@ -383,6 +383,7 @@ void bt_init(void) {
     } else {
         writePinHigh(A14);
     }
+
     bt_init_time = timer_read32();
 }
 
@@ -396,6 +397,9 @@ void bt_task(void) {
 
     if ((bt_init_time != 0) && (timer_elapsed32(bt_init_time) >= 2000)) {
         bt_init_time = 0;
+
+        bts_send_name(DEVS_HOST1);
+        wait_ms(10);
 
         // bts_send_vendor(v_en_sleep_wl);
         bts_send_vendor(v_en_sleep_bt);
@@ -445,7 +449,7 @@ void bt_task(void) {
     }
 
     long_pressed_keys_hook();
-    bt_scan_mode();
+    if (!bt_init_time) bt_scan_mode();
 }
 
 uint32_t pressed_time = 0;
@@ -1122,11 +1126,8 @@ static void show_volume_level_indication(void) {
 static void show_charging_indication(void) {
     static uint32_t entry_chrg_time = 0;
 
-    extern bool is_charging(void);
-    extern bool is_fully_charged(void);
-
-    if (is_charging()) {
-        if (!is_fully_charged()) {
+    if (!readPin(BT_CABLE_PIN)) {
+        if (!readPin(BT_CHARGE_PIN)) {
             if (timer_elapsed32(entry_chrg_time) > 500) {
                 rgb_matrix_set_color(0, 0, 0, 100);
             }

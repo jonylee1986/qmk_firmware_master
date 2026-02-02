@@ -1206,13 +1206,13 @@ static void close_rgb(void) {
                 lp_system_sleep();
 #    endif
                 extern void open_rgb(void);
-                if ((dev_info.devs != DEVS_USB) && (dev_info.devs != DEVS_2_4G))
-                    bt_switch_mode(DEVS_USB, dev_info.last_devs, false);
-                else if ((dev_info.devs == DEVS_2_4G))
-                    bt_switch_mode(DEVS_USB, DEVS_2_4G, false);
-                else if (dev_info.devs == DEVS_USB) {
-                    bt_switch_mode(dev_info.last_devs, DEVS_USB, false);
-                }
+                // if ((dev_info.devs != DEVS_USB) && (dev_info.devs != DEVS_2_4G))
+                //     bt_switch_mode(DEVS_USB, dev_info.last_devs, false);
+                // else if (dev_info.devs == DEVS_2_4G)
+                //     bt_switch_mode(DEVS_USB, DEVS_2_4G, false);
+                // else if (dev_info.devs == DEVS_USB) {
+                //     bt_switch_mode(dev_info.last_devs, DEVS_USB, false);
+                // }
 
                 open_rgb();
             }
@@ -1226,6 +1226,7 @@ void open_rgb(void) {
     // #    endif
     if (!sober) {
         writePinHigh(RGB_DRIVER_SDB_PIN); // 解决休眠唤醒RGB轴灯不亮
+        rgb_matrix_init();
         if (bak_rgb_toggle) {
             kb_sleep_flag = false;
             rgb_matrix_enable_noeeprom();
@@ -1308,6 +1309,12 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
     const uint8_t leds[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
     if (dev_info.devs != DEVS_USB) {
+        static uint32_t query_vol_time = 0;
+        if (!bt_init_time && !kb_sleep_flag && bts_info.bt_info.paired && (timer_elapsed32(query_vol_time) > 4000)) {
+            query_vol_time = timer_read32();
+            bts_send_vendor(v_query_vol);
+        }
+
         if (query_vol_flag) {
             // if(charging_time == 0){
             rgb_matrix_set_color_all(0, 0, 0);

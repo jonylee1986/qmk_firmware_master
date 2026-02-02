@@ -167,6 +167,24 @@ bool           process_record_user(uint16_t keycode, keyrecord_t *record) {
                 return false; // 跳过默认处理
             }
 
+        case G(KC_TAB):
+            if (keymap_config.no_gui) {
+                if (dev_info.devs) {
+                    bts_process_keys(KC_LGUI, record->event.pressed, dev_info.devs, false);
+                    bts_process_keys(KC_TAB, record->event.pressed, dev_info.devs, keymap_config.no_gui);
+                } else {
+                    if (record->event.pressed) {
+                        register_code(KC_LGUI);
+                        register_code(KC_TAB);
+                    } else {
+                        unregister_code(KC_TAB);
+                        unregister_code(KC_LGUI);
+                    }
+                }
+                return false;
+            }
+            return true;
+
         case RM_NEXT:
             if (record->event.pressed) {
                 dev_info.rgb_white_light = 0; // 切灯效就关闭白光

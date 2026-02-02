@@ -5,6 +5,28 @@
 
 #include "usb_main.h"
 #include "common/bt_task.h"
+#include "lib/lib8tion/lib8tion.h"
+
+static uint8_t color_tab[][3] = {
+    {HSV_RED},    // RED
+    {HSV_GREEN},  // GREEN
+    {HSV_BLUE},   // BLUE
+    {HSV_YELLOW}, // YELLOW
+    // {HSV_WHITE},  // WHITE
+    {HSV_PURPLE}, // PURPLE
+    {HSV_CYAN},   // CYAN
+};
+
+enum led_light_color {
+    LED_COLOR_RED,
+    LED_COLOR_GREEN,
+    LED_COLOR_BLUE,
+    LED_COLOR_YELLOW,
+    LED_COLOR_WHITE,
+    LED_COLOR_PURPLE,
+    LED_COLOR_CYAN,
+    LED_COLOR_COUNT,
+};
 
 bool led_inited = false;
 
@@ -45,14 +67,58 @@ bool dip_switch_update_kb(uint8_t index, bool active) {
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     if (get_low_vol_off()) {
-        // clear_keyboard();
         bts_process_keys(keycode, 0, dev_info.devs, keymap_config.no_gui, KEY_NUM);
-        // bts_process_keys(0, 1, dev_info.devs, keymap_config.no_gui, KEY_NUM);
         bts_task(dev_info.devs);
         while (bts_is_busy()) {
             wait_ms(1);
         }
         return false;
+    }
+
+    switch (keycode) {
+        case QK_RGB_MATRIX_TOGGLE: {
+            if (record->event.pressed) {
+                switch (rgb_matrix_get_flags()) {
+                    case LED_FLAG_ALL: {
+                        rgb_matrix_set_flags(LED_FLAG_NONE);
+                        rgb_matrix_set_color_all(RGB_OFF);
+                    } break;
+                    default: {
+                        rgb_matrix_set_flags(LED_FLAG_ALL);
+                    } break;
+                }
+            }
+            if (!rgb_matrix_is_enabled()) {
+                rgb_matrix_set_flags(LED_FLAG_ALL);
+                rgb_matrix_enable();
+            }
+            return false;
+        }
+
+        case RM_HUEU:
+            if (record->event.pressed) {
+                dev_info.color_index++;
+                if (dev_info.color_index >= LED_COLOR_COUNT) {
+                    dev_info.color_index = LED_COLOR_RED;
+                }
+                if (dev_info.color_index != LED_COLOR_WHITE) rgb_matrix_config.hsv.h = color_tab[dev_info.color_index][0];
+                eeconfig_update_user(dev_info.raw);
+            }
+            return false;
+        case RM_HUED:
+            if (record->event.pressed) {
+                if (dev_info.color_index == LED_COLOR_RED) {
+                    dev_info.color_index = LED_COLOR_COUNT - 1;
+                } else {
+                    dev_info.color_index--;
+                }
+                if (dev_info.color_index != LED_COLOR_WHITE) rgb_matrix_config.hsv.h = color_tab[dev_info.color_index][0];
+                eeconfig_update_user(dev_info.raw);
+            }
+            return false;
+
+        default:
+            break;
     }
 
     if (process_record_user(keycode, record) != true) {
@@ -83,10 +149,20 @@ void matrix_scan_kb(void) {
 }
 
 void keyboard_post_init_kb(void) {
+#ifdef RGB_MATRIX_ENABLE
+    dev_info.raw            = eeconfig_read_user();
+    rgb_matrix_config.hsv.h = color_tab[dev_info.color_index][0];
+#endif
+
     if (keymap_config.no_gui) {
         keymap_config.no_gui = 0;
         eeconfig_update_keymap(&keymap_config);
     }
+}
+
+void eeconfig_init_kb(void) {
+    dev_info.color_index = LED_COLOR_RED;
+    eeconfig_update_user(dev_info.raw);
 }
 
 void housekeeping_task_kb(void) {
@@ -172,15 +248,53 @@ bool rgb_matrix_indicators_kb(void) {
     if (rgb_matrix_indicators_user() != true) {
         return false;
     }
-    if (bt_indicator_led() != true) {
-        return false;
-    }
+
     return true;
 }
 
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
+    if (rgb_matrix_get_flags() == LED_FLAG_NONE) {
+        rgb_matrix_set_color_all(0, 0, 0);
+    }
+
+    extern bool EE_CLR_flag;
+    extern bool Low_power;
+
+    if ((rgb_matrix_get_flags() != LED_FLAG_NONE) && !EE_CLR_flag && !Low_power) {
+        uint8_t time = scale16by8(g_rgb_timer, qadd8(rgb_matrix_get_speed() / 4, 1));
+        for (uint8_t i = 102; i <= 104; i++) {
+            HSV hsv = {g_led_config.point[i].x - time, 255, rgb_matrix_get_val()};
+            RGB rgb = hsv_to_rgb(hsv);
+            rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
+        }
+    }
+
+    if ((dev_info.color_index == LED_COLOR_WHITE) && !Low_power) {
+        uint8_t brightness = rgb_matrix_get_val();
+        llv_rgb_matrix_set_color_all(brightness / 2, brightness / 2, brightness / 2);
+    }
+
+#    ifdef BT_MODE_ENABLE
+    if (bt_indicator_rgb(led_min, led_max) != true) {
+        return false;
+    }
+#    endif
+
     if (rgb_matrix_indicators_advanced_user(led_min, led_max) != true) {
         return false;
+    }
+
+    // caps lock red
+    if (host_keyboard_led_state().caps_lock && (((dev_info.devs != DEVS_USB) && bts_info.bt_info.paired && !get_kb_sleep_flag()) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state != USB_SUSPENDED)))) {
+        rgb_matrix_set_color(LED_CAPS_IND_INDEX, 100, 100, 100);
+    }
+    // gui lock red
+    if (keymap_config.no_gui && (((dev_info.devs != DEVS_USB) && bts_info.bt_info.paired && !get_kb_sleep_flag()) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state != USB_SUSPENDED)))) {
+        rgb_matrix_set_color(LED_WIN_IND_INDEX, 100, 100, 100);
+    }
+    // num lock red
+    if (host_keyboard_led_state().num_lock && (((dev_info.devs != DEVS_USB) && bts_info.bt_info.paired && !get_kb_sleep_flag()) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state != USB_SUSPENDED)))) {
+        rgb_matrix_set_color(LED_NUM_LOCK_IND_INDEX, 100, 100, 100);
     }
 
     if ((rgb_test_en) && (rgb_test_index > 0)) {
@@ -192,21 +306,6 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
         }
         // clang-format on
         return false;
-    }
-
-#    ifdef BT_MODE_ENABLE
-    if (bt_indicator_rgb(led_min, led_max) != true) {
-        return false;
-    }
-#    endif
-
-    // caps lock red
-    if (host_keyboard_led_state().caps_lock && (((dev_info.devs != DEVS_USB) && bts_info.bt_info.paired && !get_kb_sleep_flag()) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state != USB_SUSPENDED)))) {
-        rgb_matrix_set_color(LED_CAPS_IND_INDEX, 60, 60, 60);
-    }
-    // gui lock red
-    if (keymap_config.no_gui && (((dev_info.devs != DEVS_USB) && bts_info.bt_info.paired && !get_kb_sleep_flag()) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state != USB_SUSPENDED)))) {
-        rgb_matrix_set_color(LED_WIN_IND_INDEX, 60, 60, 60);
     }
 
     return true;

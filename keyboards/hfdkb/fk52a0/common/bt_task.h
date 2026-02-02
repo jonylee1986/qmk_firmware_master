@@ -20,6 +20,7 @@ typedef union {
     struct {
         uint8_t devs;
         uint8_t last_devs;
+        uint8_t color_index;
     };
 } dev_info_t;
 
@@ -63,7 +64,6 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max);
  * @param None
  * @return None
  */
-bool bt_indicator_led(void);
 
 /**
  * @brief 切换工作模式

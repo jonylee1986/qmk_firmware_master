@@ -378,10 +378,10 @@ void bt_init(void) {
 
     chThdCreateStatic(waThread1, sizeof(waThread1), HIGHPRIO, Thread1, NULL);
 
-    bts_send_name(DEVS_HOST1);
-    wait_ms(10);
+    // bts_send_name(DEVS_HOST1);
+    // wait_ms(10);
 
-    bt_scan_mode();
+    // bt_scan_mode();
 
     if (dev_info.devs != DEVS_USB) {
         usbDisconnectBus(&USB_DRIVER);
@@ -411,6 +411,9 @@ void bt_task(void) {
 
     if ((bt_init_time != 0) && (timer_elapsed32(bt_init_time) >= 2000)) {
         bt_init_time = 0;
+
+        bts_send_name(DEVS_HOST1);
+        wait_ms(10);
 
         bts_send_vendor(v_en_sleep_bt);
 
@@ -459,7 +462,7 @@ void bt_task(void) {
     }
 
     long_pressed_keys_hook();
-    bt_scan_mode();
+    if (!bt_init_time) bt_scan_mode();
 }
 
 uint32_t pressed_time = 0;
@@ -611,8 +614,8 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
             if (reset != false) {
                 indicator_status          = 1;
                 indicator_reset_last_time = true;
-                bts_send_name(DEVS_HOST1);
-                bts_send_vendor(v_host1);
+                // bts_send_name(DEVS_HOST1);
+                // bts_send_vendor(v_host1);
                 bts_send_vendor(v_pair);
             } else {
                 indicator_status          = 2;
@@ -624,8 +627,8 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
             if (reset != false) {
                 indicator_status          = 1;
                 indicator_reset_last_time = 0;
-                bts_send_name(DEVS_HOST2);
-                bts_send_vendor(v_host2);
+                // bts_send_name(DEVS_HOST2);
+                // bts_send_vendor(v_host2);
                 bts_send_vendor(v_pair);
             } else {
                 indicator_status          = 2;
@@ -637,8 +640,8 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
             if (reset != false) {
                 indicator_status          = 1;
                 indicator_reset_last_time = true;
-                bts_send_name(DEVS_HOST3);
-                bts_send_vendor(v_host3);
+                // bts_send_name(DEVS_HOST3);
+                // bts_send_vendor(v_host3);
                 bts_send_vendor(v_pair);
             } else {
                 indicator_status          = 2;
@@ -730,7 +733,7 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
         // } break;
         case EE_CLR: {
         } break;
-        case SW_WIN: {
+        case MAC_SW_OS: {
             if (record->event.pressed) {
                 if (get_highest_layer(default_layer_state) == 0) { // MAC_BASE
                     set_single_persistent_default_layer(3);
@@ -739,7 +742,7 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
                 SW_OS1_ind_color     = (RGB){RGB_BLUE};
             }
         } break;
-        case SW_MAC: {
+        case WIN_SW_OS: {
             if (record->event.pressed) {
                 if (get_highest_layer(default_layer_state) == 3) { // WIN_BASE
                     set_single_persistent_default_layer(0);
@@ -748,16 +751,6 @@ static bool process_record_other(uint16_t keycode, keyrecord_t *record) {
                 SW_OS1_ind_color     = (RGB){RGB_PURPLE};
             }
         } break;
-
-            // case KC_A: {
-            //     if (record->event.pressed) {
-            //         single_blink_index = 5;
-            //         single_blink_color = (RGB){RGB_WHITE};
-            //         single_blink_cnt   = 4;
-            //         single_blink_time  = timer_read32();
-            //     }
-            //     break;
-            // }
 
         default:
             return true;
@@ -1054,134 +1047,135 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
         RGB_MATRIX_INDICATOR_SET_COLOR(5, 100, 100, 100);
     }
 
-    if (dev_info.devs != DEVS_USB) {
-        uint8_t         rgb_index      = rgb_index_table[dev_info.devs];
-        static uint32_t last_time      = 0;
-        static uint32_t last_long_time = 0;
-        static uint8_t  last_status    = 0;
-        static bool     rgb_flip       = false;
-        static RGB      rgb            = {0};
+    if (!bt_init_time) {
+        if (dev_info.devs != DEVS_USB) {
+            uint8_t         rgb_index      = rgb_index_table[dev_info.devs];
+            static uint32_t last_time      = 0;
+            static uint32_t last_long_time = 0;
+            static uint8_t  last_status    = 0;
+            static bool     rgb_flip       = false;
+            static RGB      rgb            = {0};
 
-        if (last_status != indicator_status) {
-            last_status     = indicator_status;
-            last_total_time = timer_read32();
-        }
+            if (last_status != indicator_status) {
+                last_status     = indicator_status;
+                last_total_time = timer_read32();
+            }
 
-        if (indicator_reset_last_time != false) {
-            indicator_reset_last_time = false;
-            last_time                 = 0;
-        }
+            if (indicator_reset_last_time != false) {
+                indicator_reset_last_time = false;
+                last_time                 = 0;
+            }
 
-        switch (indicator_status) {
-            case 1: { // 闪烁模式 5Hz 重置
-                if ((last_time == 0) || (timer_elapsed32(last_time) >= 200)) {
-                    last_time = timer_read32();
-                    rgb_flip  = !rgb_flip;
-                    if (rgb_flip) {
-                        rgb.r = rgb_index_color_table[dev_info.devs][0];
-                        rgb.g = rgb_index_color_table[dev_info.devs][1];
-                        rgb.b = rgb_index_color_table[dev_info.devs][2];
-                    } else {
-                        rgb = (RGB){.r = 0, .g = 0, .b = 0};
-                    }
-                }
-
-                if (bts_info.bt_info.paired) {
-                    last_long_time   = timer_read32();
-                    indicator_status = 3;
-                    break;
-                }
-
-                /* 超时60s退出 */
-                if (timer_elapsed32(last_total_time) >= (30 * 1000)) {
-                    indicator_status = 0;
-                    kb_sleep_flag    = true;
-                }
-            } break;
-            case 2: { // 闪烁模式 2Hz 回连
-                if ((last_time == 0) || (timer_elapsed32(last_time) >= 500)) {
-                    last_time = timer_read32();
-                    rgb_flip  = !rgb_flip;
-                    if (rgb_flip) {
-                        rgb.r = rgb_index_color_table[dev_info.devs][0];
-                        rgb.g = rgb_index_color_table[dev_info.devs][1];
-                        rgb.b = rgb_index_color_table[dev_info.devs][2];
-                    } else {
-                        rgb = (RGB){.r = 0, .g = 0, .b = 0};
-                    }
-                }
-                if (bts_info.bt_info.paired) {
-                    last_long_time   = timer_read32();
-                    indicator_status = 3;
-                    break;
-                }
-
-                /* 超时30s退出 */
-                if (timer_elapsed32(last_total_time) >= (30 * 1000)) {
-                    indicator_status = 0;
-                    kb_sleep_flag    = true;
-                }
-            } break;
-            case 3: { // 长亮模式
-                if ((timer_elapsed32(last_long_time) < (2 * 1000))) {
-                    rgb.r = rgb_index_color_table[dev_info.devs][0];
-                    rgb.g = rgb_index_color_table[dev_info.devs][1];
-                    rgb.b = rgb_index_color_table[dev_info.devs][2];
-                } else {
-                    indicator_status = 0;
-                }
-            } break;
-            case 4: { // 长灭模式
-                rgb = (RGB){.r = 0, .g = 0, .b = 0};
-            } break;
-            default:
-                rgb_flip = false;
-                if (!kb_sleep_flag) {
-                    if (!bts_info.bt_info.paired) {
-                        if (!bts_info.bt_info.pairing) {
-                            indicator_status = 2;
-                            break;
+            switch (indicator_status) {
+                case 1: { // 闪烁模式 5Hz 重置
+                    if ((last_time == 0) || (timer_elapsed32(last_time) >= 200)) {
+                        last_time = timer_read32();
+                        rgb_flip  = !rgb_flip;
+                        if (rgb_flip) {
+                            rgb.r = rgb_index_color_table[dev_info.devs][0];
+                            rgb.g = rgb_index_color_table[dev_info.devs][1];
+                            rgb.b = rgb_index_color_table[dev_info.devs][2];
+                        } else {
+                            rgb = (RGB){.r = 0, .g = 0, .b = 0};
                         }
-                        indicator_status = 2;
-                        if (dev_info.devs == DEVS_2_4G)
-                            bt_switch_mode(DEVS_USB, DEVS_2_4G, false);
-                        else
-                            bt_switch_mode(DEVS_USB, dev_info.last_devs, false);
+                    }
+
+                    if (bts_info.bt_info.paired) {
+                        last_long_time   = timer_read32();
+                        indicator_status = 3;
                         break;
                     }
-                }
-                break;
-        }
 
-        if (indicator_status) {
-            rgb_matrix_set_color(rgb_index, rgb.r, rgb.g, rgb.b);
-            rgb_matrix_set_color(5, rgb.r, rgb.g, rgb.b);
-        }
-    } else {
-        static uint32_t USB_blink_time = 0;
-        static bool     USB_blink      = false;
+                    /* 超时60s退出 */
+                    if (timer_elapsed32(last_total_time) >= (30 * 1000)) {
+                        indicator_status = 0;
+                        kb_sleep_flag    = true;
+                    }
+                } break;
+                case 2: { // 闪烁模式 2Hz 回连
+                    if ((last_time == 0) || (timer_elapsed32(last_time) >= 500)) {
+                        last_time = timer_read32();
+                        rgb_flip  = !rgb_flip;
+                        if (rgb_flip) {
+                            rgb.r = rgb_index_color_table[dev_info.devs][0];
+                            rgb.g = rgb_index_color_table[dev_info.devs][1];
+                            rgb.b = rgb_index_color_table[dev_info.devs][2];
+                        } else {
+                            rgb = (RGB){.r = 0, .g = 0, .b = 0};
+                        }
+                    }
+                    if (bts_info.bt_info.paired) {
+                        last_long_time   = timer_read32();
+                        indicator_status = 3;
+                        break;
+                    }
 
-        if ((USB_DRIVER.state != USB_ACTIVE)) {
-            if (USB_blink_cnt <= 20) {
-                if (timer_elapsed32(USB_blink_time) >= 500) {
-                    USB_blink_cnt++;
-                    USB_blink      = !USB_blink;
-                    USB_blink_time = timer_read32();
-                }
-                if (USB_blink) {
-                    rgb_matrix_set_color(rgb_index_table[DEVS_USB], rgb_index_color_table[DEVS_USB][0], rgb_index_color_table[DEVS_USB][1], rgb_index_color_table[DEVS_USB][2]);
-                } else {
-                    rgb_matrix_set_color(rgb_index_table[DEVS_USB], RGB_BLACK);
-                }
+                    /* 超时30s退出 */
+                    if (timer_elapsed32(last_total_time) >= (30 * 1000)) {
+                        indicator_status = 0;
+                        kb_sleep_flag    = true;
+                    }
+                } break;
+                case 3: { // 长亮模式
+                    if ((timer_elapsed32(last_long_time) < (2 * 1000))) {
+                        rgb.r = rgb_index_color_table[dev_info.devs][0];
+                        rgb.g = rgb_index_color_table[dev_info.devs][1];
+                        rgb.b = rgb_index_color_table[dev_info.devs][2];
+                    } else {
+                        indicator_status = 0;
+                    }
+                } break;
+                case 4: { // 长灭模式
+                    rgb = (RGB){.r = 0, .g = 0, .b = 0};
+                } break;
+                default:
+                    rgb_flip = false;
+                    if (!kb_sleep_flag) {
+                        if (!bts_info.bt_info.paired) {
+                            if (!bts_info.bt_info.pairing) {
+                                indicator_status = 2;
+                                break;
+                            }
+                            indicator_status = 2;
+                            if (dev_info.devs == DEVS_2_4G)
+                                bt_switch_mode(DEVS_USB, DEVS_2_4G, false);
+                            else
+                                bt_switch_mode(DEVS_USB, dev_info.last_devs, false);
+                            break;
+                        }
+                    }
+                    break;
             }
-            USB_switch_time = timer_read32();
+
+            if (indicator_status) {
+                rgb_matrix_set_color(rgb_index, rgb.r, rgb.g, rgb.b);
+                rgb_matrix_set_color(5, rgb.r, rgb.g, rgb.b);
+            }
         } else {
-            if (timer_elapsed32(USB_switch_time) < (2 * 1000)) {
-                rgb_matrix_set_color(rgb_index_table[DEVS_USB], rgb_index_color_table[DEVS_USB][0], rgb_index_color_table[DEVS_USB][1], rgb_index_color_table[DEVS_USB][2]);
+            static uint32_t USB_blink_time = 0;
+            static bool     USB_blink      = false;
+
+            if ((USB_DRIVER.state != USB_ACTIVE)) {
+                if (USB_blink_cnt <= 20) {
+                    if (timer_elapsed32(USB_blink_time) >= 500) {
+                        USB_blink_cnt++;
+                        USB_blink      = !USB_blink;
+                        USB_blink_time = timer_read32();
+                    }
+                    if (USB_blink) {
+                        rgb_matrix_set_color(rgb_index_table[DEVS_USB], rgb_index_color_table[DEVS_USB][0], rgb_index_color_table[DEVS_USB][1], rgb_index_color_table[DEVS_USB][2]);
+                    } else {
+                        rgb_matrix_set_color(rgb_index_table[DEVS_USB], RGB_BLACK);
+                    }
+                }
+                USB_switch_time = timer_read32();
+            } else {
+                if (timer_elapsed32(USB_switch_time) < (2 * 1000)) {
+                    rgb_matrix_set_color(rgb_index_table[DEVS_USB], rgb_index_color_table[DEVS_USB][0], rgb_index_color_table[DEVS_USB][1], rgb_index_color_table[DEVS_USB][2]);
+                }
             }
         }
     }
-
     // if (all_blink_cnt) {
     //     rgb_matrix_set_color_all(0, 0, 0);
     //     if (timer_elapsed32(all_blink_time) > 500) {

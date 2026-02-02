@@ -40,3 +40,11 @@
 /* Indicator Config */
 #define LED_CAPS_IND_INDEX 54
 #define LED_WIN_IND_INDEX 91
+#define LED_NUM_LOCK_IND_INDEX 33
+
+#define llv_rgb_matrix_set_color_all(r, g, b) \
+    do {                                      \
+        for (uint8_t i = 0; i <= 101; i++) {  \
+            rgb_matrix_set_color(i, r, g, b); \
+        }                                     \
+    } while (0)
