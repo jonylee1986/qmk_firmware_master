@@ -32,16 +32,18 @@ typedef struct {
     void (*event_cb)(uint16_t);
 } long_pressed_keys_t;
 
-uint32_t   bt_init_time = 0;
-dev_info_t dev_info     = {0};
-bts_info_t bts_info     = {
-        .bt_name        = {"BT Keyboard", "BT Keyboard", "BT Keyboard"},
-        .uart_init      = uart_init,
-        .uart_read      = uart_read,
-        .uart_transmit  = uart_transmit,
-        .uart_receive   = uart_receive,
-        .uart_available = uart_available,
-        .timer_read32   = timer_read32,
+uint32_t bt_init_time = 0;
+uint16_t wl_init_time = 0;
+
+dev_info_t dev_info = {0};
+bts_info_t bts_info = {
+    .bt_name        = {"BT Keyboard", "BT Keyboard", "BT Keyboard"},
+    .uart_init      = uart_init,
+    .uart_read      = uart_read,
+    .uart_transmit  = uart_transmit,
+    .uart_receive   = uart_receive,
+    .uart_available = uart_available,
+    .timer_read32   = timer_read32,
 };
 
 static void long_pressed_keys_hook(void);
@@ -385,6 +387,7 @@ void bt_init(void) {
     }
 
     bt_init_time = timer_read32();
+    wl_init_time = timer_read();
 }
 
 /**
@@ -428,6 +431,10 @@ void bt_task(void) {
         }
     }
 
+    if ((wl_init_time != 0) && (timer_elapsed(wl_init_time) >= 500)) {
+        wl_init_time = 0;
+    }
+
     /* Execute every 1ms */
     if (timer_elapsed32(last_time) >= 1) {
         last_time = timer_read32();
@@ -449,7 +456,7 @@ void bt_task(void) {
     }
 
     long_pressed_keys_hook();
-    if (!bt_init_time) bt_scan_mode();
+    if (!wl_init_time) bt_scan_mode();
 }
 
 uint32_t pressed_time = 0;
@@ -938,7 +945,7 @@ static void show_device_indicator(void) {
 
 // Handle bluetooth indicator
 static void handle_bluetooth_indicator(void) {
-    if ((dev_info.devs != DEVS_USB) && !bt_init_time) {
+    if ((dev_info.devs != DEVS_USB)) {
         uint8_t         rgb_index      = rgb_index_table[dev_info.devs];
         static uint32_t last_time      = 0;
         static uint32_t last_long_time = 0;
@@ -1175,7 +1182,7 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
     show_device_indicator();
 
     // Handle bluetooth indicator
-    handle_bluetooth_indicator();
+    if (!wl_init_time) handle_bluetooth_indicator();
 
     // Show volume level indication
     show_volume_level_indication();
