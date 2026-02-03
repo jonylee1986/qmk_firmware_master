@@ -160,13 +160,13 @@ void led_deconfig_all(void) {
 static uint8_t  rChr_ChkBuf = 0;
 static uint8_t  rChr_OldBuf = 0;
 static uint16_t rChr_Cnt    = 0;
-// static uint8_t  f_ChargeOn  = 0;
-static uint8_t f_Charged = 0;
+static uint8_t  f_ChargeOn  = 0;
+static uint8_t  f_Charged   = 0;
 
 void Charge_Chat(void) {
     uint8_t i = 0;
 
-    // if (!readPin(BT_CABLE_PIN)) i |= 0x01;
+    if (!readPin(BT_CABLE_PIN)) i |= 0x01;
     if (!readPin(BT_CHARGE_PIN)) i |= 0x02;
 
     if (rChr_ChkBuf != i) {
@@ -182,8 +182,8 @@ void Charge_Chat(void) {
                     rChr_OldBuf = rChr_ChkBuf;
 
                     if (i & 0x3) {
-                        // f_ChargeOn = (rChr_ChkBuf & 0x01) ? 1 : 0;
-                        f_Charged = (rChr_ChkBuf & 0x02) ? 1 : 0;
+                        f_ChargeOn = (rChr_ChkBuf & 0x01) ? 1 : 0;
+                        f_Charged  = (rChr_ChkBuf & 0x02) ? 1 : 0;
                     }
                 }
             }
@@ -203,7 +203,7 @@ void set_led_state(void) {
         static bool     Low_power_bink;
         static uint16_t Low_power_time;
 
-        if (!readPin(BT_CABLE_PIN)) {
+        if (f_ChargeOn) {
             if (f_Charged) {
                 // if (!readPin(BT_CHARGE_PIN)) {
                 writePinHigh(INDLED_POWER_PIN);

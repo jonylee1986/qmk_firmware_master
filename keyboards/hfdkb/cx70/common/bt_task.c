@@ -560,7 +560,7 @@ void bt_switch_mode(uint8_t last_mode, uint8_t now_mode, uint8_t reset) {
         if (!!now_mode) {
             usbDisconnectBus(&USB_DRIVER);
             usbStop(&USB_DRIVER);
-            writePinHigh(A12);
+            // writePinHigh(A12);
         } else {
             init_usb_driver(&USB_DRIVER);
         }
@@ -938,7 +938,7 @@ static void show_device_indicator(void) {
 
 // Handle bluetooth indicator
 static void handle_bluetooth_indicator(void) {
-    if (dev_info.devs != DEVS_USB) {
+    if ((dev_info.devs != DEVS_USB) && !bt_init_time) {
         uint8_t         rgb_index      = rgb_index_table[dev_info.devs];
         static uint32_t last_time      = 0;
         static uint32_t last_long_time = 0;
