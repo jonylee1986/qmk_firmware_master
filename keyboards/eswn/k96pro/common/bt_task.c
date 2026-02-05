@@ -351,7 +351,7 @@ void bt_init(void) {
 
     chThdCreateStatic(waThread1, sizeof(waThread1), HIGHPRIO, Thread1, NULL);
 
-    bt_scan_mode();
+    // bt_scan_mode();
 
     if (dev_info.devs != DEVS_USB) {
         usbDisconnectBus(&USB_DRIVER);
@@ -382,7 +382,7 @@ void bt_task(void) {
         bts_send_name(DEVS_HOST1);
         wait_ms(10);
 
-        bts_send_vendor(v_en_sleep_wl);
+        // bts_send_vendor(v_en_sleep_wl);
         bts_send_vendor(v_en_sleep_bt);
 
         switch (dev_info.devs) {
@@ -435,7 +435,7 @@ void bt_task(void) {
     // }
 
     long_pressed_keys_hook();
-    bt_scan_mode();
+    if (!wl_init_time) bt_scan_mode();
 }
 uint32_t pressed_time = 0;
 
