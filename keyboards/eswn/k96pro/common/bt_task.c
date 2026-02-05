@@ -955,9 +955,10 @@ static void close_rgb(void) {
 
                 LCD_start();
 
+                LCD_command_update(LCD_WEAKUP);
+
                 open_rgb();
 
-                LCD_command_update(LCD_WEAKUP);
                 LCD_IND_update();
             }
         }
