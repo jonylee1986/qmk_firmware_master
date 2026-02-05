@@ -241,6 +241,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (!process_rgb_matrix_user(keycode, record)) return false;
 
     switch (keycode) {
+            // case MO(WIN_FN):
+            // case MO(MAC_FN):
+            //     if ((USB_DRIVER.state != USB_ACTIVE) || (USB_DRIVER.state == USB_SUSPENDED)) {
+            //         return false;
+            //     }
+            //     break;
+
         case RGB_VAD: {
             if (record->event.pressed) {
                 if (rgb_matrix_get_val() <= RGB_MATRIX_VAL_STEP) {
@@ -424,6 +431,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 }
 
 void keyboard_post_init_user() {
+    dev_info.raw            = eeconfig_read_user();
     rgb_matrix_config.hsv.h = indicator_color_tab[dev_info.smd_color_index][0];
     snled27351_pwm_phase_delay_enable(0);
     snled27351_pwm_phase_delay_enable(1);

@@ -8,7 +8,6 @@
  *  These options are also useful to firmware size reduction.
  */
 
-#define BT_MODE_ENABLE
 #ifdef BT_MODE_ENABLE
 #    define BT_CABLE_PIN B9  // 充电接入时为高
 #    define BT_CHARGE_PIN B8 // 充电时为低，充满时为高
@@ -30,6 +29,7 @@
 #    define BT_USB_COLOR RGB_WHITE   // USB指示灯颜色
 
 #    define USB_SUSPEND_CHECK_ENABLE
+
 #    define USBLINK_Status readPin(BT_CABLE_PIN)
 #    define CHARGE_Status readPin(BT_CHARGE_PIN)
 #endif
@@ -48,8 +48,13 @@
 /* I2C Config for LED Driver */
 #define SNLED27351_I2C_ADDRESS_1 SNLED27351_I2C_ADDRESS_GND
 #define SNLED27351_I2C_ADDRESS_2 SNLED27351_I2C_ADDRESS_VDDIO
+// #define IS31FL3733_I2C_ADDRESS_1 0x74
+// #define IS31FL3733_I2C_ADDRESS_2 0x77
 #define I2C1_OPMODE OPMODE_I2C
 #define I2C1_CLOCK_SPEED 400000
+
+// #define SNLED27351_CURRENT_TUNE_2 {0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80}
+// #define SNLED27351_CURRENT_TUNE {0x80, 0x50, 0x70, 0x80, 0x50, 0x70, 0x80, 0x50, 0x70, 0x80, 0x50, 0x70}
 
 #define NUM_LOCK_IND_INDEX 104
 #define CAPS_LOCK_IND_INDEX 105

@@ -56,13 +56,6 @@ bool process_record_bt(uint16_t keycode, keyrecord_t *record);
 bool bt_indicator_rgb(uint8_t led_min, uint8_t led_max);
 
 /**
- * @brief led指示灯任务
- * @param None
- * @return None
- */
-bool bt_indicator_led(void);
-
-/**
  * @brief 切换工作模式
  * @param None
  * @return None

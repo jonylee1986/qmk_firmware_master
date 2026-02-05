@@ -7,6 +7,7 @@
 
 // clang-format off
 #ifdef RGB_MATRIX_ENABLE
+#if 1
 const snled27351_led_t PROGMEM g_snled27351_leds[SNLED27351_LED_COUNT] = {
 /* Refer to IS31 manual for these locations
 *    driver
@@ -128,6 +129,123 @@ const snled27351_led_t PROGMEM g_snled27351_leds[SNLED27351_LED_COUNT] = {
     {1, CB4_CA15,  CB5_CA15,  CB6_CA15},
     {1, CB4_CA16,  CB5_CA16,  CB6_CA16},
 };
+#else
+const is31fl3733_led_t PROGMEM g_is31fl3733_leds[IS31FL3733_LED_COUNT] = {
+    {1, SW1_CS1,   SW2_CS1,   SW3_CS1},
+    {1, SW1_CS3,   SW2_CS3,   SW3_CS3},
+    {1, SW1_CS4,   SW2_CS4,   SW3_CS4},
+    {1, SW1_CS5,   SW2_CS5,   SW3_CS5},
+    {1, SW1_CS6,   SW2_CS6,   SW3_CS6},
+    {1, SW1_CS7,   SW2_CS7,   SW3_CS7},
+    {1, SW1_CS8,   SW2_CS8,   SW3_CS8},
+    {1, SW1_CS9,   SW2_CS9,   SW3_CS9},
+    {1, SW1_CS10,  SW2_CS10,  SW3_CS10},
+    {1, SW1_CS11,  SW2_CS11,  SW3_CS11},
+    {1, SW1_CS12,  SW2_CS12,  SW3_CS12},
+    {1, SW1_CS13,  SW2_CS13,  SW3_CS13},
+    {1, SW1_CS2,   SW2_CS2,   SW3_CS2},
+    {1, SW4_CS11,  SW5_CS11,  SW6_CS11},
+    {1, SW4_CS12,  SW5_CS12,  SW6_CS12},
+    {1, SW4_CS13,  SW5_CS13,  SW6_CS13},
+
+    {0, SW1_CS1,   SW2_CS1,   SW3_CS1},
+    {0, SW1_CS2,   SW2_CS2,   SW3_CS2},
+    {0, SW1_CS3,   SW2_CS3,   SW3_CS3},
+    {0, SW1_CS4,   SW2_CS4,   SW3_CS4},
+    {0, SW1_CS5,   SW2_CS5,   SW3_CS5},
+    {0, SW1_CS6,   SW2_CS6,   SW3_CS6},
+    {0, SW1_CS7,   SW2_CS7,   SW3_CS7},
+    {0, SW1_CS8,   SW2_CS8,   SW3_CS8},
+    {0, SW1_CS9,   SW2_CS9,   SW3_CS9},
+    {0, SW1_CS10,  SW2_CS10,  SW3_CS10},
+    {0, SW1_CS11,  SW2_CS11,  SW3_CS11},
+    {0, SW1_CS12,  SW2_CS12,  SW3_CS12},
+    {0, SW1_CS13,  SW2_CS13,  SW3_CS13},
+    {0, SW1_CS14,  SW2_CS14,  SW3_CS14},
+    {1, SW4_CS1,   SW5_CS1,   SW6_CS1},
+    {1, SW4_CS2,   SW5_CS2,   SW6_CS2},
+    {1, SW4_CS3,   SW5_CS3,   SW6_CS3},
+    {1, SW4_CS4,   SW5_CS4,   SW6_CS4},
+    {1, SW4_CS5,   SW5_CS5,   SW6_CS5},
+    {1, SW4_CS6,   SW5_CS6,   SW6_CS6},
+    {1, SW4_CS7,   SW5_CS7,   SW6_CS7},
+
+    {0, SW4_CS1,   SW5_CS1,   SW6_CS1},
+    {0, SW4_CS2,   SW5_CS2,   SW6_CS2},
+    {0, SW4_CS3,   SW5_CS3,   SW6_CS3},
+    {0, SW4_CS4,   SW5_CS4,   SW6_CS4},
+    {0, SW4_CS5,   SW5_CS5,   SW6_CS5},
+    {0, SW4_CS6,   SW5_CS6,   SW6_CS6},
+    {0, SW4_CS7,   SW5_CS7,   SW6_CS7},
+    {0, SW4_CS8,   SW5_CS8,   SW6_CS8},
+    {0, SW4_CS9,   SW5_CS9,   SW6_CS9},
+    {0, SW4_CS10,  SW5_CS10,  SW6_CS10},
+    {0, SW4_CS11,  SW5_CS11,  SW6_CS11},
+    {0, SW4_CS12,  SW5_CS12,  SW6_CS12},
+    {0, SW4_CS13,  SW5_CS13,  SW6_CS13},
+    {0, SW4_CS14,  SW5_CS14,  SW6_CS14},
+    {1, SW4_CS8,   SW5_CS8,   SW6_CS8},
+    {1, SW4_CS9,   SW5_CS9,   SW6_CS9},
+    {1, SW4_CS10,  SW5_CS10,  SW6_CS10},
+    {1, SW7_CS1,   SW8_CS1,   SW9_CS1},
+    {1, SW7_CS2,   SW8_CS2,   SW9_CS2},
+    {1, SW7_CS3,   SW8_CS3,   SW9_CS3},
+    {1, SW7_CS4,   SW8_CS4,   SW9_CS4},
+
+    {0, SW7_CS1,   SW8_CS1,   SW9_CS1},
+    {0, SW7_CS2,   SW8_CS2,   SW9_CS2},
+    {0, SW7_CS3,   SW8_CS3,   SW9_CS3},
+    {0, SW7_CS4,   SW8_CS4,   SW9_CS4},
+    {0, SW7_CS5,   SW8_CS5,   SW9_CS5},
+    {0, SW7_CS6,   SW8_CS6,   SW9_CS6},
+    {0, SW7_CS7,   SW8_CS7,   SW9_CS7},
+    {0, SW7_CS8,   SW8_CS8,   SW9_CS8},
+    {0, SW7_CS9,   SW8_CS9,   SW9_CS9},
+    {0, SW7_CS10,  SW8_CS10,  SW9_CS10},
+    {0, SW7_CS11,  SW8_CS11,  SW9_CS11},
+    {0, SW7_CS12,  SW8_CS12,  SW9_CS12},
+    {0, SW7_CS13,  SW8_CS13,  SW9_CS13},
+    {1, SW7_CS5,   SW8_CS5,   SW9_CS5},
+    {1, SW7_CS6,   SW8_CS6,   SW9_CS6},
+    {1, SW7_CS7,   SW8_CS7,   SW9_CS7},
+
+    {0, SW10_CS1,  SW11_CS1,  SW12_CS1},
+    {0, SW10_CS2,  SW11_CS2,  SW12_CS2},
+    {0, SW10_CS3,  SW11_CS3,  SW12_CS3},
+    {0, SW10_CS4,  SW11_CS4,  SW12_CS4},
+    {0, SW10_CS5,  SW11_CS5,  SW12_CS5},
+    {0, SW10_CS6,  SW11_CS6,  SW12_CS6},
+    {0, SW10_CS7,  SW11_CS7,  SW12_CS7},
+    {0, SW10_CS8,  SW11_CS8,  SW12_CS8},
+    {0, SW10_CS9,  SW11_CS9,  SW12_CS9},
+    {0, SW10_CS10, SW11_CS10, SW12_CS10},
+    {0, SW10_CS11, SW11_CS11, SW12_CS11},
+    {0, SW10_CS12, SW11_CS12, SW12_CS12},
+    {1, SW10_CS4,  SW11_CS4,  SW12_CS4},
+    {1, SW7_CS8,   SW8_CS8,   SW9_CS8},
+    {1, SW7_CS9,   SW8_CS9,   SW9_CS9},
+    {1, SW7_CS10,  SW8_CS10,  SW9_CS10},
+    {1, SW7_CS11,  SW8_CS11,  SW9_CS11},
+
+    {0, SW10_CS13, SW11_CS13, SW12_CS13},
+    {0, SW10_CS14, SW11_CS14, SW12_CS14},
+    {0, SW10_CS15, SW11_CS15, SW12_CS15},
+    {0, SW10_CS16, SW11_CS16, SW12_CS16},
+    {0, SW7_CS15,  SW8_CS15,  SW9_CS15},
+    {0, SW7_CS16,  SW8_CS16,  SW9_CS16},
+    {1, SW10_CS1,  SW11_CS1,  SW12_CS1},
+    {1, SW10_CS2,  SW11_CS2,  SW12_CS2},
+    {1, SW10_CS3,  SW11_CS3,  SW12_CS3},
+    {1, SW10_CS5,  SW11_CS5,  SW12_CS5},
+    {1, SW10_CS6,  SW11_CS6,  SW12_CS6},
+    {1, SW7_CS12,  SW8_CS12,  SW9_CS12},
+    {1, SW7_CS13,  SW8_CS13,  SW9_CS13},
+
+    {1, SW4_CS14,  SW5_CS14,  SW6_CS14},
+    {1, SW4_CS15,  SW5_CS15,  SW6_CS15},
+    {1, SW4_CS16,  SW5_CS16,  SW6_CS16},
+};
+#endif
 #endif
 // clang-format on
 
@@ -135,18 +253,18 @@ bool led_inited = false;
 
 void led_config_all(void) {
     if (!led_inited) {
-#ifdef RGB_DRIVER_SDB_PIN
-        writePinHigh(RGB_DRIVER_SDB_PIN);
-#endif
+        // #ifdef RGB_DRIVER_SDB_PIN
+        //         writePinHigh(RGB_DRIVER_SDB_PIN);
+        // #endif
         led_inited = true;
     }
 }
 
 void led_deconfig_all(void) {
     if (led_inited) {
-#ifdef RGB_DRIVER_SDB_PIN
-        writePinLow(RGB_DRIVER_SDB_PIN);
-#endif
+        // #ifdef RGB_DRIVER_SDB_PIN
+        //         writePinLow(RGB_DRIVER_SDB_PIN);
+        // #endif
         led_inited = false;
     }
 }
@@ -154,6 +272,7 @@ void led_deconfig_all(void) {
 void suspend_power_down_user(void) {
     // code will run multiple times while keyboard is suspended
     // led_deconfig_all();
+    // clear_keyboard();
 }
 
 void suspend_wakeup_init_user(void) {
@@ -223,9 +342,37 @@ void matrix_scan_kb(void) {
 #ifdef USB_SUSPEND_CHECK_ENABLE
     static uint32_t usb_suspend_timer = 0;
     static uint32_t usb_suspend       = false;
+    // static uint8_t  usb_was_connected     = false;
+    static bool usb_driver_was_active = false;
 
     if (dev_info.devs == DEVS_USB) {
-        if (USB_DRIVER.state != USB_ACTIVE || USB_DRIVER.state == USB_SUSPENDED || USB_DRIVER.state == USB_UNINIT) {
+        if (usb_driver_was_active && USB_DRIVER.state != USB_ACTIVE) {
+            clear_keyboard();
+            layer_clear();
+        }
+        usb_driver_was_active = (USB_DRIVER.state == USB_ACTIVE);
+
+        if (usb_suspend) {
+            bool wakeup = false;
+            for (uint8_t r = 0; r < MATRIX_ROWS; r++) {
+                if (matrix_get_row(r)) {
+                    wakeup = true;
+                    // clear_keyboard();
+                    break;
+                }
+            }
+            if (wakeup) {
+                // usbWakeupHost(&USB_DRIVER);
+                // restart_usb_driver(&USB_DRIVER);
+                usb_suspend       = false;
+                usb_suspend_timer = 0;
+#    ifdef RGB_DRIVER_SDB_PIN
+                writePinHigh(RGB_DRIVER_SDB_PIN);
+#    endif
+            }
+        }
+
+        if ((USB_DRIVER.state != USB_ACTIVE) || (USB_DRIVER.state == USB_SUSPENDED)) {
             if (!usb_suspend_timer) {
                 usb_suspend_timer = timer_read32();
             } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
@@ -238,17 +385,24 @@ void matrix_scan_kb(void) {
                 usb_suspend_timer = 0;
             }
         } else {
-            if (usb_suspend_timer) {
+            if (usb_suspend) {
                 usb_suspend_timer = 0;
-                if (usb_suspend) {
-                    usb_suspend = false;
+                usb_suspend       = false;
+
 #    ifdef RGB_DRIVER_SDB_PIN
-                    writePinHigh(RGB_DRIVER_SDB_PIN);
+                writePinHigh(RGB_DRIVER_SDB_PIN);
 #    endif
-                }
             }
         }
+        // usb_was_connected = true;
     } else {
+        // USB disconnected - clear all key states if we were previously connected
+        // if (usb_was_connected) {
+        //     clear_keyboard();
+        //     layer_clear();
+        //     usb_was_connected = false;
+        // }
+
         if (usb_suspend) {
             usb_suspend_timer = 0;
             usb_suspend       = false;
@@ -258,11 +412,16 @@ void matrix_scan_kb(void) {
         }
     }
 #endif
+
+    static uint32_t chrg_check_time = 0;
+    extern void     Charge_Chat(void);
+    if (timer_elapsed32(chrg_check_time) >= 2) {
+        chrg_check_time = timer_read32();
+        Charge_Chat();
+    }
 }
 
 void housekeeping_task_kb(void) {
-    static uint32_t chrg_check_time = 0;
-
 #ifdef BT_MODE_ENABLE
     extern void housekeeping_task_bt(void);
     housekeeping_task_bt();
@@ -281,59 +440,33 @@ void housekeeping_task_kb(void) {
         } while (nkro_mode != keymap_config.nkro);
     }
 #endif // NKRO_ENABLE
-
-    extern void Charge_Chat(void);
-    if (timer_elapsed32(chrg_check_time) >= 2) {
-        chrg_check_time = timer_read32();
-        Charge_Chat();
-    }
 }
 
 static bool backlight_shut_down = false;
 
 static uint32_t low_power_entry_time = 0;
 // static uint32_t low_power_exit_time  = 0;
+extern bool low_vol_off;
+// extern bool low_vol_shutdown;
 
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     if (!rgb_matrix_get_flags()) {
         rgb_matrix_set_color_all(0, 0, 0);
     }
 
-    if (bts_info.bt_info.low_vol && !is_charging()) {
+    if (low_vol_off) {
         if (!backlight_shut_down) {
-            backlight_shut_down = true;
+            backlight_shut_down  = true;
+            low_power_entry_time = timer_read32();
         }
-        // } else {
-        // low_power_exit_time = timer_read32();
+
         if (timer_elapsed32(low_power_entry_time) > 5000) {
             rgb_matrix_set_color_all(0, 0, 0);
         }
-        // }
     } else {
-        low_power_entry_time = timer_read32();
-
         if (backlight_shut_down) {
             backlight_shut_down = false;
-
-            writePinLow(RGB_DRIVER_SDB_PIN);
-            wait_ms(50);
-            writePinHigh(RGB_DRIVER_SDB_PIN);
-            wait_ms(1);
-
-            // setPinOutputOpenDrain(C11);
-            // writePinLow(C11);
-            // wait_ms(1);
-            // writePinHigh(C11);
-            // wait_ms(20);
-
-            // rgb_matrix_init();
         }
-        // if (low_power_exit_time && timer_elapsed32(low_power_exit_time) < 10000) {
-        //     // 恢复背光显示
-        //     rgb_matrix_set_color_all(0, 0, 0);
-        // } else {
-        //     low_power_exit_time = 0;
-        // }
     }
 
     if (rgb_matrix_indicators_advanced_user(led_min, led_max) != true) {

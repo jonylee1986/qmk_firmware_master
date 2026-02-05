@@ -3,7 +3,7 @@
 
 #include QMK_KEYBOARD_H
 
-#ifdef USB_SUSPEND_CHECK
+#ifdef USB_SUSPEND_CHECK_ENABLE
 #    include "usb_main.h"
 #endif
 
@@ -28,15 +28,25 @@ bool dip_switch_update_kb(uint8_t index, bool active) {
     }
     if (index == 0) {
         default_layer_set(1UL << (active ? 0 : 2));
-        // if (!active) {
-        //     keymap_config.no_gui = 0;
-        //     eeconfig_update_keymap(&keymap_config);
-        // }
+        if (!active) {
+            keymap_config.no_gui = 0;
+            eeconfig_update_keymap(&keymap_config);
+        }
     }
     return true;
 }
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    extern bool Low_power_off;
+    if (Low_power_off) {
+        bts_process_keys(keycode, 0, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        bts_task(dev_info.devs);
+        while (bts_is_busy()) {
+            wait_ms(1);
+        }
+        return false;
+    }
+
     if (process_record_user(keycode, record) != true) {
         return false;
     }
@@ -103,35 +113,59 @@ void housekeeping_task_kb(void) {
     housekeeping_task_bt();
 #endif
 
-#ifdef USB_SUSPEND_CHECK
+#ifdef USB_SUSPEND_CHECK_ENABLE
     static uint32_t usb_suspend_timer = 0;
     static uint32_t usb_suspend       = false;
 
     if (dev_info.devs == DEVS_USB) {
-        if (USB_DRIVER.state != USB_ACTIVE || USB_DRIVER.state == USB_SUSPENDED) {
+        if (usb_suspend) {
+            bool wakeup = false;
+            for (uint8_t r = 0; r < MATRIX_ROWS; r++) {
+                if (matrix_get_row(r)) {
+                    wakeup = true;
+                    break;
+                }
+            }
+            if (wakeup) {
+                // usbWakeupHost(&USB_DRIVER);
+                // restart_usb_driver(&USB_DRIVER);
+                usb_suspend       = false;
+                usb_suspend_timer = 0;
+#    ifdef RGB_DRIVER_SDB_PIN
+                writePinHigh(RGB_DRIVER_SDB_PIN);
+#    endif
+            }
+        }
+
+        if ((USB_DRIVER.state != USB_ACTIVE) || (USB_DRIVER.state == USB_SUSPENDED)) {
             if (!usb_suspend_timer) {
                 usb_suspend_timer = timer_read32();
             } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
                 if (!usb_suspend) {
                     usb_suspend = true;
-                    led_deconfig_all();
+#    ifdef RGB_DRIVER_SDB_PIN
+                    writePinLow(RGB_DRIVER_SDB_PIN);
+#    endif
                 }
                 usb_suspend_timer = 0;
             }
         } else {
-            if (usb_suspend_timer) {
+            if (usb_suspend) {
                 usb_suspend_timer = 0;
-                if (usb_suspend) {
-                    usb_suspend = false;
-                    led_config_all();
-                }
+                usb_suspend       = false;
+
+#    ifdef RGB_DRIVER_SDB_PIN
+                writePinHigh(RGB_DRIVER_SDB_PIN);
+#    endif
             }
         }
     } else {
         if (usb_suspend) {
             usb_suspend_timer = 0;
             usb_suspend       = false;
-            led_config_all();
+#    ifdef RGB_DRIVER_SDB_PIN
+            writePinHigh(RGB_DRIVER_SDB_PIN);
+#    endif
         }
     }
 #endif
@@ -147,14 +181,12 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
         rgb_matrix_set_color(i, 0, 0, 0);
     }
 
-    if (rgb_matrix_get_flags() == LED_FLAG_NONE) {
+    extern bool Low_power;
+    if ((rgb_matrix_get_flags() == LED_FLAG_NONE) && Low_power) {
         rgb_matrix_set_color_all(0, 0, 0);
     }
 
 #    ifdef BT_MODE_ENABLE
-    if (bt_indicator_led() != true) {
-        return false;
-    }
     if (bt_indicator_rgb(led_min, led_max) != true) {
         return false;
     }
@@ -176,15 +208,3 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     return true;
 }
 #endif
-
-void suspend_power_down_kb(void) {
-#ifdef RGB_DRIVER_SDB_PIN
-    writePinLow(RGB_DRIVER_SDB_PIN);
-#endif
-}
-
-void suspend_wakeup_init_kb(void) {
-#ifdef RGB_DRIVER_SDB_PIN
-    writePinHigh(RGB_DRIVER_SDB_PIN);
-#endif
-}

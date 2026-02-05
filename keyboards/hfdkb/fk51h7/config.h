@@ -8,17 +8,14 @@
  *  These options are also useful to firmware size reduction.
  */
 
-#define BT_MODE_ENABLE
-
 #ifdef BT_MODE_ENABLE
-#    define NO_USB_STARTUP_CHECK
-#    define ENTRY_STOP_MODE // 超时进入STOP Mode
 #    define BT_CABLE_PIN B8
 #    define BT_CHARGE_PIN B9 // 充电时为低，充满时为高
 #    define RGB_DRIVER_SDB_PIN A15
-// #    define BT_MODE_SW_PIN C0  // 低电平时
-// #    define RF_MODE_SW_PIN B11 // 低电平时
-// #    define USB_SUSPEND_CHECK
+#    define BT_MODE_SW_PIN C0
+#    define RF_MODE_SW_PIN C15
+#    define USB_SUSPEND_CHECK_ENABLE
+#    define KEY_NUM 6
 #endif
 
 /* I2C Config for LED Driver */

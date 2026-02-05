@@ -60,8 +60,6 @@
             "gradient_up_down": true,
             "gradient_left_right": true,
             "breathing": true,
-            "band_sat": false,
-            "band_val": false,
             "band_pinwheel_sat": true,
             "band_pinwheel_val": true,
             "band_spiral_sat": true,
@@ -71,7 +69,6 @@
             "cycle_up_down": true,
             "cycle_out_in": true,
             "cycle_out_in_dual": true,
-            "rainbow_moving_chevron": false,
             "cycle_pinwheel": true,
             "cycle_spiral": true,
             "dual_beacon": true,
@@ -85,7 +82,6 @@
             "hue_wave": true,
             "pixel_fractal": true,
             "pixel_flow": true,
-            "pixel_rain": false,
             "typing_heatmap": true,
             "digital_rain": true,
             "solid_reactive_simple": true,
@@ -102,8 +98,6 @@
             "solid_multisplash": true,
             "starlight": true,
             "starlight_smooth": true,
-            "starlight_dual_hue": false,
-            "starlight_dual_sat": false,
             "riverflow": true
         }
     }
