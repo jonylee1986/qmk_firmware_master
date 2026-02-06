@@ -977,9 +977,9 @@ static void close_rgb(void) {
             close_rgb_time = timer_read32();
             rgb_matrix_disable_noeeprom();
 
-            snled27351_sw_shutdown(0);
-            wait_ms(1);
-            snled27351_sw_shutdown(1);
+            // snled27351_sw_shutdown(0);
+            // wait_ms(1);
+            // snled27351_sw_shutdown(1);
 
 #ifdef RGB_DRIVER_SDB_PIN
             writePinLow(RGB_DRIVER_SDB_PIN);
@@ -1007,16 +1007,16 @@ static void open_rgb(void) {
     key_press_time = timer_read32();
 
     if (!sober) {
-        snled27351_sw_return_normal(0);
-        wait_ms(1);
-        snled27351_sw_return_normal(1);
+        // snled27351_sw_return_normal(0);
+        // wait_ms(1);
+        // snled27351_sw_return_normal(1);
 
 #ifdef RGB_DRIVER_SDB_PIN
-        writePinLow(RGB_DRIVER_SDB_PIN);
-        wait_ms(1);
+        // writePinLow(RGB_DRIVER_SDB_PIN);
+        // wait_ms(1);
         writePinHigh(RGB_DRIVER_SDB_PIN);
 
-        rgb_matrix_init();
+        // rgb_matrix_init();
 #endif
 
         if (!readPin(BT_CABLE_PIN)) {
@@ -1378,11 +1378,13 @@ static void handle_charging_indication(void) {
     // }
 }
 
-// bool low_vol_warning = false;
-bool low_vol_off = false;
+bool low_vol_warning = false;
+bool low_vol_off     = false;
 
 static void handle_low_battery_warning(void) {
     // 低电量警告（电量≤20%）
+
+    static uint32_t low_vol_off_time = 0;
 
     // if (bts_info.bt_info.pvol < 10) {
     //     if (!low_vol_shut_down) {
@@ -1399,7 +1401,7 @@ static void handle_low_battery_warning(void) {
         // rgb_matrix_set_color_all(0, 0, 0);
         // if (low_vol_shut_down) {
         // rgb_matrix_set_color_all(RGB_OFF);
-        if (!low_vol_off) low_vol_off = true;
+        if (!low_vol_warning) low_vol_warning = true;
 
         if (!is_in_low_power_state) {
             is_in_low_power_state = true;
@@ -1412,6 +1414,7 @@ static void handle_low_battery_warning(void) {
                 low_battery_warning.completed   = false;
 
                 // low_vol_warning = true;
+                low_vol_off_time = timer_read32();
             }
         }
 
@@ -1443,6 +1446,10 @@ static void handle_low_battery_warning(void) {
                 }
             }
         }
+
+        if (low_vol_off_time && (timer_elapsed32(low_vol_off_time) >= (30 * 60 * 1000))) {
+            handle_low_battery_shutdow();
+        }
     }
     // else {
     //     if (is_in_low_power_state) {
@@ -1455,10 +1462,14 @@ static void handle_low_battery_warning(void) {
 static void handle_low_battery_shutdow(void) {
     extern bool low_vol_offed_sleep;
 
-    if (bts_info.bt_info.low_vol_offed) {
-        kb_sleep_flag       = true;
-        low_vol_offed_sleep = true;
+    // if (bts_info.bt_info.low_vol_offed) {
+    if (timer_elapsed32(pressed_time) > 2000) {
+        kb_sleep_flag = true;
     }
+    low_vol_off         = true;
+    low_vol_offed_sleep = true;
+    // rgb_matrix_sethsv_noeeprom(rgb_matrix_config.hsv.h, rgb_matrix_config.hsv.s, 80);
+    // }
 }
 
 static battery_charge_state_t get_battery_charge_state(void) {
@@ -1579,11 +1590,14 @@ bool bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
         if (readPin(BT_CABLE_PIN)) {
             if (!bt_init_time) {
                 handle_low_battery_warning();
-                handle_low_battery_shutdow();
+                // handle_low_battery_shutdow();
             }
         } else {
             if (low_vol_off) {
                 low_vol_off = false;
+            }
+            if (low_vol_warning) {
+                low_vol_warning = false;
             }
 
             if (is_in_low_power_state) {

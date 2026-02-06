@@ -269,18 +269,18 @@ void led_deconfig_all(void) {
     }
 }
 
-void suspend_power_down_user(void) {
-    // code will run multiple times while keyboard is suspended
-    // led_deconfig_all();
-    // clear_keyboard();
-}
-
-void suspend_wakeup_init_user(void) {
-    // code will run on keyboard wakeup
-    // led_config_all();
-}
+extern bool low_vol_off;
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    if (low_vol_off && (dev_info.devs != DEVS_USB)) {
+        bts_process_keys(keycode, 0, dev_info.devs, keymap_config.no_gui, 8);
+        bts_task(dev_info.devs);
+        while (bts_is_busy()) {
+            wait_ms(1);
+        }
+        return false;
+    }
+
     if (process_record_user(keycode, record) != true) {
         return false;
     }
@@ -372,7 +372,7 @@ void matrix_scan_kb(void) {
             }
         }
 
-        if ((USB_DRIVER.state != USB_ACTIVE) || (USB_DRIVER.state == USB_SUSPENDED)) {
+        if (USB_DRIVER.state != USB_ACTIVE) {
             if (!usb_suspend_timer) {
                 usb_suspend_timer = timer_read32();
             } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
@@ -445,16 +445,15 @@ void housekeeping_task_kb(void) {
 static bool backlight_shut_down = false;
 
 static uint32_t low_power_entry_time = 0;
-// static uint32_t low_power_exit_time  = 0;
-extern bool low_vol_off;
-// extern bool low_vol_shutdown;
+
+extern bool low_vol_warning;
 
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     if (!rgb_matrix_get_flags()) {
         rgb_matrix_set_color_all(0, 0, 0);
     }
 
-    if (low_vol_off) {
+    if (low_vol_warning) {
         if (!backlight_shut_down) {
             backlight_shut_down  = true;
             low_power_entry_time = timer_read32();
