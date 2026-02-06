@@ -955,9 +955,10 @@ static void close_rgb(void) {
 
                 LCD_start();
 
+                LCD_command_update(LCD_WEAKUP);
+
                 open_rgb();
 
-                LCD_command_update(LCD_WEAKUP);
                 LCD_IND_update();
             }
         }
@@ -1010,7 +1011,7 @@ static void factory_reset(void) {
             eeconfig_update_keymap(&keymap_config);
             dev_info.LCD_PAGE = 0;
             eeconfig_update_user(dev_info.raw);
-            LCD_Page_update(dev_info.LCD_PAGE);
+            // LCD_Page_update(dev_info.LCD_PAGE);
 
             if (dev_info.devs != DEVS_USB && !bts_info.bt_info.paired) {
                 if (dev_info.devs == DEVS_2_4G) {
