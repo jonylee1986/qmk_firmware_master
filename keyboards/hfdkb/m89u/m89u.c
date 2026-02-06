@@ -50,6 +50,11 @@ const snled27351_led_t PROGMEM g_snled27351_leds[SNLED27351_LED_COUNT] = {
 // clang-format on
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    // extern bool key_eql_pressed;
+    // if (key_eql_pressed) {
+    //     return false;
+    // }
+
     if (!process_record_user(keycode, record)) {
         return false;
     }

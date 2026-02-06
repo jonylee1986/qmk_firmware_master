@@ -1,0 +1,104 @@
+{
+    "manufacturer": "@HFD",
+    "keyboard_name": "FK52A0",
+    "maintainer": "jonylee@hfd",
+    "url": "https://github.com/jonylee1986/qmk_firmware_master/tree/hfdkb_playground",
+    "processor": "WB32FQ95",
+    "bootloader": "wb32-dfu",
+    "usb": {
+        "vid": "0xFFFE",
+        "suspend_wakeup_delay": 1000
+    },
+    "host": {
+        "default": {
+            "nkro": true
+        }
+    },
+    "diode_direction": "ROW2COL",
+    "features": {
+        "bootmagic": true,
+        "command": false,
+        "console": false,
+        "extrakey": true,
+        "mousekey": true,
+        "nkro": true,
+        "rgb_matrix": true,
+        "dip_switch":true,
+        "encoder": true
+    },
+    "matrix_pins": {
+        "cols": ["C1","C2","C3","A0","A1","A2","A3","A4","A5","A6","A7","C4","C5","B0","B1","B2","B12","B13","A8"],
+        "rows": ["B15", "C6", "C7", "C8", "C9", "B14"]
+    },
+    "encoder": {
+        "enabled": true,
+        "rotary": [ { "pin_a": "C14", "pin_b": "C13", "resolution": 2 }
+        ]
+    },
+    "dip_switch": {
+        "pins": [ "C11" ]
+    },
+    "eeprom": {
+        "driver": "wear_leveling",
+        "wear_leveling": {
+            "driver": "spi_flash",
+            "backing_size": 4096
+        }
+    },
+    "rgb_matrix": {
+        "driver": "snled27351",
+        "react_on_keyup": true,
+        "sleep": true,
+        "max_brightness": 160,
+        "val_steps": 40,
+        "speed_steps": 64,
+        "hue_steps": 32,
+        "animations": {
+            "none": true,
+            "solid_color": true,
+            "alphas_mods": true,
+            "gradient_up_down": true,
+            "gradient_left_right": true,
+            "breathing": true,
+            "band_pinwheel_sat": true,
+            "band_pinwheel_val": true,
+            "band_spiral_sat": true,
+            "band_spiral_val": true,
+            "cycle_all": true,
+            "cycle_left_right": true,
+            "cycle_up_down": true,
+            "cycle_out_in": true,
+            "cycle_out_in_dual": true,
+            "cycle_pinwheel": true,
+            "cycle_spiral": true,
+            "dual_beacon": true,
+            "rainbow_beacon": true,
+            "rainbow_pinwheels": true,
+            "flower_blooming": true,
+            "raindrops": true,
+            "jellybean_raindrops": true,
+            "hue_breathing": true,
+            "hue_pendulum": true,
+            "hue_wave": true,
+            "pixel_fractal": true,
+            "pixel_flow": true,
+            "typing_heatmap": true,
+            "digital_rain": true,
+            "solid_reactive_simple": true,
+            "solid_reactive": true,
+            "solid_reactive_wide": true,
+            "solid_reactive_multiwide": true,
+            "solid_reactive_cross": true,
+            "solid_reactive_multicross": true,
+            "solid_reactive_nexus": true,
+            "solid_reactive_multinexus": true,
+            "splash": true,
+            "multisplash": true,
+            "solid_splash": true,
+            "solid_multisplash": true,
+            "starlight": true,
+            "starlight_smooth": true,
+            "riverflow": true
+        }
+    }
+}

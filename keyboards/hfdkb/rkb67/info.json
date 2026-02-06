@@ -44,6 +44,8 @@
         "react_on_keyup": true,
         "sleep": true,
         "max_brightness": 160,
+        "val_steps": 40,
+        "speed_steps": 64,
         "animations": {
             "solid_color": true,
             "breathing": true,

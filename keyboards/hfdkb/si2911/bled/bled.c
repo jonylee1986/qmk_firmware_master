@@ -356,6 +356,7 @@ void bled_eeconfig_init(void) {
     dev_info.sled_mode  = SLED_MODE_FLOW;
     dev_info.bled_mode  = BLED_MODE_FLOW;
     dev_info.bled_color = COLOR_RED;
+    dev_info.sled_color = COLOR_RED;
     eeconfig_update_user(dev_info.raw);
 
     bled_info.bled_val   = RGB_MATRIX_MAXIMUM_BRIGHTNESS;

@@ -152,6 +152,14 @@ void snled27351_init(uint8_t index) {
     snled27351_select_page(index, SNLED27351_COMMAND_CURRENT_TUNE);
 
     uint8_t current_tune_reg_list[SNLED27351_LED_CURRENT_TUNE_LENGTH] = SNLED27351_CURRENT_TUNE;
+
+#ifdef SNLED27351_CURRENT_TUNE_2
+    if (index == 0) {
+        const uint8_t temp_vals[SNLED27351_LED_CURRENT_TUNE_LENGTH] = SNLED27351_CURRENT_TUNE_2;
+        memcpy(current_tune_reg_list, temp_vals, SNLED27351_LED_CURRENT_TUNE_LENGTH);
+    }
+#endif
+
     for (int i = 0; i < SNLED27351_LED_CURRENT_TUNE_LENGTH; i++) {
         snled27351_write_register(index, i, current_tune_reg_list[i]);
     }

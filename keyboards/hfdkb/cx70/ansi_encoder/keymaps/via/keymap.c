@@ -41,8 +41,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______, KC_MYCM,  KC_MAIL,  KC_WSCH,  KC_WHOM, KC_CALC, KC_MSEL, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,    KC_VOLU,                   _______,
         _______, BT_HOST1, BT_HOST2, BT_HOST3, BT_2_4G, _______, _______, _______, _______, _______, _______, _______,    _______, BT_VOL,           _______,
         _______, _______,  KC_W2UP,  _______,  _______, _______, _______, _______, _______, _______, _______, _______,    RM_HUEU, RM_NEXT,          _______,
-        _______, SW_OS1,   _______,  _______,  _______, _______, _______, _______, _______, _______, _______, _______,             RM_TOGG,          _______,
-        _______,           _______,  _______,  _______, _______, _______, _______, _______, _______, _______, _______,             _______, RM_VALU, _______,
+        _______, _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______, _______,             RM_TOGG,          _______,
+        _______,           SW_OS1,   _______,  _______, _______, _______, _______, _______, _______, _______, _______,             _______, RM_VALU, _______,
         _______, GU_TOGG,  _______,                              EE_CLR,                             _______, _______,    _______, RM_SPDD, RM_VALD, RM_SPDU),
 
     [MAC_B] = LAYOUT_ansi_81( /* Base */
@@ -51,14 +51,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_TAB,  KC_Q,     KC_W,     KC_E,     KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC,    KC_RBRC, KC_BSLS,          KC_END,
         KC_CAPS, KC_A,     KC_S,     KC_D,     KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,             KC_ENT,           KC_PGUP,
         KC_LSFT,           KC_Z,     KC_X,     KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,             KC_RSFT, KC_UP,   KC_PGDN,
-        KC_LCTL, KC_LOPT,  KC_LCMD,                              KC_SPC,                             KC_RCMD, MO(WIN_FN), KC_RCTL, KC_LEFT, KC_DOWN, KC_RGHT),
+        KC_LCTL, KC_LOPT,  KC_LCMD,                              KC_SPC,                             KC_RCMD, MO(MAC_FN), KC_RCTL, KC_LEFT, KC_DOWN, KC_RGHT),
 
     [MAC_FN] = LAYOUT_ansi_81( /* FN */
         _______, KC_BRID,  KC_BRIU,  KC_MCTL,  KC_LPAD, KC_NO,   KC_NO,   KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, KC_VOLD,    KC_VOLU,                   _______,
         _______, BT_HOST1, BT_HOST2, BT_HOST3, BT_2_4G, _______, _______, _______, _______, _______, _______, _______,    _______, BT_VOL,           _______,
         _______, _______,  KC_W2UP,  _______,  _______, _______, _______, _______, _______, _______, _______, _______,    RM_HUEU, RM_NEXT,          _______,
-        _______, _______,  SW_OS1,   _______,  _______, _______, _______, _______, _______, _______, _______, _______,             RM_TOGG,          _______,
-        _______,           _______,  _______,  _______, _______, _______, _______, _______, _______, _______, _______,             _______, RM_VALU, _______,
+        _______, _______,  _______,  _______,  _______, _______, _______, _______, _______, _______, _______, _______,             RM_TOGG,          _______,
+        _______,           _______,  SW_OS1,   _______, _______, _______, _______, _______, _______, _______, _______,             _______, RM_VALU, _______,
         _______, _______,  _______,                              EE_CLR,                             _______, _______,    _______, RM_SPDD, RM_VALD, RM_SPDU),
 };
 
@@ -81,19 +81,22 @@ static uint8_t  all_blink_cnt      = 0;
 static RGB      all_blink_color    = {0};
 static uint32_t all_blink_time     = 0;
 
-static uint16_t pressed_code_user;
-static uint16_t pressed_time_user = 0;
-static bool     W2UP_flag         = false;
+// static uint16_t pressed_code_user;
+// static uint16_t pressed_time_user = 0;
+static bool W2UP_flag = false;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case KC_W2UP:
             if (record->event.pressed) {
-                pressed_code_user = KC_W2UP;
-                pressed_time_user = timer_read();
-            } else {
-                pressed_time_user = 0;
+                W2UP_flag = !W2UP_flag;
+
+                // pressed_code_user = KC_W2UP;
+                // pressed_time_user = timer_read();
             }
+            // else {
+            // pressed_time_user = 0;
+            // }
             break;
         case KC_W:
             if (W2UP_flag) {
@@ -260,15 +263,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 }
 
 void housekeeping_task_user(void) {
-    switch (pressed_code_user) {
-        case KC_W2UP:
-            if ((timer_elapsed32(pressed_time_user) > 3000) && (pressed_time_user)) {
-                W2UP_flag         = !W2UP_flag;
-                pressed_time_user = 0;
-            }
-        default:
-            break;
-    }
+    // switch (pressed_code_user) {
+    //     case KC_W2UP:
+    //         if ((timer_elapsed32(pressed_time_user) > 3000) && (pressed_time_user)) {
+    //             W2UP_flag         = !W2UP_flag;
+    //             pressed_time_user = 0;
+    //         }
+    //     default:
+    //         break;
+    // }
 }
 
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
@@ -281,7 +284,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         if (all_blink_cnt & 0x1) {
             rgb_matrix_set_color_all(all_blink_color.r, all_blink_color.g, all_blink_color.b);
         } else {
-            rgb_matrix_set_color_all(RGB_OFF);
+            rgb_matrix_set_color_all(0, 0, 0);
         }
     }
 

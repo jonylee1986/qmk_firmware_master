@@ -44,6 +44,8 @@
 #    define BAT_LEVEL_DISPLAY_INDEX {102, 103, 104, 105, 106} // Battery level indicator
 
 #    define USB_SUSPEND_CHECK_ENABLE
+#    define USBLINK_Status readPin(MM_CABLE_PIN)
+#    define CHARGE_Status readPin(MM_CHARGE_PIN)
 #endif
 
 // Win lock indicator
