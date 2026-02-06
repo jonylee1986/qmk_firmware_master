@@ -71,6 +71,7 @@ void LCD_IND_update(void) {
 void LCD_Page_update(uint8_t page_num) {
     uint8_t Page_data[5] = {0};
 
+    Page_data[0] = 0xAA;
     Page_data[1] = 0x01;
     switch (page_num) {
         case 0:
