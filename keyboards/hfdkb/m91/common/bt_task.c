@@ -1384,7 +1384,7 @@ bool low_vol_off     = false;
 static void handle_low_battery_warning(void) {
     // 低电量警告（电量≤20%）
 
-    static uint32_t low_vol_off_time = 0;
+    // static uint32_t low_vol_off_time = 0;
 
     // if (bts_info.bt_info.pvol < 10) {
     //     if (!low_vol_shut_down) {
@@ -1401,7 +1401,10 @@ static void handle_low_battery_warning(void) {
         // rgb_matrix_set_color_all(0, 0, 0);
         // if (low_vol_shut_down) {
         // rgb_matrix_set_color_all(RGB_OFF);
-        if (!low_vol_warning) low_vol_warning = true;
+        if (!low_vol_warning) {
+            low_vol_warning = true;
+            if (rgb_matrix_get_val() != 80) rgb_matrix_sethsv(rgb_matrix_config.hsv.h, rgb_matrix_config.hsv.s, 80);
+        }
 
         if (!is_in_low_power_state) {
             is_in_low_power_state = true;
@@ -1414,7 +1417,7 @@ static void handle_low_battery_warning(void) {
                 low_battery_warning.completed   = false;
 
                 // low_vol_warning = true;
-                low_vol_off_time = timer_read32();
+                // low_vol_off_time = timer_read32();
             }
         }
 
@@ -1447,9 +1450,9 @@ static void handle_low_battery_warning(void) {
             }
         }
 
-        if (low_vol_off_time && (timer_elapsed32(low_vol_off_time) >= (30 * 60 * 1000))) {
-            handle_low_battery_shutdow();
-        }
+        // if (low_vol_off_time && (timer_elapsed32(low_vol_off_time) >= (30 * 60 * 1000))) {
+        //     handle_low_battery_shutdow();
+        // }
     }
     // else {
     //     if (is_in_low_power_state) {
@@ -1462,14 +1465,14 @@ static void handle_low_battery_warning(void) {
 static void handle_low_battery_shutdow(void) {
     extern bool low_vol_offed_sleep;
 
-    // if (bts_info.bt_info.low_vol_offed) {
-    if (timer_elapsed32(pressed_time) > 2000) {
-        kb_sleep_flag = true;
+    if (bts_info.bt_info.low_vol_offed) {
+        if (timer_elapsed32(pressed_time) > 1000) {
+            kb_sleep_flag = true;
+        }
+        low_vol_off         = true;
+        low_vol_offed_sleep = true;
+        // rgb_matrix_sethsv_noeeprom(rgb_matrix_config.hsv.h, rgb_matrix_config.hsv.s, 80);
     }
-    low_vol_off         = true;
-    low_vol_offed_sleep = true;
-    // rgb_matrix_sethsv_noeeprom(rgb_matrix_config.hsv.h, rgb_matrix_config.hsv.s, 80);
-    // }
 }
 
 static battery_charge_state_t get_battery_charge_state(void) {
@@ -1590,7 +1593,7 @@ bool bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
         if (readPin(BT_CABLE_PIN)) {
             if (!bt_init_time) {
                 handle_low_battery_warning();
-                // handle_low_battery_shutdow();
+                handle_low_battery_shutdow();
             }
         } else {
             if (low_vol_off) {
