@@ -11,10 +11,10 @@
 #ifdef BT_MODE_ENABLE
 #    define BT_CABLE_PIN B8  // 充电接入时为高
 #    define BT_CHARGE_PIN B9 // 充电时为低，充满时为高
-#    define WS2812_EN_PIN B7 // WS2812电源
 #endif
 
 /* RGB Matrix */
+#define WS2812_EN_PIN B7
 
 /* SPI Config for spi flash*/
 #define SPI_DRIVER SPIDQ
