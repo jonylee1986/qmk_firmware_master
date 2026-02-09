@@ -44,6 +44,7 @@
         "pin": "C15"
     },
     "rgb_matrix": {
+        "driver": "ws2812",
         "react_on_keyup": true,
         "sleep": true,
         "max_brightness": 160,
