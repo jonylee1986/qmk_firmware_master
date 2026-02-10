@@ -22,7 +22,30 @@
 #    define UART_RX_PAL_MODE 7
 
 #    define LPWR_TIMEOUT RGB_MATRIX_TIMEOUT
-#    define WLS_KEYBOARD_REPORT_KEYS 6
+#    define WLS_KEYBOARD_REPORT_KEYS 5
+
+#    define MD_BT_NAME "DOS 68 BT$"
+#    define MD_BT1_NAME "DOS 68 BT$"
+#    define MD_BT2_NAME "DOS 68 BT$"
+#    define MD_BT3_NAME "DOS 68 BT$"
+
+/* Wireless indicator timeout (per mode, ms; 30 seconds by default) */
+#    ifndef WLS_BT_PAIR_TIMEOUT
+#        define WLS_BT_PAIR_INTERVAL 200 // typical 200ms
+#        define WLS_BT_PAIR_TIMEOUT 150  // 150 * 2 * interval(typical 200ms) = 60s
+#    endif
+#    ifndef WLS_BT_RECONNECT_TIMEOUT
+#        define WLS_BT_RECONNECT_INTERVAL 500 // typical 500ms
+#        define WLS_BT_RECONNECT_TIMEOUT 10   // 10 * 2 * interval(typical 500ms) = 10s
+#    endif
+#    ifndef WLS_2G4_PAIR_TIMEOUT
+#        define WLS_2G4_PAIR_INTERVAL 200
+#        define WLS_2G4_PAIR_TIMEOUT 150
+#    endif
+#    ifndef WLS_2G4_RECONNECT_TIMEOUT
+#        define WLS_2G4_RECONNECT_INTERVAL 500
+#        define WLS_2G4_RECONNECT_TIMEOUT 10
+#    endif
 #endif
 
 /* RGB Matrix */
@@ -30,29 +53,18 @@
 
 /* RGB Indicator index */
 #define LED_CAPS_LOCK_INDEX 30
+#define LED_GUI_LOCK_INDEX 59
+#define LED_LEFT_CTRL_INDEX 58
 #define LED_HOST_BT1_INDEX 1
 #define LED_HOST_BT2_INDEX 2
 #define LED_HOST_BT3_INDEX 3
 #define LED_HOST_2G4_INDEX 0
-// #define LED_HOST_USB_INDEX 29
-#define LED_HOST_BT1_COLOR {0, 0, 77}
-#define LED_HOST_BT2_COLOR {0, 0, 77}
-#define LED_HOST_BT3_COLOR {0, 0, 77}
-#define LED_HOST_2G4_COLOR {0, 77, 0}
-
-/* Wireless indicator timeout (per mode, ms; 30 seconds by default) */
-#ifndef WLS_BT_PAIR_TIMEOUT
-#    define WLS_BT_PAIR_TIMEOUT 60000
-#endif
-#ifndef WLS_BT_RECONNECT_TIMEOUT
-#    define WLS_BT_RECONNECT_TIMEOUT 10000
-#endif
-#ifndef WLS_2G4_PAIR_TIMEOUT
-#    define WLS_2G4_PAIR_TIMEOUT 60000
-#endif
-#ifndef WLS_2G4_RECONNECT_TIMEOUT
-#    define WLS_2G4_RECONNECT_TIMEOUT 10000
-#endif
+#define LED_HOST_USB_INDEX 29
+#define LED_HOST_BT1_COLOR {0, 0, 0x77}
+#define LED_HOST_BT2_COLOR {0, 0, 0x77}
+#define LED_HOST_BT3_COLOR {0, 0, 0x77}
+#define LED_HOST_2G4_COLOR {0, 0x77, 0}
+#define LED_HOST_USB_COLOR {0x77, 0x77, 0x77}
 
 /* FLASH */
 /* SPI Config for spi flash*/

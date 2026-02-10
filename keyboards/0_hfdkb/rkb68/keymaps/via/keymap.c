@@ -25,12 +25,6 @@ enum __layers {
     MAC_EX,
 };
 
-#define BT_2_4G KC_2G4
-#define BT_HOST1 KC_BT1
-#define BT_HOST2 KC_BT2
-#define BT_HOST3 KC_BT3
-#define BT_USB KC_USB
-
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [WIN_B] = LAYOUT( /* Base */
@@ -41,8 +35,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_LCTL, KC_LWIN,  KC_LALT,                              KC_SPC,                    KC_RALT, MO(WIN_FN), KC_RCTL, KC_LEFT, KC_DOWN, KC_RGHT ),
 
     [WIN_FN] = LAYOUT( /* FN */
-        BT_2_4G, BT_HOST1, BT_HOST2, BT_HOST3, _______, _______, _______, _______, _______, _______, _______, _______,    _______, _______, _______,
-        BT_USB,  _______,  _______,  _______,  _______, _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,    _______, _______, _______,
+        KC_2G4,  KC_BT1,   KC_BT2,   KC_BT3,   _______, _______, _______, _______, _______, _______, _______, _______,    _______, _______, _______,
+        KC_USB,  _______,  _______,  _______,  _______, _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,    _______, _______, _______,
         _______, _______,  SW_OS1,   _______,  _______, _______, _______, KC_INS,  KC_HOME, KC_PGUP, _______, _______,             _______, _______,
         _______,           KC_MSEL,  KC_VOLD,  KC_VOLU, KC_MUTE, BT_VOL,  _______, KC_DEL,  KC_END,  KC_PGDN, _______,    _______, _______, _______,
         KC_N2FN, GU_TOGG,  _______,                              EE_CLR,                    _______, _______, _______,    _______, _______, _______),
@@ -62,8 +56,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_LCTL, KC_LOPT,  KC_LCMD,                              KC_SPC,                    KC_RCMD, MO(MAC_FN), KC_RCTL, KC_LEFT, KC_DOWN, KC_RGHT ),
 
     [MAC_FN] = LAYOUT( /* FN */
-        BT_2_4G, BT_HOST1, BT_HOST2, BT_HOST3, _______, _______, _______, _______, _______, _______, _______, _______,    _______, _______, _______,
-        BT_USB,  _______,  _______,  _______,  _______, _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,    _______, _______, _______,
+        KC_2G4,  KC_BT1,   KC_BT2,   KC_BT3,   _______, _______, _______, _______, _______, _______, _______, _______,    _______, _______, _______,
+        KC_USB,  _______,  _______,  _______,  _______, _______, _______, KC_PSCR, KC_SCRL, KC_PAUS, _______, _______,    _______, _______, _______,
         _______, SW_OS1,   _______,  _______,  _______, _______, _______, KC_INS,  KC_HOME, KC_PGUP, _______, _______,             _______, _______,
         _______,           KC_MSEL,  KC_VOLD,  KC_VOLU, KC_MUTE, BT_VOL,  _______, KC_DEL,  KC_END,  KC_PGDN, _______,    _______, _______, _______,
         KC_N2FN, _______,  _______,                              EE_CLR,                    _______, _______, _______,    _______, _______, _______),
@@ -104,7 +98,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                         single_blink_color = (RGB){0, 0, 100};
                     }
                     single_blink_cnt   = 6;
-                    single_blink_index = 66;
+                    single_blink_index = LED_LEFT_CTRL_INDEX;
                     if (timer_elapsed32(single_blink_time) >= 300) {
                         single_blink_time = timer_read32();
                     }
@@ -124,7 +118,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                         single_blink_color = (RGB){0, 0, 100};
                     }
                     single_blink_cnt   = 6;
-                    single_blink_index = 66;
+                    single_blink_index = LED_LEFT_CTRL_INDEX;
                     if (timer_elapsed32(single_blink_time) >= 300) {
                         single_blink_time = timer_read32();
                     }
