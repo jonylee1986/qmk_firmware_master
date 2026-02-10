@@ -19,7 +19,8 @@
         "extrakey": true,
         "mousekey": true,
         "nkro": true,
-        "rgb_matrix": true
+        "rgb_matrix": true,
+        "deferred_exec": true
     },
     "matrix_pins": {
         "cols": ["C1","C2","C3","A0","A1","A2","A3","A4","A5","A6","A7","C4","C5", "B0", "B1", "B2"],
@@ -40,6 +41,38 @@
             "nkro": true
         }
     },
+    "keycodes": [
+        {
+            "key": "KC_USB"
+        },
+        {
+            "key": "KC_BT1"
+        },
+        {
+            "key": "KC_BT2"
+        },
+        {
+            "key": "KC_BT3"
+        },
+        {
+            "key": "KC_BT4"
+        },
+        {
+            "key": "KC_BT5"
+        },
+        {
+            "key": "KC_2G4"
+        },
+        {
+            "key": "BT_VOL"
+        },
+        {
+            "key": "KC_N2FN"
+        },
+        {
+            "key": "SW_OS1"
+        }
+    ],
     "ws2812": {
         "pin": "C15"
     },
@@ -146,13 +179,13 @@
             { "flags": 4, "matrix": [4, 13], "x": 209, "y": 64},
             { "flags": 4, "matrix": [4, 15], "x": 224, "y": 64},
 
-            { "flags": 2, "x": 123, "y": 64},
-            { "flags": 2, "x": 135, "y": 64},
-            { "flags": 2, "x": 151, "y": 64},
-            { "flags": 2, "x": 168, "y": 64},
-            { "flags": 2, "x": 194, "y": 64},
+            { "flags": 2, "x": 224, "y": 64},
             { "flags": 2, "x": 209, "y": 64},
-            { "flags": 2, "x": 224, "y": 64}
+            { "flags": 2, "x": 194, "y": 64},
+            { "flags": 2, "x": 168, "y": 64},
+            { "flags": 2, "x": 151, "y": 64},
+            { "flags": 2, "x": 135, "y": 64},
+            { "flags": 2, "x": 123, "y": 64}
         ]
     },
     "layouts": {
