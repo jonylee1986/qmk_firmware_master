@@ -265,9 +265,12 @@ bool process_record_wls(uint16_t keycode, keyrecord_t *record) {
 bool     query_vol_flag = false;
 uint32_t key_press_time = 0;
 
+static bool key_press_time_reset = false;
+
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     if (confinfo.devs != DEVS_USB) {
         key_press_time = timer_read32();
+        if (key_press_time_reset) key_press_time_reset = false;
         if (low_vol_off) {
             report_keyboard_t    temp_report_keyboard = {0};
             extern host_driver_t wireless_driver;
@@ -324,9 +327,13 @@ void matrix_scan_kb(void) {
         if (!key_press_time) {
             key_press_time = timer_read32();
         } else if (timer_elapsed32(key_press_time) >= (5 * 60 * 1000)) {
-            lpwr_set_state(LPWR_PRESLEEP);
+            if (!key_press_time_reset) {
+                key_press_time_reset = true;
+                lpwr_set_state(LPWR_PRESLEEP);
+            }
         }
     }
+    matrix_scan_user();
 }
 
 #ifdef RGB_MATRIX_ENABLE
