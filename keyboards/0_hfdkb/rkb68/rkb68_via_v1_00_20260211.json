@@ -1,5 +1,5 @@
 {
-    "name": "RIE68",
+    "name": "DOS 68",
     "vendorId": "0xFFFE",
     "productId": "0x006C",
     "keycodes": ["qmk_lighting"],
@@ -23,18 +23,25 @@
                 "options": [
                   ["All Off", 0],
                   ["SOLID_COLOR", 1],
-                  ["BREATHING", 2],
-                  ["CYCLE_ALL", 3],
-                  ["CYCLE_LEFT_RIGHT", 4],
-                  ["CYCLE_UP_DOWN", 5],
-                  ["RAINBOW_MOVING_CHEVRON", 6],
-                  ["CYCLE_OUT_IN", 7],
-                  ["CYCLE_OUT_IN_DUAL", 8],
-                  ["CYCLE_PINWHEEL", 9],
-                  ["CYCKE_SPIRAL", 10],
-                  ["DUAL_BEACON", 11],
-                  ["RAINBOW_BEACON", 12],
-                  ["MATRIX_MULTISPLASH", 13]
+                  ["GRADIENT_UP_DOWN", 2],
+                  ["BREATHING", 3],
+                  ["BAND_PINWHEEL_SAT", 4],
+                  ["BAND_SPIRAL_SAT", 5],
+                  ["CYCLE_ALL", 6],
+                  ["CYCLE_LEFT_RIGHT", 7],
+                  ["RAINBOW_MOVING_CHEVRON", 8],
+                  ["CYCLE_OUT_IN", 9],
+                  ["CYCLE_OUT_IN_DUAL", 10],
+                  ["CYCLE_PINWHEEL", 11],
+                  ["DUAL_BEACON", 12],
+                  ["RAINBOW_PINWHEELS", 13],
+                  ["HUE_WAVE", 14],
+                  ["TYPING_HEATMAP", 15],
+                  ["SOLID_REACTIVE_SIMPLE", 16],
+                  ["SOLID_REACTIVE_WIDE", 17],
+                  ["SOLID_REACTIVE_CROSS", 18],
+                  ["SOLID_REACTIVE_NEXUS", 19],
+                  ["MULTISPLASH", 20]
                 ]
               },
               {
@@ -55,19 +62,22 @@
         ]
       }
     ],
-    "matrix": { "rows": 5, "cols": 15 },
+    "matrix": { "rows": 5, "cols": 16 },
     "customKeycodes":[
-        {"name":"BT_HOST1","title":"BT_HOST1","shortName":"BT_HOST1"},
-        {"name":"BT_HOST2","title":"BT_HOST2","shortName":"BT_HOST2"},
-        {"name":"BT_HOST3","title":"BT_HOST3","shortName":"BT_HOST3"},
-        {"name":"BT_2_4G","title": "BT_2_4G","shortName":"BT_2_4G"},
-        {"name":"BT_USB","title":  "BT_USB","shortName":"BT_USB"}
+        {"name":"USB","title":  "USB","shortName":"USB"},
+        {"name":"BT_1","title":"BT_1","shortName":"BT_1"},
+        {"name":"BT_2","title":"BT_2","shortName":"BT_2"},
+        {"name":"BT_3","title":"BT_3","shortName":"BT_3"},
+        {"name":"2_4G","title": "2_4G","shortName":"2_4G"},
+        {"name":"BT_VOL","title": "BT_VOL","shortName":"BT_VOL"},
+        {"name":"N2FN","title": "N2FN","shortName":"N2FN"},
+        {"name":"SW_OS1","title": "SW_OS1","shortName":"SW_OS1"}
       ],
     "layouts": {
       "keymap":[
       [
         {
-          "c": "#AAAAAA"
+          "c": "#777777"
         },
         "0,0",
         {
@@ -89,15 +99,11 @@
           "c": "#AAAAAA",
           "w": 2
         },
-        "0,13",
-        {
-          "c": "#cccccc"
-        },
-        "0,14"
+        "0,14",
+        "0,15"
       ],
       [
         {
-          "c": "#AAAAAA",
           "w": 1.5
         },
         "1,0",
@@ -117,18 +123,16 @@
         "1,11",
         "1,12",
         {
-          "c": "#AAAAAA",
           "w": 1.5
         },
         "1,13",
         {
-          "c": "#cccccc"
+          "c": "#AAAAAA"
         },
-        "1,14"
+        "1,15"
       ],
       [
         {
-          "c": "#AAAAAA",
           "w": 1.75
         },
         "2,0",
@@ -152,14 +156,14 @@
         },
         "2,13",
         {
-          "c": "#cccccc"
+          "c": "#AAAAAA"
         },
-        "2,14"
+        "2,15"
       ],
       [
         {
           "c": "#AAAAAA",
-          "w": 2
+          "w": 2.25
         },
         "3,0",
         {
@@ -177,7 +181,7 @@
         "3,11",
         {
           "c": "#AAAAAA",
-          "w": 2
+          "w": 1.75
         },
         "3,12",
         {
@@ -187,7 +191,7 @@
         {
           "c": "#AAAAAA"
         },
-        "3,14"
+        "3,15"
       ],
       [
         {
@@ -203,9 +207,13 @@
         },
         "4,2",
         {
+          "c": "#cccccc",
           "w": 6.25
         },
-        "4,5",
+        "4,6",
+        {
+          "c": "#AAAAAA"
+        },
         "4,9",
         "4,10",
         "4,11",
@@ -214,8 +222,8 @@
         },
         "4,12",
         "4,13",
-        "4,14"
-      ]]
-
-    }
+        "4,15"
+      ]
+    ]
   }
+}

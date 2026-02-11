@@ -55,12 +55,6 @@
             "key": "KC_BT3"
         },
         {
-            "key": "KC_BT4"
-        },
-        {
-            "key": "KC_BT5"
-        },
-        {
             "key": "KC_2G4"
         },
         {
@@ -85,8 +79,8 @@
         "speed_steps": 64,
         "animations": {
             "solid_color": true,
-            "breathing": true,
             "gradient_up_down": true,
+            "breathing": true,
             "band_pinwheel_sat": true,
             "band_spiral_sat": true,
             "cycle_all": true,

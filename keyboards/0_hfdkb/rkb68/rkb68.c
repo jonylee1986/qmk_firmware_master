@@ -57,13 +57,13 @@ void keyboard_post_init_kb(void) {
     eeconfig_confinfo_init();
 
 #ifdef LED_POWER_EN_PIN
-    gpio_set_pin_output(LED_POWER_EN_PIN);
-    gpio_write_pin_low(LED_POWER_EN_PIN);
+    setPinOutput(LED_POWER_EN_PIN);
+    writePinLow(LED_POWER_EN_PIN);
 #endif
 
 #ifdef USB_POWER_EN_PIN
-    gpio_write_pin_low(USB_POWER_EN_PIN);
-    gpio_set_pin_output(USB_POWER_EN_PIN);
+    writePinLow(USB_POWER_EN_PIN);
+    setPinOutput(USB_POWER_EN_PIN);
 #endif
 
 #ifdef WL_PWR_SW_PIN
@@ -97,26 +97,26 @@ void keyboard_post_init_kb(void) {
 #ifdef WIRELESS_ENABLE
 void usb_power_connect(void) {
 #    ifdef USB_POWER_EN_PIN
-    gpio_write_pin_low(USB_POWER_EN_PIN);
+    writePinLow(USB_POWER_EN_PIN);
 #    endif
 }
 
 void usb_power_disconnect(void) {
 #    ifdef USB_POWER_EN_PIN
-    gpio_write_pin_high(USB_POWER_EN_PIN);
+    writePinHigh(USB_POWER_EN_PIN);
 #    endif
 }
 
 void suspend_power_down_kb(void) {
 #    ifdef LED_POWER_EN_PIN
-    // gpio_write_pin_high(LED_POWER_EN_PIN);
+    writePinHigh(LED_POWER_EN_PIN);
 #    endif
     suspend_power_down_user();
 }
 
 void suspend_wakeup_init_kb(void) {
 #    ifdef LED_POWER_EN_PIN
-    // gpio_write_pin_low(LED_POWER_EN_PIN);
+    writePinLow(LED_POWER_EN_PIN);
 #    endif
 
     wireless_devs_change(wireless_get_current_devs(), wireless_get_current_devs(), false);
@@ -133,6 +133,9 @@ void wireless_post_task(void) {
         post_init_timer = 0x00;
     }
 }
+
+static bool low_vol_warning = false;
+static bool low_vol_off     = false;
 
 static bool     wls_factory_reset_flash_active    = false;
 static uint8_t  wls_factory_reset_flash_remaining = 0;
@@ -243,6 +246,8 @@ bool process_record_wls(uint16_t keycode, keyrecord_t *record) {
         } break;
         case KC_USB: {
             if (record->event.pressed) {
+                clear_keyboard();
+                layer_clear();
                 wireless_devs_change(wireless_get_current_devs(), DEVS_USB, false);
             }
         } break;
@@ -257,9 +262,20 @@ bool process_record_wls(uint16_t keycode, keyrecord_t *record) {
 }
 #endif
 
-bool query_vol_flag = false;
+bool     query_vol_flag = false;
+uint32_t key_press_time = 0;
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    if (confinfo.devs != DEVS_USB) {
+        key_press_time = timer_read32();
+        if (low_vol_off) {
+            report_keyboard_t    temp_report_keyboard = {0};
+            extern host_driver_t wireless_driver;
+            wireless_driver.send_keyboard(&temp_report_keyboard);
+            return false;
+        }
+    }
+
     if (process_record_user(keycode, record) != true) {
         return false;
     }
@@ -301,6 +317,16 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     }
 
     return false;
+}
+
+void matrix_scan_kb(void) {
+    if (confinfo.devs != DEVS_USB) {
+        if (!key_press_time) {
+            key_press_time = timer_read32();
+        } else if (timer_elapsed32(key_press_time) >= (5 * 60 * 1000)) {
+            lpwr_set_state(LPWR_PRESLEEP);
+        }
+    }
 }
 
 #ifdef RGB_MATRIX_ENABLE
@@ -428,9 +454,13 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
         }
 
         if (wls_factory_reset_flash_on) {
-            rgb_matrix_set_color_all(0xFF, 0x00, 0x00);
+            for (uint8_t i = 0; i < 68; i++) {
+                rgb_matrix_set_color(i, 0x77, 0, 0);
+            }
         } else {
-            rgb_matrix_set_color_all(0x00, 0x00, 0x00);
+            for (uint8_t i = 0; i < 68; i++) {
+                rgb_matrix_set_color(i, 0x00, 0x00, 0x00);
+            }
         }
 
         return true;
@@ -447,10 +477,6 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
             rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
         }
     }
-
-    static bool low_vol_warning = false;
-    static bool low_vol_off     = false;
-    extern bool low_vol_offed_sleep;
 
     if (confinfo.devs != DEVS_USB) {
         if (query_vol_flag) {
@@ -483,6 +509,8 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
                 rgb_matrix_set_color(query_index[i], color.r, color.g, color.b);
             }
         }
+
+        extern bool low_vol_offed_sleep;
 
         if (readPin(BT_CABLE_PIN)) {
             // Critical battery - force sleep immediately
@@ -582,24 +610,6 @@ void md_devs_change(uint8_t devs, bool reset) {
     }
 }
 
-void lpwr_presleep_hook(void) {
-#    ifdef LED_POWER_EN_PIN
-    writePinHigh(LED_POWER_EN_PIN);
-#    endif
-}
-
-void lpwr_wakeup_hook(void) {
-#    ifdef LED_POWER_EN_PIN
-    setPinOutput(LED_POWER_EN_PIN);
-    writePinLow(LED_POWER_EN_PIN);
-#    endif
-
-    wireless_devs_change_kb(wireless_get_current_devs(), wireless_get_current_devs(), wls_rgb_indicator_reset);
-
-    // refresh led
-    led_wakeup();
-}
-
 #endif // RGB_MATRIX_ENABLE
 
 void wireless_send_nkro(report_nkro_t *report) {
@@ -691,7 +701,7 @@ void wireless_send_nkro(report_nkro_t *report) {
 }
 
 #ifdef WIRELESS_ENABLE
-void housekeeping_task_bt(void) {
+void housekeeping_task_wls(void) {
     if (confinfo.devs == DEVS_USB) {
         if ((USB_DRIVER.state == USB_SUSPENDED) && (USB_DRIVER.saved_state == USB_ACTIVE)) {
             print("[s]");
@@ -720,7 +730,7 @@ void housekeeping_task_user(void) {
     static uint32_t usb_suspend       = false;
 
 #ifdef WIRELESS_ENABLE
-    housekeeping_task_bt();
+    housekeeping_task_wls();
 #endif
 
     if (confinfo.devs == DEVS_USB) {
