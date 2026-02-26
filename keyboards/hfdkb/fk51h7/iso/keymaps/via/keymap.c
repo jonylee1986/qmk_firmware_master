@@ -47,7 +47,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC,   KC_RBRC,                   KC_PGUP,
         KC_CAPS, KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,   KC_NUHS, KC_ENT,           KC_PGDN,
         KC_LSFT, KC_NUBS, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,   KC_RSFT,          KC_UP,   KC_DEL,
-        KC_LCTL, KC_LOPT, KC_LCMD,                            KC_SPC,                             KC_ROPT, MO(MAC_FN),KC_RCTL, KC_LEFT, KC_DOWN, KC_RGHT),
+        KC_LCTL, KC_LOPT, KC_LCMD,                            KC_SPC,                             KC_RCMD, MO(MAC_FN),KC_RCTL, KC_LEFT, KC_DOWN, KC_RGHT),
 
     [MAC_FN] = LAYOUT_iso( /* FN */
         EE_CLR,           KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,    KC_F11,  KC_F12,           RM_TOGG,
@@ -247,9 +247,9 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     if (VAL_OUT_blink_cnt > 0) {
         // Set the color every frame based on current blink state
         if (VAL_OUT_blink_cnt % 2) {
-            RGB_MATRIX_INDICATOR_SET_COLOR(VAL_OUT_LEDINDEX, VAL_OUT_blink_color.r, VAL_OUT_blink_color.g, VAL_OUT_blink_color.b);
+            rgb_matrix_set_color(VAL_OUT_LEDINDEX, VAL_OUT_blink_color.r, VAL_OUT_blink_color.g, VAL_OUT_blink_color.b);
         } else {
-            RGB_MATRIX_INDICATOR_SET_COLOR(VAL_OUT_LEDINDEX, 0, 0, 0);
+            rgb_matrix_set_color(VAL_OUT_LEDINDEX, 0, 0, 0);
         }
 
         // Toggle state every 200ms

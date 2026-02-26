@@ -100,6 +100,228 @@ long_pressed_keys_t long_pressed_keys[] = {
 };
 // clang-format on
 
+#include "command.h"
+
+void register_mouse(uint8_t mouse_keycode, bool pressed);
+/** \brief Utilities for actions. (FIXME: Needs better description)
+ *
+ * FIXME: Needs documentation.
+ */
+__attribute__((weak)) void register_code(uint8_t code) {
+    if (dev_info.devs) {
+        WL_PROCESS_KEYS(code, 1);
+        bts_task(dev_info.devs);
+        while (bts_is_busy()) {
+            wait_ms(1);
+        }
+    } else {
+        if (code == KC_NO) {
+            return;
+
+#ifdef LOCKING_SUPPORT_ENABLE
+        } else if (KC_LOCKING_CAPS_LOCK == code) {
+#    ifdef LOCKING_RESYNC_ENABLE
+            // Resync: ignore if caps lock already is on
+            if (host_keyboard_leds() & (1 << USB_LED_CAPS_LOCK)) return;
+#    endif
+            add_key(KC_CAPS_LOCK);
+            send_keyboard_report();
+            wait_ms(TAP_HOLD_CAPS_DELAY);
+            del_key(KC_CAPS_LOCK);
+            send_keyboard_report();
+
+        } else if (KC_LOCKING_NUM_LOCK == code) {
+#    ifdef LOCKING_RESYNC_ENABLE
+            if (host_keyboard_leds() & (1 << USB_LED_NUM_LOCK)) return;
+#    endif
+            add_key(KC_NUM_LOCK);
+            send_keyboard_report();
+            wait_ms(100);
+            del_key(KC_NUM_LOCK);
+            send_keyboard_report();
+
+        } else if (KC_LOCKING_SCROLL_LOCK == code) {
+#    ifdef LOCKING_RESYNC_ENABLE
+            if (host_keyboard_leds() & (1 << USB_LED_SCROLL_LOCK)) return;
+#    endif
+            add_key(KC_SCROLL_LOCK);
+            send_keyboard_report();
+            wait_ms(100);
+            del_key(KC_SCROLL_LOCK);
+            send_keyboard_report();
+#endif
+
+        } else if (IS_BASIC_KEYCODE(code)) {
+            // TODO: should push command_proc out of this block?
+            if (command_proc(code)) return;
+
+            // Force a new key press if the key is already pressed
+            // without this, keys with the same keycode, but different
+            // modifiers will be reported incorrectly, see issue #1708
+            if (is_key_pressed(code)) {
+                del_key(code);
+                send_keyboard_report();
+            }
+            add_key(code);
+            send_keyboard_report();
+        } else if (IS_MODIFIER_KEYCODE(code)) {
+            add_mods(MOD_BIT(code));
+            send_keyboard_report();
+
+#ifdef EXTRAKEY_ENABLE
+        } else if (IS_SYSTEM_KEYCODE(code)) {
+            host_system_send(KEYCODE2SYSTEM(code));
+        } else if (IS_CONSUMER_KEYCODE(code)) {
+            host_consumer_send(KEYCODE2CONSUMER(code));
+#endif
+
+        } else if (IS_MOUSE_KEYCODE(code)) {
+            register_mouse(code, true);
+        }
+    }
+}
+
+/** \brief Utilities for actions. (FIXME: Needs better description)
+ *
+ * FIXME: Needs documentation.
+ */
+__attribute__((weak)) void unregister_code(uint8_t code) {
+    if (dev_info.devs) {
+        WL_PROCESS_KEYS(code, 0);
+        bts_task(dev_info.devs);
+        while (bts_is_busy()) {
+            wait_ms(1);
+        }
+    } else {
+        if (code == KC_NO) {
+            return;
+
+#ifdef LOCKING_SUPPORT_ENABLE
+        } else if (KC_LOCKING_CAPS_LOCK == code) {
+#    ifdef LOCKING_RESYNC_ENABLE
+            // Resync: ignore if caps lock already is off
+            if (!(host_keyboard_leds() & (1 << USB_LED_CAPS_LOCK))) return;
+#    endif
+            add_key(KC_CAPS_LOCK);
+            send_keyboard_report();
+            del_key(KC_CAPS_LOCK);
+            send_keyboard_report();
+
+        } else if (KC_LOCKING_NUM_LOCK == code) {
+#    ifdef LOCKING_RESYNC_ENABLE
+            if (!(host_keyboard_leds() & (1 << USB_LED_NUM_LOCK))) return;
+#    endif
+            add_key(KC_NUM_LOCK);
+            send_keyboard_report();
+            del_key(KC_NUM_LOCK);
+            send_keyboard_report();
+
+        } else if (KC_LOCKING_SCROLL_LOCK == code) {
+#    ifdef LOCKING_RESYNC_ENABLE
+            if (!(host_keyboard_leds() & (1 << USB_LED_SCROLL_LOCK))) return;
+#    endif
+            add_key(KC_SCROLL_LOCK);
+            send_keyboard_report();
+            del_key(KC_SCROLL_LOCK);
+            send_keyboard_report();
+#endif
+
+        } else if (IS_BASIC_KEYCODE(code)) {
+            del_key(code);
+            send_keyboard_report();
+        } else if (IS_MODIFIER_KEYCODE(code)) {
+            del_mods(MOD_BIT(code));
+            send_keyboard_report();
+
+#ifdef EXTRAKEY_ENABLE
+        } else if (IS_SYSTEM_KEYCODE(code)) {
+            host_system_send(0);
+        } else if (IS_CONSUMER_KEYCODE(code)) {
+            host_consumer_send(0);
+#endif
+
+        } else if (IS_MOUSE_KEYCODE(code)) {
+            register_mouse(code, false);
+        }
+    }
+}
+
+extern void do_code16(uint16_t code, void (*f)(uint8_t));
+
+__attribute__((weak)) void register_code16(uint16_t code) {
+    if (dev_info.devs) {
+        if (QK_MODS_GET_MODS(code) & 0x1) {
+            if (QK_MODS_GET_MODS(code) & 0x10)
+                WL_PROCESS_KEYS(KC_RCTL, 1);
+            else
+                WL_PROCESS_KEYS(KC_LCTL, 1);
+        }
+        if (QK_MODS_GET_MODS(code) & 0x2) {
+            if (QK_MODS_GET_MODS(code) & 0x10)
+                WL_PROCESS_KEYS(KC_RSFT, 1);
+            else
+                WL_PROCESS_KEYS(KC_LSFT, 1);
+        }
+        if (QK_MODS_GET_MODS(code) & 0x4) {
+            if (QK_MODS_GET_MODS(code) & 0x10)
+                WL_PROCESS_KEYS(KC_RALT, 1);
+            else
+                WL_PROCESS_KEYS(KC_LALT, 1);
+        }
+        if (QK_MODS_GET_MODS(code) & 0x8) {
+            if (QK_MODS_GET_MODS(code) & 0x10)
+                WL_PROCESS_KEYS(KC_RGUI, 1);
+            else
+                WL_PROCESS_KEYS(KC_LGUI, 1);
+        }
+        WL_PROCESS_KEYS(QK_MODS_GET_BASIC_KEYCODE(code), 1);
+    } else {
+        if (IS_MODIFIER_KEYCODE(code) || code == KC_NO) {
+            do_code16(code, register_mods);
+        } else {
+            do_code16(code, register_weak_mods);
+        }
+        register_code(code);
+    }
+}
+
+__attribute__((weak)) void unregister_code16(uint16_t code) {
+    if (dev_info.devs) {
+        if (QK_MODS_GET_MODS(code) & 0x1) {
+            if (QK_MODS_GET_MODS(code) & 0x10)
+                WL_PROCESS_KEYS(KC_RCTL, 0);
+            else
+                WL_PROCESS_KEYS(KC_LCTL, 0);
+        }
+        if (QK_MODS_GET_MODS(code) & 0x2) {
+            if (QK_MODS_GET_MODS(code) & 0x10)
+                WL_PROCESS_KEYS(KC_RSFT, 0);
+            else
+                WL_PROCESS_KEYS(KC_LSFT, 0);
+        }
+        if (QK_MODS_GET_MODS(code) & 0x4) {
+            if (QK_MODS_GET_MODS(code) & 0x10)
+                WL_PROCESS_KEYS(KC_RALT, 0);
+            else
+                WL_PROCESS_KEYS(KC_LALT, 0);
+        }
+        if (QK_MODS_GET_MODS(code) & 0x8) {
+            if (QK_MODS_GET_MODS(code) & 0x10)
+                WL_PROCESS_KEYS(KC_RGUI, 0);
+            else
+                WL_PROCESS_KEYS(KC_LGUI, 0);
+        }
+        WL_PROCESS_KEYS(QK_MODS_GET_BASIC_KEYCODE(code), 0);
+    } else {
+        unregister_code(code);
+        if (IS_MODIFIER_KEYCODE(code) || code == KC_NO) {
+            do_code16(code, unregister_mods);
+        } else {
+            do_code16(code, unregister_weak_mods);
+        }
+    }
+}
+
 static THD_WORKING_AREA(waThread1, 128);
 static THD_FUNCTION(Thread1, arg) {
     (void)arg;
