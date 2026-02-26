@@ -1001,14 +1001,14 @@ static void bt_indicator_led(void) {
                 rgb_flip = false;
                 if (!kb_sleep_flag) {
                     if (!bts_info.bt_info.paired) {
-                        if (!bts_info.bt_info.pairing) {
-                            indicator_status = 2;
-                            break;
-                        }
+                        // if (!bts_info.bt_info.pairing) {
+                        //     indicator_status = 2;
+                        //     break;
+                        // }
                         indicator_status = 2;
-                        if (dev_info.devs == DEVS_2_4G) {
-                            bt_switch_mode(DEVS_USB, DEVS_2_4G, false);
-                        }
+                        // if (dev_info.devs == DEVS_2_4G) {
+                        // bt_switch_mode(DEVS_USB, DEVS_2_4G, false);
+                        // }
                         break;
                     }
                 }
