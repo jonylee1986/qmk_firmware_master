@@ -1294,9 +1294,9 @@ uint8_t bt_indicator_rgb(uint8_t led_min, uint8_t led_max) {
     /*************************************************************************************/
     if (dev_info.devs != DEVS_USB) {
         // Show device status when FN pressed
-        if ((get_highest_layer(layer_state) == 1) || (get_highest_layer(layer_state) == 4)) {
-            rgb_matrix_set_color(rgb_index_table[dev_info.devs], rgb_index_color_table[dev_info.devs][0], rgb_index_color_table[dev_info.devs][1], rgb_index_color_table[dev_info.devs][2]);
-        }
+        // if ((get_highest_layer(layer_state) == 1) || (get_highest_layer(layer_state) == 4)) {
+        //     rgb_matrix_set_color(rgb_index_table[dev_info.devs], rgb_index_color_table[dev_info.devs][0], rgb_index_color_table[dev_info.devs][1], rgb_index_color_table[dev_info.devs][2]);
+        // }
 
         // if (query_vol_flag) {
         //     for (int i = 16; i < 16 + (bts_info.bt_info.pvol / 10); i++) {

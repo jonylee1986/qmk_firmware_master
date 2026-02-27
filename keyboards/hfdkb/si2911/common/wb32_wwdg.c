@@ -6,74 +6,19 @@
 #include <stdlib.h>
 #include "wwdg.h"
 
-bool     feed_dog   = false;
-bool     enable_dog = false;
-uint16_t time       = 0;
+static bool     feed_dog   = false;
+static bool     enable_dog = false;
+static uint16_t time       = 0;
 
-bool process_record_kb_dg(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-        case KC_Q: {
-            if (record->event.pressed) {
-                Disable_WWDG();
-                feed_dog = false;
-            }
-            return false;
-        }
-        case KC_T: {
-            if (record->event.pressed) {
-                enable_dog = true;
-                return false;
-            }
-        }
-        case KC_R: {
-            if (record->event.pressed) {
-                // RCC->CLRRSTSTAT = RCC_CLRRSTSTAT_CLR;
-
-                setPinOutputOpenDrain(C11);
-                writePinLow(C11);
-                wait_ms(1);
-                writePinHigh(C11);
-                wait_ms(20);
-
-                WWDG_SetCounter(127);
-                time = timer_read();
-
-                rgb_matrix_init();
-                // uprintf("snled27351 reset!!\n");
-
-                // uprintf("%ld\n", RCC->RSTSTAT);
-                // for (uint8_t i = 0; i < SNLED27351_DRIVER_COUNT; i++) {
-                //     // snled27351_sw_return_normal(i);
-                //     snled27351_init(i);
-                // }
-
-                return false;
-            }
-        }
-        case KC_Y: {
-            if (record->event.pressed) {
-                // rgb_matrix_init();
-                // uprintf("%ld\n", RCC->RSTSTAT);
-                // for (uint8_t i = 0; i < SNLED27351_DRIVER_COUNT; i++) {
-                //     // snled27351_sw_return_normal(i);
-                //     snled27351_init(i);
-                // }
-
-                return true;
-            }
-        }
-        case KC_U: {
-            if (record->event.pressed) {
-                // RCC->CLRRSTSTAT = RCC_CLRRSTSTAT_CLR;
-
-                return true;
-            }
-        }
-
-        default:
-            break;
+void wwdg_disable(void) {
+    if (feed_dog) {
+        Disable_WWDG();
+        feed_dog = false;
     }
-    return true;
+}
+
+void wwdg_enable(void) {
+    enable_dog = true;
 }
 
 void housekeeping_task_kb(void) {
@@ -90,6 +35,24 @@ void housekeeping_task_kb(void) {
             WWDG_SetCounter(127);
         }
     }
-
-    // housekeeping_task_user();
 }
+
+void snled27351_reset(void) {
+    setPinOutputOpenDrain(C11);
+    writePinLow(C11);
+    wait_ms(1);
+    writePinHigh(C11);
+    // wait_ms(20);
+
+    WWDG_SetCounter(127);
+    time = timer_read();
+
+    rgb_matrix_init();
+}
+
+// void keyboard_pre_init_kb(void) {
+//     feed_dog = true;
+//     Init_WWDG();
+//     WWDG_Enable(127);
+//     time = timer_read();
+// }

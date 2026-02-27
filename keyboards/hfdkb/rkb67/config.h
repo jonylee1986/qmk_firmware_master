@@ -8,17 +8,11 @@
  *  These options are also useful to firmware size reduction.
  */
 
-#define BT_MODE_ENABLE
-
 #ifdef BT_MODE_ENABLE
-#    define NO_USB_STARTUP_CHECK
-#    define ENTRY_STOP_MODE
 #    define BT_CABLE_PIN B8
 #    define BT_CHARGE_PIN B9
-// #    define BT_MODE_SW_PIN C13
-// #    define RF_MODE_SW_PIN C14
 #    define RGB_DRIVER_SDB_PIN B7
-#    define USB_SUSPEND_STATE_CHECK
+// #    define USB_SUSPEND_STATE_CHECK
 #endif
 
 /* SPI Config for spi flash*/
@@ -40,4 +34,4 @@
 #define SLED_END_INDEX 72
 #define SLED_NUM 6
 
-#define KEY_NUM 8
+#define KEY_NUM 6

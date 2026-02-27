@@ -207,29 +207,30 @@ bool process_rgb_matrix_user(uint16_t keycode, keyrecord_t *record) {
             case RGB_MOD:
                 rgb_matrix_step();
                 return false;
-            case RGB_HUI:
-                rgb_matrix_increase_hue();
-                return false;
-            case RGB_HUD:
-                rgb_matrix_decrease_hue();
-                return false;
+            // case RGB_HUI:
+            //     rgb_matrix_increase_hue();
+            //     return false;
+            // case RGB_HUD:
+            //     rgb_matrix_decrease_hue();
+            //     return false;
             case RGB_SAI:
                 rgb_matrix_increase_sat();
                 return false;
-            case RGB_SAD:
-                rgb_matrix_decrease_sat();
-                return false;
+            // case RGB_SAD:
+            //     rgb_matrix_decrease_sat();
+            //     return false;
             case RGB_VAI:
                 rgb_matrix_increase_val();
                 return false;
-            case RGB_VAD:
-                rgb_matrix_decrease_val();
+            // case RGB_VAD:
+            //     rgb_matrix_decrease_val();
+            //     return false;
             case RGB_SPI:
                 rgb_matrix_increase_speed();
                 return false;
-            case RGB_SPD:
-                rgb_matrix_decrease_speed();
-                return false;
+                // case RGB_SPD:
+                //     rgb_matrix_decrease_speed();
+                //     return false;
         }
     }
 
@@ -240,29 +241,46 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (!process_rgb_matrix_user(keycode, record)) return false;
 
     switch (keycode) {
+            // case MO(WIN_FN):
+            // case MO(MAC_FN):
+            //     if ((USB_DRIVER.state != USB_ACTIVE) || (USB_DRIVER.state == USB_SUSPENDED)) {
+            //         return false;
+            //     }
+            //     break;
+
         case RGB_VAD: {
             if (record->event.pressed) {
-                rgb_matrix_config.hsv.v = rgb_matrix_get_val() - RGB_MATRIX_VAL_STEP;
-                if (rgb_matrix_get_val() <= 32) rgb_matrix_config.hsv.v = 32;
+                if (rgb_matrix_get_val() <= RGB_MATRIX_VAL_STEP) {
+                    rgb_matrix_config.hsv.v = RGB_MATRIX_VAL_STEP;
+                    eeconfig_update_rgb_matrix(&rgb_matrix_config);
+                } else {
+                    rgb_matrix_decrease_val();
+                }
             }
-        }
             return false;
+        }
         case RGB_SPD: {
             if (record->event.pressed) {
-                rgb_matrix_config.speed = rgb_matrix_get_speed() - RGB_MATRIX_SPD_STEP;
-                eeconfig_update_rgb_matrix(&rgb_matrix_config);
-                if (rgb_matrix_get_speed() <= 51) rgb_matrix_config.speed = 51;
+                if (rgb_matrix_get_speed() <= RGB_MATRIX_SPD_STEP) {
+                    rgb_matrix_config.speed = RGB_MATRIX_SPD_STEP;
+                    eeconfig_update_rgb_matrix(&rgb_matrix_config);
+                } else {
+                    rgb_matrix_decrease_speed();
+                }
             }
-        }
             return false;
+        }
         case RGB_SAD: {
             if (record->event.pressed) {
-                rgb_matrix_config.hsv.s = rgb_matrix_get_sat() - RGB_MATRIX_SAT_STEP;
-                eeconfig_update_rgb_matrix(&rgb_matrix_config);
-                if (rgb_matrix_get_sat() <= 64) rgb_matrix_config.hsv.s = 64;
+                if (rgb_matrix_get_sat() <= RGB_MATRIX_SAT_STEP) {
+                    rgb_matrix_config.hsv.s = RGB_MATRIX_SAT_STEP;
+                    eeconfig_update_rgb_matrix(&rgb_matrix_config);
+                } else {
+                    rgb_matrix_decrease_sat();
+                }
             }
-        }
             return false;
+        }
 
         case IND_VAL: {
             if (record->event.pressed) {
@@ -378,17 +396,20 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     hsv.v = dev_info.ind_brightness;
     rgb   = hsv_to_rgb(hsv);
 
-    if (!dev_info.eco_tog_flag && host_keyboard_led_state().num_lock && ((bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
+    // extern bool show_full;
+    // extern bool low_vol_warning;
+
+    if (!dev_info.eco_tog_flag && host_keyboard_led_state().num_lock && (((dev_info.devs != DEVS_USB) && bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
         rgb_matrix_set_color(NUM_LOCK_IND_INDEX, rgb.r, rgb.g, rgb.b);
     } else {
         rgb_matrix_set_color(NUM_LOCK_IND_INDEX, 0, 0, 0);
     }
-    if (!dev_info.eco_tog_flag && host_keyboard_led_state().caps_lock && ((bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
+    if (!dev_info.eco_tog_flag && host_keyboard_led_state().caps_lock && (((dev_info.devs != DEVS_USB) && bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
         rgb_matrix_set_color(CAPS_LOCK_IND_INDEX, rgb.r, rgb.g, rgb.b);
     } else {
         rgb_matrix_set_color(CAPS_LOCK_IND_INDEX, 0, 0, 0);
     }
-    if (!dev_info.eco_tog_flag && host_keyboard_led_state().scroll_lock && ((bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
+    if (!dev_info.eco_tog_flag && host_keyboard_led_state().scroll_lock && (((dev_info.devs != DEVS_USB) && bts_info.bt_info.paired) || ((dev_info.devs == DEVS_USB) && (USB_DRIVER.state == USB_ACTIVE)))) {
         rgb_matrix_set_color(SCROLL_LOCK_IND_INDEX, rgb.r, rgb.g, rgb.b);
     } else {
         rgb_matrix_set_color(SCROLL_LOCK_IND_INDEX, 0, 0, 0);
@@ -410,6 +431,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 }
 
 void keyboard_post_init_user() {
+    dev_info.raw            = eeconfig_read_user();
     rgb_matrix_config.hsv.h = indicator_color_tab[dev_info.smd_color_index][0];
     snled27351_pwm_phase_delay_enable(0);
     snled27351_pwm_phase_delay_enable(1);

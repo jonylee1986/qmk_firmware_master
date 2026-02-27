@@ -15,8 +15,8 @@ void led_config_all(void) {
     if (!led_inited) {
         // Set our LED pins as output
 #ifdef RGB_DRIVER_SDB_PIN
-        setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
-        writePinHigh(RGB_DRIVER_SDB_PIN);
+        // setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
+        // writePinHigh(RGB_DRIVER_SDB_PIN);
 #endif
         led_inited = true;
     }
@@ -26,14 +26,23 @@ void led_deconfig_all(void) {
     if (led_inited) {
         // Set our LED pins as input
 #ifdef RGB_DRIVER_SDB_PIN
-        setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
-        writePinLow(RGB_DRIVER_SDB_PIN);
+        // setPinOutputPushPull(RGB_DRIVER_SDB_PIN);
+        // writePinLow(RGB_DRIVER_SDB_PIN);
 #endif
         led_inited = false;
     }
 }
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    if (get_low_vol_off()) {
+        bts_process_keys(keycode, 0, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+        bts_task(dev_info.devs);
+        while (bts_is_busy()) {
+            wait_ms(1);
+        }
+        return false;
+    }
+
     if (process_record_user(keycode, record) != true) {
         return false;
     }
@@ -119,38 +128,68 @@ void housekeeping_task_kb(void) {
     static uint32_t usb_suspend       = false;
 
     if (dev_info.devs == DEVS_USB) {
-        if (USB_DRIVER.state != USB_ACTIVE || USB_DRIVER.state == USB_SUSPENDED) {
+        if (usb_suspend) {
+            bool wakeup = false;
+            for (uint8_t r = 0; r < MATRIX_ROWS; r++) {
+                if (matrix_get_row(r)) {
+                    wakeup = true;
+                    break;
+                }
+            }
+            if (wakeup) {
+                // usbWakeupHost(&USB_DRIVER);
+                // restart_usb_driver(&USB_DRIVER);
+                usb_suspend       = false;
+                usb_suspend_timer = 0;
+#    ifdef RGB_DRIVER_SDB_PIN
+                writePinHigh(RGB_DRIVER_SDB_PIN);
+#    endif
+            }
+        }
+
+        if ((USB_DRIVER.state != USB_ACTIVE)) {
             if (!usb_suspend_timer) {
                 usb_suspend_timer = timer_read32();
             } else if (timer_elapsed32(usb_suspend_timer) > 10000) {
                 if (!usb_suspend) {
                     usb_suspend = true;
-                    led_deconfig_all();
+#    ifdef RGB_DRIVER_SDB_PIN
+                    writePinLow(RGB_DRIVER_SDB_PIN);
+#    endif
                 }
                 usb_suspend_timer = 0;
             }
         } else {
-            if (usb_suspend_timer) {
+            if (usb_suspend) {
                 usb_suspend_timer = 0;
-                if (usb_suspend) {
-                    usb_suspend = false;
-                    led_config_all();
-                }
+                usb_suspend       = false;
+
+#    ifdef RGB_DRIVER_SDB_PIN
+                writePinHigh(RGB_DRIVER_SDB_PIN);
+#    endif
             }
         }
     } else {
         if (usb_suspend) {
             usb_suspend_timer = 0;
             usb_suspend       = false;
-            led_config_all();
+#    ifdef RGB_DRIVER_SDB_PIN
+            writePinHigh(RGB_DRIVER_SDB_PIN);
+#    endif
         }
     }
 #endif
+
+    // if (get_low_vol_off()) {
+    //     bts_process_keys(0, 1, dev_info.devs, keymap_config.no_gui, KEY_NUM);
+    //     bts_task(dev_info.devs);
+    //     while (bts_is_busy()) {
+    //         wait_ms(1);
+    //     }
+    // }
 }
 
 #ifdef RGB_MATRIX_ENABLE
-void blink_rgb_advanced(void);
-
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     if (!rgb_matrix_get_flags()) {
         rgb_matrix_set_color_all(RGB_OFF);
@@ -168,11 +207,11 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
 
     // caps lock red
     if ((host_keyboard_led_state().caps_lock) && ((bts_info.bt_info.paired) || (dev_info.devs == DEVS_USB))) {
-        RGB_MATRIX_INDICATOR_SET_COLOR(CAPS_LOCK_LED_INDEX, 100, 100, 100);
+        rgb_matrix_set_color(CAPS_LOCK_LED_INDEX, 100, 100, 100);
     }
     // GUI lock red
     if (keymap_config.no_gui) {
-        RGB_MATRIX_INDICATOR_SET_COLOR(GUI_LOCK_LED_INDEX, 100, 100, 100);
+        rgb_matrix_set_color(GUI_LOCK_LED_INDEX, 100, 100, 100);
     }
 
     return true;

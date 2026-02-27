@@ -8,30 +8,35 @@
  *  These options are also useful to firmware size reduction.
  */
 
-#define BT_MODE_ENABLE
-
 #ifdef BT_MODE_ENABLE
-#    define NO_USB_STARTUP_CHECK
-#    define ENTRY_STOP_MODE  // 超时进入STOP Mode
 #    define BT_CABLE_PIN B9  // 充电接入时为高
 #    define BT_CHARGE_PIN B8 // 充电时为低，充满时为高
 #    define RGB_DRIVER_SDB_PIN A15
 #    define BT_MODE_SW_PIN C0  // 低电平时
 #    define RF_MODE_SW_PIN B11 // 低电平时
 #    define INDLED_POWER_PIN C11
+
+#    define USB_SUSPEND_CHECK_ENABLE
 #endif
 
 #define ENCODER_DEFAULT_POS 0x3
 
 /* I2C Config for LED Driver */
-#define IS31FL3733_DRIVER_COUNT 2
-#define IS31FL3733_I2C_ADDRESS_1 0b1110100
-#define IS31FL3733_I2C_ADDRESS_2 0b1110111
+#define SNLED27351_DRIVER_COUNT 2
+#define SNLED27351_I2C_ADDRESS_1 SNLED27351_I2C_ADDRESS_GND
+#define SNLED27351_I2C_ADDRESS_2 SNLED27351_I2C_ADDRESS_VDDIO
 #define I2C1_SDA_PIN B7
 #define I2C1_SCL_PIN B6
 #define I2C1_SCL_PAL_MODE 4
 #define I2C1_OPMODE OPMODE_I2C
 #define I2C1_CLOCK_SPEED 400000
+{0x80, 0x50, 0x70, 0x80, 0x50, 0x70, 0x80, 0x50, 0x70, 0x80, 0x50, 0x70}
+#define SNLED27351_CURRENT_TUNE_2 {0xA0, 0x70, 0xFF, 0xA0, 0x70, 0xFF, 0xA0, 0x70, 0xFF, 0xA0, 0x70, 0xFF}
+// #define SNLED27351_CURRENT_TUNE {0x80, 0x80, 0xA0, 0x80, 0x80, 0xA0, 0x80, 0x80, 0xA0, 0x80, 0x80, 0xA0}
+// #define SNLED27351_CURRENT_TUNE {0x60, 0x60, 0x80, 0x60, 0x60, 0x80, 0x60, 0x60, 0x80, 0x60, 0x60, 0x80}
+// #define SNLED27351_CURRENT_TUNE {0x80, 0x60, 0x80, 0x80, 0x60, 0x80, 0x80, 0x60, 0x80, 0x80, 0x60, 0x80}
+#define SNLED27351_CURRENT_TUNE
+// #define SNLED27351_CURRENT_TUNE {0x50, 0x50, 0x60, 0x50, 0x50, 0x60, 0x50, 0x50, 0x60, 0x50, 0x50, 0x60}
 
 /* SPI Config for spi flash*/
 #define SPI_DRIVER SPIDQ
@@ -42,11 +47,11 @@
 
 #define EXTERNAL_FLASH_SPI_SLAVE_SELECT_PIN C12
 
-#define n_rgb_matrix_set_color_all(r, g, b)       \
-    do {                                          \
-        for (uint8_t i = 16; i <= 17; i++) {      \
-            rgb_matrix_set_color(i, r, g, b);     \
-        }                                         \
+#define n_rgb_matrix_set_color_all(r, g, b)   \
+    do {                                      \
+        for (uint8_t i = 16; i <= 17; i++) {  \
+            rgb_matrix_set_color(i, r, g, b); \
+        }                                     \
     } while (0)
 
 #define llv_rgb_matrix_set_color_all(r, g, b)     \
@@ -57,3 +62,5 @@
             }                                     \
         }                                         \
     } while (0)
+
+#define MATRIX_UNSELECT_DRIVE_HIGH

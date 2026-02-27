@@ -1,7 +1,7 @@
 {
     "usb": {
         "pid": "0x00B0",
-        "device_version": "1.0.1"
+        "device_version": "1.1.0"
     },
     "rgb_matrix": {
         "layout": [

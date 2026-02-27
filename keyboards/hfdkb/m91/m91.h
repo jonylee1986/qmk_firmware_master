@@ -5,6 +5,9 @@
 
 #include "quantum.h"
 
+bool is_charging(void);
+bool is_fully_charged(void);
+
 enum bt_keycodes {
     BT_HOST1 = QK_KB_0,
     BT_HOST2,

@@ -162,3 +162,30 @@ void housekeeping_task_user(void) {
         }
     }
 }
+
+bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+    uint8_t layer = get_highest_layer(layer_state);
+
+    if (layer == WIN_F || layer == MAC_F) {
+        uint8_t base_layer = (layer == WIN_F) ? WIN_B : MAC_B;
+        for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+            for (uint8_t col = 0; col < MATRIX_COLS; col++) {
+                uint8_t index = g_led_config.matrix_co[row][col];
+                if (index >= led_min && index < led_max && index != NO_LED) {
+                    uint16_t keycode = keymap_key_to_keycode(layer, (keypos_t){col, row});
+                    if (keycode > KC_TRNS) {
+                        rgb_matrix_set_color(index, RGB_WHITE);
+                    } else {
+                        // Also highlight the FN key itself (MO key on base layer)
+                        uint16_t base_keycode = keymap_key_to_keycode(base_layer, (keypos_t){col, row});
+                        if (base_keycode == MO(layer)) {
+                            rgb_matrix_set_color(index, RGB_WHITE);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
+}

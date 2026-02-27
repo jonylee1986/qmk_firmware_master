@@ -53,7 +53,8 @@ typedef union {
         uint8_t bled_color : 4;
         uint8_t bled_mode : 4;
         uint8_t sled_color : 4;
-        uint8_t sled_mode : 4;
+        uint8_t sled_mode : 3;
+        uint8_t rgb_test_en : 1;
     };
 } dev_info_t;
 
@@ -67,6 +68,8 @@ extern bool query_vol_flag;
 void bt_housekeeping_task(void);
 void led_config_all(void);
 void led_deconfig_all(void);
+
+bool get_low_vol_off(void);
 
 /**
  * @brief bluetooth 初始化函数
