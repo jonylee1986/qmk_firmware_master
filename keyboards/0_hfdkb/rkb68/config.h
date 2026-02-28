@@ -25,9 +25,12 @@
 #    define WLS_KEYBOARD_REPORT_KEYS 5
 
 #    define MD_BT_NAME "DOS 68 BT$"
-#    define MD_BT1_NAME "DOS 68 BT$"
-#    define MD_BT2_NAME "DOS 68 BT$"
-#    define MD_BT3_NAME "DOS 68 BT$"
+// #    define MD_BT1_NAME "DOS 68 BT$"
+// #    define MD_BT2_NAME "DOS 68 BT$"
+// #    define MD_BT3_NAME "DOS 68 BT$"
+
+#    define ENTRY_STOP_TIMEOUT 100
+#    define ENTRY_STOP_MODE
 
 /* Wireless indicator timeout (per mode, ms; 30 seconds by default) */
 #    ifndef WLS_BT_PAIR_TIMEOUT

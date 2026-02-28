@@ -274,6 +274,10 @@ void wireless_task(void) {
     }
 }
 
+void wireless_kb_task(void) __attribute__((weak));
+void wireless_kb_task(void) {}
+
 void housekeeping_task_kb(void) {
     wireless_task();
+    wireless_kb_task();
 }

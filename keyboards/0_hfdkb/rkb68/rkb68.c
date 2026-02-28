@@ -144,6 +144,7 @@ static uint32_t wls_factory_reset_flash_timer     = 0x00;
 
 void wls_factory_reset(void) {
     eeconfig_init();
+    eeconfig_update_rgb_matrix_default();
 
     if (keymap_config.no_gui) {
         keymap_config.no_gui = false;
@@ -205,7 +206,7 @@ bool process_record_wls(uint16_t keycode, keyrecord_t *record) {
 #    define WLS_KEYCODE_EXEC(wls_dev)                                                                                          \
         do {                                                                                                                   \
             if (record->event.pressed) {                                                                                       \
-                wireless_devs_change(wireless_get_current_devs(), wls_dev, false);                                             \
+                if (wireless_get_current_devs() != wls_dev) wireless_devs_change(wireless_get_current_devs(), wls_dev, false); \
                 if (wls_process_long_press_token == INVALID_DEFERRED_TOKEN) {                                                  \
                     wls_process_long_press_token = defer_exec(WLS_KEYCODE_PAIR_TIME, wls_process_long_press, &keycode_shadow); \
                 }                                                                                                              \
@@ -265,22 +266,55 @@ bool process_record_wls(uint16_t keycode, keyrecord_t *record) {
 bool     query_vol_flag = false;
 uint32_t key_press_time = 0;
 
-static bool key_press_time_reset = false;
+static bool     sober          = true;
+static bool     bak_rgb_toggle = false;
+static uint32_t close_rgb_time = 0;
+
+void open_rgb(void) {
+    key_press_time = timer_read32();
+#ifdef LED_POWER_EN_PIN
+    writePinLow(LED_POWER_EN_PIN);
+#endif
+    if (!sober) {
+        if (bak_rgb_toggle) {
+            rgb_matrix_enable_noeeprom();
+        }
+        sober = true;
+    }
+}
+
+void close_rgb(void) {
+    if (!key_press_time) {
+        key_press_time = timer_read32();
+        return;
+    }
+
+    if (sober) {
+        if (timer_elapsed32(key_press_time) >= (1 * 60 * 1000)) {
+            bak_rgb_toggle = rgb_matrix_config.enable;
+            sober          = false;
+            close_rgb_time = timer_read32();
+            rgb_matrix_disable_noeeprom();
+#ifdef LED_POWER_EN_PIN
+            writePinHigh(LED_POWER_EN_PIN);
+#endif
+        }
+    } else {
+        if (timer_elapsed32(close_rgb_time) >= (5 * 60 * 1000)) {
+            lpwr_set_state(LPWR_PRESLEEP);
+        }
+    }
+}
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     if (confinfo.devs != DEVS_USB) {
-        key_press_time = timer_read32();
-        if (key_press_time_reset) key_press_time_reset = false;
+        // key_press_time = timer_read32();
+        open_rgb();
         if (low_vol_off) {
-            report_keyboard_t    temp_report_keyboard = {0};
-            extern host_driver_t wireless_driver;
+            report_keyboard_t temp_report_keyboard = {0};
             wireless_driver.send_keyboard(&temp_report_keyboard);
             return false;
         }
-    }
-
-    if (process_record_user(keycode, record) != true) {
-        return false;
     }
 
 #ifdef WIRELESS_ENABLE
@@ -324,14 +358,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
 void matrix_scan_kb(void) {
     if (confinfo.devs != DEVS_USB) {
-        if (!key_press_time) {
-            key_press_time = timer_read32();
-        } else if (timer_elapsed32(key_press_time) >= (5 * 60 * 1000)) {
-            if (!key_press_time_reset) {
-                key_press_time_reset = true;
-                lpwr_set_state(LPWR_PRESLEEP);
-            }
-        }
+        close_rgb();
     }
     matrix_scan_user();
 }
@@ -429,6 +456,10 @@ bool rgb_matrix_wls_indicator(void) {
         } else {
             rgb_matrix_set_color(wls_rgb_indicator_index, 0x00, 0x00, 0x00);
         }
+    } else {
+        if (*md_getp_state() == MD_STATE_DISCONNECTED) {
+            wireless_devs_change_kb(wireless_get_current_devs(), wireless_get_current_devs(), wls_rgb_indicator_reset);
+        }
     }
 
     return true;
@@ -441,8 +472,9 @@ static const uint8_t rgb_index_color_table[][3] = {
 };
 
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
-    static uint8_t pvol = 94;
-    pvol                = *md_getp_bat();
+    static uint8_t pvol = 0;
+
+    pvol = *md_getp_bat();
 
     if (wls_factory_reset_flash_active) {
         for (uint8_t i = 68; i <= 74; i++) {
@@ -702,7 +734,6 @@ void wireless_send_nkro(report_nkro_t *report) {
     while (smsg_is_busy()) {
         wireless_task();
     }
-    extern host_driver_t wireless_driver;
     wireless_driver.send_keyboard(&temp_report_keyboard);
     md_send_nkro(wls_report_nkro);
 }
@@ -732,7 +763,7 @@ void housekeeping_task_wls(void) {
 }
 #endif
 
-void housekeeping_task_user(void) {
+void wireless_kb_task(void) {
     static uint32_t usb_suspend_timer = 0;
     static uint32_t usb_suspend       = false;
 
