@@ -35,13 +35,13 @@ typedef struct {
 uint32_t   bt_init_time = 0;
 dev_info_t dev_info     = {0};
 bts_info_t bts_info     = {
-        .bt_name        = {"pixel 67 BT$", "pixel 67 BT$", "pixel 67 BT$"},
-        .uart_init      = uart_init,
-        .uart_read      = uart_read,
-        .uart_transmit  = uart_transmit,
-        .uart_receive   = uart_receive,
-        .uart_available = uart_available,
-        .timer_read32   = timer_read32,
+    .bt_name        = {"pixel 67 BT$", "pixel 67 BT$", "pixel 67 BT$"},
+    .uart_init      = uart_init,
+    .uart_read      = uart_read,
+    .uart_transmit  = uart_transmit,
+    .uart_receive   = uart_receive,
+    .uart_available = uart_available,
+    .timer_read32   = timer_read32,
 };
 
 static void long_pressed_keys_hook(void);
@@ -786,7 +786,7 @@ static void bt_used_pin_init(void) {
 
 #ifdef RGB_DRIVER_SDB_PIN
     gpio_set_pin_output_push_pull(RGB_DRIVER_SDB_PIN);
-    gpio_write_pin_low(RGB_DRIVER_SDB_PIN);
+    gpio_write_pin_high(RGB_DRIVER_SDB_PIN);
 #endif
 }
 
@@ -850,7 +850,7 @@ static void close_rgb(void) {
             close_rgb_time = timer_read32();
             rgb_matrix_disable_noeeprom();
 #ifdef RGB_DRIVER_SDB_PIN
-            gpio_write_pin_high(RGB_DRIVER_SDB_PIN);
+            gpio_write_pin_low(RGB_DRIVER_SDB_PIN);
 #endif
         }
     } else {
@@ -880,7 +880,7 @@ void open_rgb(void) {
 
     if (!sober) {
 #ifdef RGB_DRIVER_SDB_PIN
-        gpio_write_pin_low(RGB_DRIVER_SDB_PIN);
+        gpio_write_pin_high(RGB_DRIVER_SDB_PIN);
 #endif
 
         if (bak_rgb_toggle) {

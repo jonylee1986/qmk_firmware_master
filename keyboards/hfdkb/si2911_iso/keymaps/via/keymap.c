@@ -221,7 +221,11 @@ void eeconfig_init_user(void) {
 
 bool rgb_matrix_indicators_user(void) {
     if (!rgb_matrix_get_flags() || backlight_sleep_flag) {
-        rgb_matrix_set_color_all(0, 0, 0);
+        if (!dev_info.rgb_test_en) {
+            for (uint8_t i = 0; i <= 101; i++) {
+                rgb_matrix_set_color(i, 0, 0, 0);
+            }
+        }
     }
 
     return true;
@@ -232,9 +236,15 @@ bool show_chrg_full = false;
 
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     // if (!backlight_sleep_flag) {
-    if (!backlight_sleep_flag && rgb_matrix_get_flags()) {
+    // if (!backlight_sleep_flag && rgb_matrix_get_flags()) {
+    if (!backlight_sleep_flag) {
         bled_task();
         if (!show_chrg && !show_chrg_full) sled_task();
+        // sled_task();
+    } else {
+        for (uint8_t i = 102; i <= 108; i++) {
+            rgb_matrix_set_color(i, 0, 0, 0);
+        }
     }
 
 #ifdef MULTIMODE_ENABLE

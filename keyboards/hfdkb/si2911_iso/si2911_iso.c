@@ -168,7 +168,11 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     switch (rgb_matrix_get_flags()) {
                         case LED_FLAG_ALL: {
                             rgb_matrix_set_flags(LED_FLAG_NONE);
-                            rgb_matrix_set_color_all(RGB_OFF);
+                            if (!dev_info.rgb_test_en) {
+                                for (uint8_t i = 0; i <= 101; i++) {
+                                    rgb_matrix_set_color(i, 0, 0, 0);
+                                }
+                            }
                         } break;
                         default: {
                             rgb_matrix_set_flags(LED_FLAG_ALL);

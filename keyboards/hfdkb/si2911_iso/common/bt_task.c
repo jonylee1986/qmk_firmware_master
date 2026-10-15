@@ -1193,7 +1193,7 @@ static void bt_bat_low_level_warning(void) {
         if (Low_power) Low_power = false;
     }
     if (Low_power) {
-        for (uint8_t i = 0; i < KEYBOARD_MAIN_LED_NUM; i++) {
+        for (uint8_t i = 0; i < KEYBOARD_MAIN_LED_NUM + 2; i++) {
             rgb_matrix_set_color(i, RGB_OFF);
         }
         bled_low_indicate();
@@ -1299,6 +1299,9 @@ static void bt_charging_indication(void) {
 
         entry_chrg_time = timer_read32();
         entry_full_time = timer_read32();
+
+        show_chrg_full = false;
+        show_chrg      = false;
     }
 }
 
