@@ -259,6 +259,29 @@ static bt_mousekey_t bt_mousekey;
 static uint16_t bt_mousekey_move_send_time;
 static uint16_t bt_mousekey_wheel_send_time;
 
+static void bt_mousekey_send_report(void) {
+    bts_send_mouse_report(bt_mousekey.data);
+    // Relative motion belongs to this report only; keep held buttons.
+    memset(&bt_mousekey.data[1], 0, sizeof(bt_mousekey.data) - 1);
+}
+
+static bool bt_mousekey_button(uint16_t keycode, bool pressed) {
+    if (keycode < QK_MOUSE_BUTTON_1 || keycode > QK_MOUSE_BUTTON_8) {
+        return false;
+    }
+
+    const uint8_t mask = 1U << (keycode - QK_MOUSE_BUTTON_1);
+    if (pressed) {
+        bt_mousekey.data[0] |= mask;
+    } else {
+        bt_mousekey.data[0] &= ~mask;
+    }
+    // The wheel task may have prepared a delta while waiting for its interval.
+    memset(&bt_mousekey.data[1], 0, sizeof(bt_mousekey.data) - 1);
+    bt_mousekey_send_report();
+    return true;
+}
+
 static int8_t bt_mousekey_times_inv_sqrt2(int8_t value) {
     const int16_t  numerator   = value * 181;
     const uint16_t denominator = 256;
@@ -325,7 +348,7 @@ static void bt_mousekey_send_move_report(uint8_t unit) {
     bt_mousekey.data[3] = 0;
     bt_mousekey.data[4] = 0;
 
-    bts_send_mouse_report(bt_mousekey.data);
+    bt_mousekey_send_report();
 }
 
 static void bt_mousekey_move_press(move_t *axis, bool negative) {
@@ -356,7 +379,7 @@ static void bt_mousekey_move_release(move_t *axis, bool negative) {
         bt_mousekey.data[3] = 0;
         bt_mousekey.data[4] = 0;
 
-        bts_send_mouse_report(bt_mousekey.data);
+        bt_mousekey_send_report();
     } else {
         bt_mousekey_send_move_report(bt_mousekey_move_unit());
     }
@@ -399,7 +422,7 @@ void bt_mousekey_task(void) {
         }
         if (timer_elapsed(bt_mousekey_wheel_send_time) >= 80) {
             bt_mousekey_wheel_send_time = timer_read();
-            bts_send_mouse_report(bt_mousekey.data);
+            bt_mousekey_send_report();
         }
     }
 }
@@ -419,6 +442,13 @@ __attribute__((weak)) void register_code(uint8_t code) {
         // }
 
         // bool is_key_eql_numpad = key_eql_pressed;
+        if (bt_mousekey_button(code, true)) {
+            bts_task(dev_info.devs);
+            while (bts_is_busy()) {
+                wait_ms(1);
+            }
+            return;
+        }
 
         // if (dev_info.unsync && IS_NUMPAD_KEYCODE(code) && !is_key_eql_numpad) {
         if (dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
@@ -574,6 +604,13 @@ __attribute__((weak)) void unregister_code(uint8_t code) {
         // }
         // Skip async numpad logic for KC_P6 and KC_P1 when KEY_EQL is active (Alt+61 sequence)
         // bool is_key_eql_numpad = key_eql_pressed;
+        if (bt_mousekey_button(code, false)) {
+            bts_task(dev_info.devs);
+            while (bts_is_busy()) {
+                wait_ms(1);
+            }
+            return;
+        }
 
         // if (dev_info.unsync && IS_NUMPAD_KEYCODE(code) && !is_key_eql_numpad) {
         if (dev_info.unsync && IS_NUMPAD_KEYCODE(code)) {
@@ -948,6 +985,9 @@ bool bt_process_record(uint16_t keycode, keyrecord_t *record) {
     // }
 
     if (dev_info.devs != DEVS_USB) {
+        if (retval && bt_mousekey_button(keycode, record->event.pressed)) {
+            retval = false;
+        }
         if (retval != false) {
             if ((keycode > QK_MODS) && (keycode <= QK_MODS_MAX)) {
                 if (QK_MODS_GET_MODS(keycode) & 0x1) {
