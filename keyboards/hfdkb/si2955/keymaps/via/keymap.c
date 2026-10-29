@@ -39,7 +39,7 @@ enum _layers {
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [WIN_BASE] = LAYOUT_107_ansi(
-        KC_ESC,            KC_F1,    KC_F2,    KC_F3,    KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,   KC_F11,   KC_F12,   KC_PSCR,  KC_SCRL, KC_PAUS,  KC_CALC,  GOOGLE,   VIA_WEB,  KC_MUTE,
+        KC_ESC,            KC_F1,    KC_F2,    KC_F3,    KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,   KC_F11,   KC_F12,   KC_PSCR,  KC_SCRL, KC_PAUS,  KC_CALC,  KC_WHOM,  VIA_WEB,  KC_MUTE,
         KC_GRV,  KC_1,     KC_2,     KC_3,     KC_4,     KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS,  KC_EQL,   KC_BSPC,  KC_INS,   KC_HOME, KC_PGUP,  KC_NUM,   KC_PSLS,  KC_PAST,  KC_PMNS,
         KC_TAB,  KC_Q,     KC_W,     KC_E,     KC_R,     KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC,  KC_RBRC,  KC_BSLS,  KC_DEL,   KC_END,  KC_PGDN,  KC_P7,    KC_P8,    KC_P9,    KC_PPLS,
         KC_CAPS, KC_A,     KC_S,     KC_D,     KC_F,     KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,            KC_ENT,                                KC_P4,    KC_P5,    KC_P6,
@@ -55,7 +55,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         BLED_SPI,GU_TOGG,  BLED_VAI,                              SLED_SPI,                           SLED_VAI,_______,  _______,  _______,  RM_SPDD,  RM_VALD,  RM_SPDU, _______,            _______),
 
     [MAC_BASE] = LAYOUT_107_ansi(
-        KC_ESC,            KC_BRID,  KC_BRIU,  MAC_TSK,  MAC_SEH, KC_F5,   KC_F6,   KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE,  KC_VOLD,  KC_VOLU,  KC_PSCR,  KC_SCRL, KC_PAUS,  KC_CALC,  GOOGLE,   VIA_WEB,  KC_MUTE,
+        KC_ESC,            KC_BRID,  KC_BRIU,  MAC_TSK,  MAC_SEH, KC_F5,   KC_F6,   KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE,  KC_VOLD,  KC_VOLU,  KC_PSCR,  KC_SCRL, KC_PAUS,  M_CALC,   M_BROWSER,  VIA_WEB,  KC_MUTE,
         KC_GRV,  KC_1,     KC_2,     KC_3,     KC_4,     KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS,  KC_EQL,   KC_BSPC,  KC_INS,   KC_HOME, KC_PGUP,  KC_NUM,   KC_PSLS,  KC_PAST,  KC_PMNS,
         KC_TAB,  KC_Q,     KC_W,     KC_E,     KC_R,     KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC,  KC_RBRC,  KC_BSLS,  KC_DEL,   KC_END,  KC_PGDN,  KC_P7,    KC_P8,    KC_P9,    KC_PPLS,
         KC_CAPS, KC_A,     KC_S,     KC_D,     KC_F,     KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,            KC_ENT,                                KC_P4,    KC_P5,    KC_P6,
@@ -95,11 +95,30 @@ enum via_web_states {
     VIA_WEB_CAPS_RESTORE_RELEASE,
 };
 
+enum web_type {
+    WEB_VIA,
+    WEB_GOOGLE,
+    WEB_CALC,
+    WEB_BROWSER,
+};
+
 static const uint16_t PROGMEM via_web_keycodes[] = {
     KC_H, KC_T, KC_T, KC_P, KC_S, S(KC_SCLN), KC_SLSH, KC_SLSH, KC_U, KC_S, KC_E, KC_V, KC_I, KC_A, KC_DOT, KC_A, KC_P, KC_P, KC_SLSH,
 };
+
 static const uint16_t PROGMEM google_web_keycodes[] = {
     KC_H, KC_T, KC_T, KC_P, KC_S, S(KC_SCLN), KC_SLSH, KC_SLSH, KC_W, KC_W, KC_W, KC_DOT, KC_G, KC_O, KC_O, KC_G, KC_L, KC_E, KC_DOT, KC_C, KC_O, KC_M, KC_SLSH,
+};
+
+static const uint16_t PROGMEM calc_keycodes[] = {
+    KC_C,
+    KC_A,
+    KC_L,
+    KC_C,
+};
+
+static const uint16_t PROGMEM browser_keycodes[] = {
+    KC_S, KC_A, KC_F, KC_A, KC_R, KC_I,
 };
 
 static uint8_t  via_web_state = VIA_WEB_IDLE;
@@ -108,20 +127,52 @@ static uint16_t via_web_keycode;
 static uint32_t via_web_timer;
 static bool     via_web_gui_was_locked;
 static bool     via_web_caps_was_on;
-static bool     via_web_is_google;
+static bool     via_web_is_mac;
+static enum web_type via_web_type;
 
-static void start_web(bool is_google) {
+static uint8_t web_keycode_count(void) {
+    switch (via_web_type) {
+        case WEB_VIA:
+            return ARRAY_SIZE(via_web_keycodes);
+        case WEB_GOOGLE:
+            return ARRAY_SIZE(google_web_keycodes);
+        case WEB_CALC:
+            return ARRAY_SIZE(calc_keycodes);
+        case WEB_BROWSER:
+            return ARRAY_SIZE(browser_keycodes);
+        default:
+            return 0;
+    }
+}
+
+static uint16_t web_keycode_at(uint8_t index) {
+    switch (via_web_type) {
+        case WEB_VIA:
+            return pgm_read_word(&via_web_keycodes[index]);
+        case WEB_GOOGLE:
+            return pgm_read_word(&google_web_keycodes[index]);
+        case WEB_CALC:
+            return pgm_read_word(&calc_keycodes[index]);
+        case WEB_BROWSER:
+            return pgm_read_word(&browser_keycodes[index]);
+        default:
+            return KC_NO;
+    }
+}
+
+static void start_web(enum web_type web_type) {
     if (via_web_state != VIA_WEB_IDLE) {
         return;
     }
 
     via_web_gui_was_locked = keymap_config.no_gui;
     via_web_caps_was_on    = host_keyboard_led_state().caps_lock;
-    via_web_is_google      = is_google;
+    via_web_is_mac         = get_highest_layer(default_layer_state) == MAC_BASE;
+    via_web_type           = web_type;
     via_web_index          = 0;
 
     keymap_config.no_gui = false;
-    via_web_keycode      = G(KC_R);
+    via_web_keycode      = via_web_is_mac ? G(KC_SPC) : G(KC_R);
     register_code16(via_web_keycode);
     via_web_timer = timer_read32();
     via_web_state = VIA_WEB_LAUNCH_RELEASE;
@@ -167,11 +218,7 @@ static void via_web_task(void) {
 
         case VIA_WEB_CHAR_PRESS:
             if (timer_elapsed32(via_web_timer) >= 10) {
-                if (via_web_is_google) {
-                    via_web_keycode = pgm_read_word(&google_web_keycodes[via_web_index]);
-                } else {
-                    via_web_keycode = pgm_read_word(&via_web_keycodes[via_web_index]);
-                }
+                via_web_keycode = web_keycode_at(via_web_index);
                 register_code16(via_web_keycode);
                 via_web_timer = timer_read32();
                 via_web_state = VIA_WEB_CHAR_RELEASE;
@@ -183,12 +230,12 @@ static void via_web_task(void) {
                 unregister_code16(via_web_keycode);
                 via_web_timer = timer_read32();
                 via_web_index++;
-                via_web_state = via_web_index < (via_web_is_google ? ARRAY_SIZE(google_web_keycodes) : ARRAY_SIZE(via_web_keycodes)) ? VIA_WEB_CHAR_PRESS : VIA_WEB_SUBMIT_WAIT;
+                via_web_state = via_web_index < web_keycode_count() ? VIA_WEB_CHAR_PRESS : VIA_WEB_SUBMIT_WAIT;
             }
             break;
 
         case VIA_WEB_SUBMIT_WAIT:
-            if (timer_elapsed32(via_web_timer) >= 100) {
+            if (timer_elapsed32(via_web_timer) >= (via_web_is_mac ? 500 : 100)) {
                 register_code(KC_ENTER);
                 via_web_timer = timer_read32();
                 via_web_state = VIA_WEB_ENTER_RELEASE;
@@ -196,7 +243,7 @@ static void via_web_task(void) {
             break;
 
         case VIA_WEB_ENTER_RELEASE:
-            if (timer_elapsed32(via_web_timer) >= 50) {
+            if (timer_elapsed32(via_web_timer) >= (via_web_is_mac ? 100 : 50)) {
                 unregister_code(KC_ENTER);
                 via_web_timer = timer_read32();
                 via_web_state = via_web_caps_was_on ? VIA_WEB_IDLE : VIA_WEB_CAPS_RESTORE_WAIT;
@@ -339,13 +386,23 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
         case VIA_WEB:
             if (record->event.pressed) {
-                start_web(false);
+                start_web(WEB_VIA);
             }
             return false;
 
         case GOOGLE_WEB:
             if (record->event.pressed) {
-                start_web(true);
+                start_web(WEB_GOOGLE);
+            }
+            return false;
+        case M_CALC:
+            if (record->event.pressed) {
+                start_web(WEB_CALC);
+            }
+            return false;
+        case M_BROWSER:
+            if (record->event.pressed) {
+                start_web(WEB_BROWSER);
             }
             return false;
 

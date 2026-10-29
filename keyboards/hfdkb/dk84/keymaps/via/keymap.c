@@ -287,12 +287,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                             keymap_config.no_gui = false;
                         }
                         eeconfig_update_keymap(&keymap_config);
-                        single_blink_cnt   = 6;
-                        single_blink_color = (RGB){0xFF / 3, 0xFF, 0xFF};
-                        if (timer_elapsed32(single_blink_time) >= 300) {
-                            single_blink_time = timer_read32();
-                        }
-                        single_blink_index = GUI_LOCK_LED_INDEX;
+                        // single_blink_cnt   = 6;
+                        // single_blink_color = (RGB){0xFF / 3, 0xFF, 0xFF};
+                        // if (timer_elapsed32(single_blink_time) >= 300) {
+                        //     single_blink_time = timer_read32();
+                        // }
+                        // single_blink_index = GUI_LOCK_LED_INDEX;
                         return false;
                     }
                 }
@@ -351,14 +351,68 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 }
 
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
-    static uint8_t leds[] = {
-        17, 18, 19, 33, 55, 67, 69,
-    };
+    static bool     key_highlight_on   = true;
+    static bool     highlight_active   = false;
+    static uint32_t key_highlight_time = 0;
 
-    if ((key_press_status & KEY_FLASK_PRESSED) != 0) {
-        for (uint8_t i = 0; i < (sizeof(leds) / sizeof(leds[0])); i++) {
-            rgb_matrix_set_color(leds[i], 0xFF / 3, 0xFF, 0xFF);
+    bool active = (key_press_status & KEY_FLASK_PRESSED) != 0;
+    if (!active) {
+        highlight_active = false;
+        return true;
+    }
+
+    if (!highlight_active) {
+        highlight_active   = true;
+        key_highlight_on   = true;
+        key_highlight_time = timer_read32();
+    } else if (timer_elapsed32(key_highlight_time) >= 500) {
+        key_highlight_time = timer_read32();
+        key_highlight_on   = !key_highlight_on;
+    }
+
+    uint8_t leds[2];
+    uint8_t led_count = 0;
+
+    switch (dev_info.devs) {
+        case DEVS_HOST1:
+            leds[led_count++] = BT1_LED_INDEX;
+            break;
+        case DEVS_HOST2:
+            leds[led_count++] = BT2_LED_INDEX;
+            break;
+        case DEVS_HOST3:
+            leds[led_count++] = BT3_LED_INDEX;
+            break;
+        case DEVS_USB:
+            break;
+        default:
+            return true;
+    }
+
+    leds[led_count++] = get_highest_layer(default_layer_state) == MAC_B ? 69 : 33;
+
+    static const uint8_t indicator_leds[] = {17, 18, 19, 33, 55, 67, 69};
+    for (uint8_t i = 0; i < sizeof(indicator_leds) / sizeof(indicator_leds[0]); i++) {
+        uint8_t led = indicator_leds[i];
+        if (dev_info.devs == DEVS_USB && led == 67) {
+            continue;
+        }
+        if (led >= led_min && led < led_max) {
+            bool should_blink = false;
+            for (uint8_t j = 0; j < led_count; j++) {
+                if (led == leds[j]) {
+                    should_blink = true;
+                    break;
+                }
+            }
+
+            if (should_blink && !key_highlight_on) {
+                rgb_matrix_set_color(led, 0, 0, 0);
+            } else {
+                rgb_matrix_set_color(led, 0xFF / 3, 0xFF, 0xFF);
+            }
         }
     }
+
     return true;
 }

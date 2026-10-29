@@ -36,7 +36,7 @@ uint32_t bt_init_time = 0;
 
 dev_info_t dev_info = {0};
 bts_info_t bts_info = {
-    .bt_name        = {"Code one", "Code one", "Code one"},
+    .bt_name        = {"Code One", "Code One", "Code One"},
     .uart_init      = uart_init,
     .uart_read      = uart_read,
     .uart_transmit  = uart_transmit,
@@ -1199,9 +1199,9 @@ uint8_t ledNum;
 // }
 /* ================================================== */
 static void battery_voltage_display(void) {
-    static bool     was_querying   = false;
-    static bool     bat_query_on   = false;
-    static uint32_t bat_query_time = 0;
+    static bool was_querying = false;
+    static bool bat_query_on = false;
+    // static uint32_t bat_query_time = 0;
 
     const bool querying = query_vol_flag && gpio_read_pin(BT_CABLE_PIN);
 
@@ -1219,9 +1219,9 @@ static void battery_voltage_display(void) {
      * 检测一次新的电量查询。
      */
     if (!was_querying) {
-        was_querying   = true;
-        bat_query_on   = true;
-        bat_query_time = timer_read32();
+        was_querying = true;
+        bat_query_on = true;
+        // bat_query_time = timer_read32();
     }
 
     /*
@@ -1250,10 +1250,10 @@ static void battery_voltage_display(void) {
      * 每 1 秒切换一次亮灭状态。
      * 因为新查询时 bat_query_on=true，所以必定先亮。
      */
-    if (timer_elapsed32(bat_query_time) >= 1000) {
-        bat_query_time = timer_read32();
-        bat_query_on   = !bat_query_on;
-    }
+    // if (timer_elapsed32(bat_query_time) >= 1000) {
+    //     bat_query_time = timer_read32();
+    //     bat_query_on   = !bat_query_on;
+    // }
 
     if (bat_query_on) {
         for (uint8_t i = 0; i < led_count; i++) {
@@ -1425,7 +1425,7 @@ static void battery_low_warning(void) {
     // 电量恢复到 20% 及以上，重新允许下一次 15% 提醒。
     // 留出 5 个百分点，避免 15% 附近波动造成反复提醒。
     if (percent >= 20) {
-        next_threshold = 15;
+        next_threshold           = 15;
         battery_low_warning_flag = false;
     }
     /*
@@ -1561,7 +1561,7 @@ static void indicator_bluetooth_connection(void) {
 
         switch (indicator_status) {
             case 1: { // 闪烁模式 5Hz 重置
-                if ((last_time == 0) || (timer_elapsed32(last_time) >= 200)) {
+                if ((last_time == 0) || (timer_elapsed32(last_time) >= 125)) {
                     last_time = timer_read32();
                     rgb_flip  = !rgb_flip;
                     rgb       = rgb_flip ? (RGB){rgb_index_color_table[dev_info.devs][0], rgb_index_color_table[dev_info.devs][1], rgb_index_color_table[dev_info.devs][2]} : (RGB){0, 0, 0};
@@ -1580,7 +1580,7 @@ static void indicator_bluetooth_connection(void) {
             } break;
 
             case 2: { // 闪烁模式 2Hz 回连
-                if ((last_time == 0) || (timer_elapsed32(last_time) >= 500)) {
+                if ((last_time == 0) || (timer_elapsed32(last_time) >= 250)) {
                     last_time = timer_read32();
                     rgb_flip  = !rgb_flip;
                     rgb       = rgb_flip ? (RGB){rgb_index_color_table[dev_info.devs][0], rgb_index_color_table[dev_info.devs][1], rgb_index_color_table[dev_info.devs][2]} : (RGB){0, 0, 0};
@@ -1592,7 +1592,7 @@ static void indicator_bluetooth_connection(void) {
                     break;
                 }
 
-                if (timer_elapsed32(last_total_time) >= (10 * 1000)) {
+                if (timer_elapsed32(last_total_time) >= (60 * 1000)) {
                     indicator_status = 0;
                     kb_sleep_flag    = true;
                 }

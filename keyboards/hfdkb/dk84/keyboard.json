@@ -1,5 +1,5 @@
 {
-    "manufacturer": "hfdic",
+    "manufacturer": "Code One",
     "keyboard_name": "Code One",
     "maintainer": "jonylee@hfd",
     "url": "https://github.com/jonylee1986/qmk_firmware_master/tree/hfdkb_playground",
@@ -8,7 +8,7 @@
     "usb": {
         "vid": "0x0C45",
         "pid": "0x0040",
-        "device_version": "1.0.7",
+        "device_version": "1.1.0",
         "suspend_wakeup_delay": 1000
     },
     "host": {

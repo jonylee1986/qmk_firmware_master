@@ -38,6 +38,8 @@ enum multimode_keycodes {
     WIN_TSK,
     GOOGLE_WEB,
     VIA_WEB,
+    M_CALC,
+    M_BROWSER,
 };
 
 typedef enum {
